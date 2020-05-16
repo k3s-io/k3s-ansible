@@ -7,7 +7,7 @@ Author: <https://github.com/itwars>
 Build a Kubernetes cluster using Ansible with k3s. The goal is easily install a Kubernetes cluster on machines running:
 
 - [X] Debian
-- [ ] Ubuntu
+- [X] Ubuntu
 - [X] CentOS
 
 on processor architecture:
@@ -51,4 +51,3 @@ To get access to your **Kubernetes** cluster just
 ```bash
 scp debian@master_ip:~/.kube/config ~/.kube/config
 ```
-
