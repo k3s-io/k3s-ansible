@@ -1,0 +1,55 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: ubuntu-18.04
+    image: docker.io/geerlingguy/docker-ubuntu1804-ansible
+    pre_build_image: true
+  - name: centos-8
+    image: docker.io/geerlingguy/docker-centos8-ansible
+    pre_build_image: true
+provisioner:
+  name: ansible
+  # log: true
+verifier:
+  name: ansible
+scenario:
+  name: default
+  create_sequence:
+    - dependency
+    - create
+    - prepare
+  check_sequence:
+    - dependency
+    - cleanup
+    - destroy
+    - create
+    - prepare
+    - converge
+    - check
+    - destroy
+  converge_sequence:
+    - dependency
+    - create
+    - prepare
+    - converge
+  destroy_sequence:
+    - dependency
+    - cleanup
+    - destroy
+  test_sequence:
+    - lint
+    - dependency
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    # - idempotence # deleting existing files before download cause this to fail.
+    - side_effect
+    - verify
+    - cleanup
+    - destroy

@@ -1,0 +1,12 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+  - name: Check for /usr/local/bin/k3s
+    stat:
+      path: /usr/local/bin/k3s
+    register: file
+
+  - name: Verify binary exists
+    assert:
+      that: file.stat.exists

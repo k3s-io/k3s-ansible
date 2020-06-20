@@ -1,0 +1,9 @@
+---
+- name: Converge
+  hosts: all
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: "Include download"
+      include_role:
+        name: "download"
