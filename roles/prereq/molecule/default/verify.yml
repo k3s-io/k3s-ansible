@@ -1,0 +1,19 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+  - name: Check if /etc/sysctl.conf contains "net.ipv4.ip_forward=1"
+    command: grep -Fxq "net.ipv4.ip_forward=1" /etc/sysctl.conf
+    register: sysctl_ipv4_forward
+  
+  - name: Check if /etc/sysctl.conf contains "net.ipv6.conf.all.forwarding=1"
+    command: grep -Fxq "net.ipv6.conf.all.forwarding=1" /etc/sysctl.conf
+    register: sysctl_ipv6_forward
+
+  - name: Verify that sysctl ipv4 forwarding is enabled
+    assert:
+      that: sysctl_ipv4_forward.rc == 0
+
+  - name: Verify that sysctl ipv6 forwarding is enabled
+    assert:
+      that: sysctl_ipv6_forward.rc == 0
