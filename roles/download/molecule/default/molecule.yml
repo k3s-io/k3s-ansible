@@ -4,7 +4,10 @@ dependency:
 driver:
   name: docker
 platforms:
-  - name: ubuntu-18.04
+  - name: debian-10
+    image: docker.io/geerlingguy/docker-debian10-ansible
+    pre_build_image: true
+  - name: ubuntu-1804
     image: docker.io/geerlingguy/docker-ubuntu1804-ansible
     pre_build_image: true
   - name: centos-8
