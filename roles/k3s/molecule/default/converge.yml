@@ -1,0 +1,9 @@
+---
+- name: Converge
+  hosts: all
+  vars_files:
+    - vars.yml
+  tasks:
+
+- import_playbook: ../../master/tasks/main.yml
+- import_playbook: ../../node/tasks/main.yml

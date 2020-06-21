@@ -1,0 +1,10 @@
+---
+- name: Converge
+  hosts: all
+  vars_files:
+    - vars.yml
+  tasks:
+  - import_tasks: ../../../../download/tasks/main.yml
+  - name: Include master
+    include_role:
+      name: master

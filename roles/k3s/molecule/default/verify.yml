@@ -1,0 +1,8 @@
+---
+- name: Verify
+  hosts:
+    - master-debian-10
+    - master-ubuntu-1804
+    - master-centos-8
+  tasks:
+  # Todo - Verify the integration between master and node / Verify that there is one node available in the cluster with `kubectl get nodes`

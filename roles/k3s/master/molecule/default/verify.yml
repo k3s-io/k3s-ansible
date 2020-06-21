@@ -1,0 +1,14 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Populate service facts
+      service_facts:
+
+    - name: Verify ansible k3s service is enabled
+      assert:
+        that: ansible_facts.services['k3s.service'].status == 'enabled'
+
+    - name: Verify ansible k3s service is running
+      assert:
+        that: ansible_facts.services['k3s.service'].state == 'running'
