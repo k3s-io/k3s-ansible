@@ -1,0 +1,9 @@
+---
+- name: Converge
+  hosts: all
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Include reset
+      include_role:
+        name: reset

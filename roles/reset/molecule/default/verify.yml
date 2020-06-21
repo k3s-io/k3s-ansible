@@ -1,0 +1,22 @@
+---
+- name: Verify
+  hosts: all
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Check for k3s files
+      stat:
+        path: "{{ item }}"
+      register: files
+      with_items:
+        - "{{ systemd_dir }}/k3s.service"
+        - "{{ systemd_dir }}/k3s-node.service"
+        - /etc/rancher/k3s
+        - /var/lib/rancher/k3s
+        - /var/lib/kubelet
+        - /usr/local/bin/k3s
+
+    - name: Verify files are deleted
+      assert:
+        that: "{{ item.stat.exists }} is false"
+      with_items: "{{ files.results }}"
