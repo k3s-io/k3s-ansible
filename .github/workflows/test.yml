@@ -1,0 +1,32 @@
+---
+name: Test
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the codebase.
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.7.
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install test dependencies.
+        run: python3 -m pip install --user "molecule[lint]"
+
+      - name: Debug
+        run: molecule --version
+
+      # - name: Run tests.
+      #   run: |
+      #     cd roles/download && molecule test
