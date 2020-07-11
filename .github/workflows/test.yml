@@ -22,10 +22,16 @@ jobs:
           python-version: '3.x'
 
       - name: Install test dependencies.
-        run: pip3 install molecule
+        run: pip3 install molecule docker
+
+      - name: Install docker
+        run: curl -sSL https://get.docker.com | bash
 
       - name: Debug
         run: molecule --version
+
+      - name: Debug
+        run: docker --version
 
       # - name: Run tests.
       #   run: |
