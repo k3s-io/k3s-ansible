@@ -22,7 +22,7 @@ jobs:
           python-version: '3.x'
 
       - name: Install test dependencies.
-        run: python3 -m pip install --user "molecule[lint]"
+        run: pip3 install molecule
 
       - name: Debug
         run: molecule --version
