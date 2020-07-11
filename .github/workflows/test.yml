@@ -27,5 +27,5 @@ jobs:
       - name: Run tests.
         run: |
           cd roles/download && molecule test
-          cd roles/prereq && molecule test
-          cd roles/reset && molecule test
+          cd ../prereq && molecule test
+          cd ../reset && molecule test
