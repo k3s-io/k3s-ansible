@@ -27,12 +27,6 @@ jobs:
       - name: Install docker
         run: curl -sSL https://get.docker.com | bash
 
-      - name: Debug
-        run: molecule --version
-
-      - name: Debug
-        run: docker --version
-
-      # - name: Run tests.
-      #   run: |
-      #     cd roles/download && molecule test
+      - name: Run tests.
+        run: |
+          cd roles/download && molecule test
