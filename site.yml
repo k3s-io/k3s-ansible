@@ -7,6 +7,7 @@
     - role: prereq
     - role: download
     - role: raspbian
+    - role: armbian
     - role: ubuntu
 
 - hosts: master
