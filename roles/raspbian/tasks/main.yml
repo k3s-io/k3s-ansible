@@ -2,11 +2,11 @@
 - name: Test for Raspbian
   set_fact:
     raspbian: '{% if
+      ansible_facts.lsb.description is defined and
       ( ansible_facts.architecture is search("arm") and
-        ansible_facts.lsb.description is match("[Rr]aspbian.*[Bb]uster") ) or
+      ansible_facts.lsb.description is match("[Rr]aspbian.*[Bb]uster") ) or
       ( ansible_facts.architecture is search("aarch64") and
-        ansible_facts.lsb.description is match("Debian.*buster") or
-        ansible_facts.lsb.description is match("[Rr]aspbian.*[Bb]uster") ) %}true{% else %}false{% endif %}'
+      ansible_facts.lsb.description is match("Debian.*buster") ) %}true{% else %}false{% endif %}'
 
 - name: Activating cgroup support
   lineinfile:
