@@ -16,7 +16,7 @@
     state: absent
   when:
     - k3s_bin.stat.exists == True
-    - ks3_local_version.stdout.find(k3s_version) == -1 
+    - ks3_local_version.stdout.find(k3s_version) == -1
 
 - name: Check if k3s binary is present
   stat:
