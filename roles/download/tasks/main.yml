@@ -8,14 +8,14 @@
 - name: K3s version check
   command: /usr/local/bin/k3s --version
   register: ks3_local_version
-  when: k3s_bin.stat.exists == True
+  when: k3s_bin.stat.exists
 
 - name: Delete k3s if already present and the wrong version
   file:
     path: /usr/local/bin/k3s
     state: absent
   when:
-    - k3s_bin.stat.exists == True
+    - not k3s_bin.stat.exists
     - ks3_local_version.stdout.find(k3s_version) == -1
 
 - name: Check if k3s binary is present
@@ -31,7 +31,7 @@
     group: root
     mode: 0755
   when:
-    - k3s_bin.stat.exists == False
+    - not k3s_bin.stat.exists
     - ansible_facts.architecture == "x86_64"
 
 - name: Download k3s binary arm64
@@ -42,7 +42,7 @@
     group: root
     mode: 0755
   when:
-    - k3s_bin.stat.exists == False
+    - not k3s_bin.stat.exists
     - ( ansible_facts.architecture is search("arm") and
         ansible_facts.userspace_bits == "64" ) or
       ansible_facts.architecture is search("aarch64")
@@ -55,6 +55,6 @@
     group: root
     mode: 0755
   when:
-    - k3s_bin.stat.exists == False
+    - not k3s_bin.stat.exists
     - ansible_facts.architecture is search("arm")
     - ansible_facts.userspace_bits == "32"
