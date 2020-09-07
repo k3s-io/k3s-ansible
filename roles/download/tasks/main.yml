@@ -9,6 +9,7 @@
   command: /usr/local/bin/k3s --version
   register: ks3_local_version
   when: k3s_bin.stat.exists
+  check_mode: no
 
 - name: Delete k3s if already present and the wrong version
   file:
