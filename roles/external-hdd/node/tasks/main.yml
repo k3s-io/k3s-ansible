@@ -1,0 +1,20 @@
+---
+
+- name: Installing packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ software_packages }}"
+
+- name: Create disk path
+  file:
+    path: /mnt/ssd
+    owner: "{{ ansible_user }}"
+    recurse: yes
+
+- name: Including line on exports
+  lineinfile:
+    path: /etc/fstab
+    line: '{{ master_ip }}:/mnt/ssd   /mnt/ssd   nfs    rw  0  0'
+    insertafter: EOF
+  notify: reboot

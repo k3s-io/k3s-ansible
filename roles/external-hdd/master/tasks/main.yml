@@ -1,0 +1,33 @@
+---
+
+- name: Installing packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ software_packages }}"
+
+- name: Create disk path
+  file:
+    path: /mnt/ssd
+    owner: "{{ ansible_user }}"
+    recurse: yes
+
+- name: Create a ext4 filesystem on /dev/sda
+  filesystem:
+    fstype: ext4
+    dev: /dev/sda
+
+- name: Mount
+  mount:
+    path: /mnt/ssd
+    src: /dev/sda
+    fstype: ext4
+    state: mounted
+
+- name: Including line on exports
+  lineinfile:
+    path: /etc/exports
+    regexp: '^/mnt/ssd *(rw,no_root_squash,insecure,async,no_subtree_check,anonuid=1000,anongid=1000)'
+    line: '/mnt/ssd *(rw,no_root_squash,insecure,async,no_subtree_check,anonuid=1000,anongid=1000)'
+    insertafter: EOF
+  notify: restart_nfs

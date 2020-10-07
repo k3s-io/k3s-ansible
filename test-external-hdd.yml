@@ -1,0 +1,11 @@
+---
+
+- hosts: master
+  become: yes
+  roles:
+    - role: external-hdd/master
+
+- hosts: node
+  become: yes
+  roles:
+    - role: external-hdd/node
