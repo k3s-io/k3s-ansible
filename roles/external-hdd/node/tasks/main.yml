@@ -1,4 +1,8 @@
 ---
+- name: "update hostnames"
+  hostname:
+    name: "{{ new_hostname }}"
+  notify: reboot
 
 - name: Installing packages
   package:
@@ -18,3 +22,9 @@
     line: '{{ master_ip }}:/mnt/ssd   /mnt/ssd   nfs    rw  0  0'
     insertafter: EOF
   notify: reboot
+
+- name: Create disk path
+  file:
+    path: /mnt/ssd
+    owner: "{{ ansible_user }}"
+    recurse: yes

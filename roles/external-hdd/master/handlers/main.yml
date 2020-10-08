@@ -1,3 +1,8 @@
 ---
 - name: restart_nfs
-  shell: "exportfs -ra"
+  service:
+    name: nfs-kernel-server
+    state: restarted
+
+- name: reboot
+  reboot:

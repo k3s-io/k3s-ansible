@@ -1,4 +1,8 @@
 ---
+- name: "update hostnames"
+  hostname:
+    name: "{{ new_hostname }}"
+  notify: reboot
 
 - name: Installing packages
   package:
@@ -31,3 +35,9 @@
     line: '/mnt/ssd *(rw,no_root_squash,insecure,async,no_subtree_check,anonuid=1000,anongid=1000)'
     insertafter: EOF
   notify: restart_nfs
+
+- name: Create disk path
+  file:
+    path: /mnt/ssd
+    owner: "{{ ansible_user }}"
+    recurse: yes
