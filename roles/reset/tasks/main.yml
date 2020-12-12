@@ -8,6 +8,7 @@
   with_items:
     - k3s
     - k3s-node
+    - k3s-init
 
 - name: Pkill k3s container runtimes"
   register: pkill_containerd_shim_runc
