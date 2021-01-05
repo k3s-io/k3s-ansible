@@ -27,3 +27,5 @@ pip install ansible
 - Run `scp root@<cp-node-ip>:~/.kube/config ./kubeconfig` to copy the k8s config file locally.
 
 - Export the _KUBECONFIG_ environment variable or otherwise make `kubectl` understand you want to work with this cluster.
+
+- To remove k3s, run `ansible-playbook reset.yml -i inventory/scs/hosts.ini`
