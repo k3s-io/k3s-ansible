@@ -1,0 +1,4 @@
+---
+- name: Delay shutting down the remote node
+  community.general.shutdown:
+    delay: 5
