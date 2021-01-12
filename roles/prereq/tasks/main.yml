@@ -22,6 +22,7 @@
   copy:
     content: "br_netfilter"
     dest: /etc/modules-load.d/br_netfilter.conf
+    mode: "u=rw,g=,o="
   when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
 
 - name: Load br_netfilter
@@ -32,7 +33,7 @@
 
 - name: Set bridge-nf-call-iptables (just to be sure)
   sysctl:
-    name: "{{ items }}"
+    name: "{{ item }}"
     value: "1"
     state: present
     reload: yes
