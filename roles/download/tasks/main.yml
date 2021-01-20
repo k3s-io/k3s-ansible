@@ -1,19 +1,36 @@
 ---
+- name: Create target image directory for k3s
+  file:
+    path: /var/lib/rancher/k3s/agent/images
+    state: directory
+    mode: 0744
+    group: root
+    owner: root
 
 - name: Download k3s binary x64
   get_url:
-    url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s
-    checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-amd64.txt
+    url: "{{ remote_repo_url }}/{{ k3s_version }}/k3s"
+    checksum: "sha256:{{ remote_repo_url }}/{{ k3s_version }}/sha256sum-amd64.txt"
     dest: /usr/local/bin/k3s
     owner: root
     group: root
     mode: 0755
   when: ansible_facts.architecture == "x86_64"
 
+- name: Download k3s airgap images x64
+  get_url:
+    url: "{{ remote_repo_url }}/{{ k3s_version }}/k3s-airgap-images-amd64.tar"
+    checksum: "sha256:{{ remote_repo_url }}/{{ k3s_version }}/sha256sum-amd64.txt"
+    dest: /var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar
+    owner: root
+    group: root
+    mode: 0644
+  when: ansible_facts.architecture == "x86_64"
+
 - name: Download k3s binary arm64
   get_url:
-    url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-arm64
-    checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-arm64.txt
+    url: "{{ remote_repo_url }}/{{ k3s_version }}/k3s-arm64"
+    checksum: "sha256:{{ remote_repo_url }}/{{ k3s_version }}/sha256sum-arm64.txt"
     dest: /usr/local/bin/k3s
     owner: root
     group: root
@@ -23,14 +40,39 @@
         ansible_facts.userspace_bits == "64" ) or
       ansible_facts.architecture is search("aarch64")
 
+- name: Download k3s airgap images arm64
+  get_url:
+    url: "{{ remote_repo_url }}/{{ k3s_version }}/k3s-airgap-images-arm64.tar"
+    checksum: "sha256:{{ remote_repo_url }}/{{ k3s_version }}/sha256sum-arm64.txt"
+    dest: /var/lib/rancher/k3s/agent/images/k3s-airgap-images-arm64.tar
+    owner: root
+    group: root
+    mode: 0644
+  when:
+    - ( ansible_facts.architecture is search("arm") and
+        ansible_facts.userspace_bits == "64" ) or
+      ansible_facts.architecture is search("aarch64")
+
 - name: Download k3s binary armhf
   get_url:
-    url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-armhf
-    checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-arm.txt
+    url: "{{ remote_repo_url }}/{{ k3s_version }}/k3s-armhf"
+    checksum: "sha256:{{ remote_repo_url }}/{{ k3s_version }}/sha256sum-arm.txt"
     dest: /usr/local/bin/k3s
     owner: root
     group: root
     mode: 0755
+  when:
+    - ansible_facts.architecture is search("arm")
+    - ansible_facts.userspace_bits == "32"
+
+- name: Download k3s airgap images armhf
+  get_url:
+    url: "{{ remote_repo_url }}/{{ k3s_version }}/k3s-airgap-images-arm.tar"
+    checksum: "sha256:{{ remote_repo_url }}/{{ k3s_version }}/sha256sum-arm.txt"
+    dest: /var/lib/rancher/k3s/agent/images/k3s-airgap-images-arm.tar
+    owner: root
+    group: root
+    mode: 0644
   when:
     - ansible_facts.architecture is search("arm")
     - ansible_facts.userspace_bits == "32"
