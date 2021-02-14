@@ -3,10 +3,10 @@ ansible_user: root
 k3s_server_location: /var/lib/rancher/k3s
 server_init_args: >-
   {% if groups['master'] | length > 1 %}
-    {% if ansible_host == groups['master'][0] %}
+    {% if ansible_host == hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) %}
       --cluster-init
     {% else %}
-      --server https://{{ groups['master'][0] }}:6443
+      --server https://{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}:6443
     {% endif %}
   {% endif %}
   {{ extra_server_args | default('') }}
