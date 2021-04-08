@@ -14,3 +14,9 @@
     daemon_reload: yes
     state: restarted
     enabled: yes
+
+- name: Create crictl symlink
+  file:
+    src: /usr/local/bin/k3s
+    dest: /usr/local/bin/crictl
+    state: link
