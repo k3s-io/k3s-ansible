@@ -60,10 +60,20 @@ The following describes how to get remote access to your k3s **Kubernetes** clus
 - The master node must have a publicly exposed IP address.
 - The master node must allow traffic to and from port 6443.
 
-### Add k3s kubeconfig to your local machine
+### Simple Method
 
 ```bash
-scp debian@master_ip:~/.kube/config ~/.kube/config-k3s
+cp ~/.kube/config ~/.kube/config.bak
+scp debian@master_ip:.kube/config ~/.kube/config
+```
+
+The above assumes you are only accessing a single cluster.
+You can now access your cluster with `kubectl`
+
+### Advanced Method; Multiple Cluster Access
+
+```bash
+scp debian@master_ip:.kube/config ~/.kube/config-k3s
 export KUBECONFIG=$HOME/.kube/config:$HOME/.kube/config-k3s
 ```
 
@@ -78,20 +88,10 @@ The value `my-k3s-cluster` used below is only an example, any other value that d
 - Update the `cluster` field under `context` to `my-k3s-cluster`.
 - Update the `current-context` field to `my-k3s-cluster`.
 
-### Point kubectl to your k3s cluster
+#### Point kubectl to your k3s cluster
 
 Switch to the `my-k3s-cluster` context with `kubectl config`.
 
 ```bash
 kubectl config use-context my-k3s-cluster
 ```
-
-### If you do not need to preserve existing kubeconfig
-
-Alternatively if you do not need to preserve any existing kubeconfig, you may simply scp the config file to your host, update the IP address and use it as is.
-
-```bash
-scp debian@master_ip:.kube/config ~/.kube/config
-```
-
-Then edit the IP address to be the master node's publicly exposed IP address.
