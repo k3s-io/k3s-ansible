@@ -4,16 +4,16 @@
   gather_facts: yes
   become: yes
   roles:
-    - role: prereq
-    - role: download
+    - role: k3s/prereq
+    - role: k3s/download
     - role: raspberrypi
 
-- hosts: master
+- hosts: server
   become: yes
   roles:
-    - role: k3s/master
+    - role: k3s/server
 
-- hosts: node
+- hosts: agent
   become: yes
   roles:
-    - role: k3s/node
+    - role: k3s/agent

@@ -10,7 +10,7 @@
 
 - name: Enable and check K3s service
   systemd:
-    name: k3s-node
+    name: k3s-agent
     daemon_reload: yes
     state: restarted
     enabled: yes

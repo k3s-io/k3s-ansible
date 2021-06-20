@@ -5,9 +5,10 @@ After=network-online.target
 
 [Service]
 Type=notify
+EnvironmentFile=-/etc/systemd/system/k3s.service.env
 ExecStartPre=-/sbin/modprobe br_netfilter
 ExecStartPre=-/sbin/modprobe overlay
-ExecStart=/usr/local/bin/k3s agent --server https://{{ master_ip }}:6443 --token {{ hostvars[groups['master'][0]]['token'] }} {{ extra_agent_args | default("") }}
+ExecStart=/usr/local/bin/k3s agent --server https://{{ api_service_ip }}:6443 --token {{ hostvars[groups['server'][0]]['token'] }} {{ extra_agent_args | default("") }}
 KillMode=process
 Delegate=yes
 # Having non-zero Limit*s causes performance problems due to accounting overhead

@@ -30,12 +30,12 @@
     path: /var/lib/rancher/k3s/server
     mode: "g+rx,o+rx"
 
-- name: Read node-token from master
+- name: Read node-token from primary server
   slurp:
     src: /var/lib/rancher/k3s/server/node-token
   register: node_token
 
-- name: Store Master node-token
+- name: Store Primary server node-token
   set_fact:
     token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
 
@@ -43,6 +43,8 @@
   file:
     path: /var/lib/rancher/k3s/server
     mode: "{{ p.stat.mode }}"
+
+# Need to add in steps for adding additional server instances
 
 - name: Create directory .kube
   file:
@@ -59,10 +61,10 @@
     owner: "{{ ansible_user }}"
     mode: "u=rw,g=,o="
 
-- name: Replace https://localhost:6443 by https://master-ip:6443
+- name: Replace https://localhost:6443 by https://{{ api_service_ip }}:6443
   command: >-
     k3s kubectl config set-cluster default
-      --server=https://{{ master_ip }}:6443
+      --server=https://{{ api_service_ip }}:6443
       --kubeconfig ~{{ ansible_user }}/.kube/config
   changed_when: true
 
