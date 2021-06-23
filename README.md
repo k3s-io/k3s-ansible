@@ -19,7 +19,7 @@ on processor architecture:
 ## System requirements
 
 Deployment environment must have Ansible 2.4.0+
-Master and nodes must have passwordless SSH access
+Server and agent nodes must have passwordless SSH access
 
 ## Usage
 
@@ -32,18 +32,18 @@ cp -R inventory/sample inventory/my-cluster
 Second, edit `inventory/my-cluster/hosts.ini` to match the system information gathered above. For example:
 
 ```bash
-[master]
+[server]
 192.16.35.12
 
-[node]
+[agent]
 192.16.35.[10:11]
 
 [k3s_cluster:children]
-master
-node
+server
+agent
 ```
 
-If multiple hosts are in the master group, the playbook will automatically setup k3s in HA mode with etcd.
+If multiple hosts are in the server group, the playbook will automatically setup k3s in HA mode with etcd.
 https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/
 This requires at least k3s version 1.19.1
 

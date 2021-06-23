@@ -1,0 +1,51 @@
+---
+
+- name: Ensure keepalived is installed
+  ansible.builtin.package:
+    name: keepalived  # Seems to be the same in EL and Debian based distros
+    state: present
+
+- name: Ensure ipv4 nonlocal binding is enabled
+  ansible.builtin.sysctl:
+    name: net.ipv4.ip_nonlocal_bind
+    value: "1"
+    state: present
+    reload: yes
+
+- name: Ensure ipv6 nonlocal binding is enabled
+  ansible.builtin.sysctl:
+    name: net.ipv6.ip_nonlocal_bind
+    value: "1"
+    state: present
+    reload: yes
+
+- name: Ensure variables are set on Primary server
+  ansible.builtin.set_fact:
+    vr_priority: '200'
+    vr_state: MASTER
+  when:
+    - ansible_host == hostvars[groups['server'][0]]['ansible_host']
+
+- name: Ensure keepalived service configuration template is correct
+  ansible.builtin.template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart-keepalived-service
+
+- name: Ensure keepalived service k3s check script is correct
+  ansible.builtin.template:
+    src: check_k3s.sh.j2
+    dest: /etc/keepalived/check_k3s.sh
+    owner: root
+    group: root
+    mode: '0755'
+  notify: restart-keepalived-service
+
+- name: Ensure keepalived service is running
+  ansible.builtin.service:
+    name: keepalived
+    state: started
+    enabled: true

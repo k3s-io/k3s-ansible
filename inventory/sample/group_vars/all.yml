@@ -12,5 +12,9 @@ systemd_dir: /etc/systemd/system
 apiserver_endpoint: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}"
 # k3s_token: "mysupersecuretoken"
 
+# Enable virtual IP address on server nodes to provide control plane api high availability
+# Be sure to update the apiserver_endpoint with a dedicated IP address that is not in use by the cluster
+# keepalived_enabled: true
+
 extra_server_args: ""
 extra_agent_args: ""

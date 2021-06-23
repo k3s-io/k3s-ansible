@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+if [ -z "`pidof 'k3s server'`" ]; then
+  exit 1
+fi
