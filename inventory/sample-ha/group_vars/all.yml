@@ -1,0 +1,24 @@
+---
+
+k3s_version: v1.21.1+k3s1
+ansible_user: pi
+systemd_dir: /etc/systemd/system
+
+# If you define multiple servers you should be providing a loadbalanced
+# apiserver endpoint. The configuration below sets an API IP address outside of
+# the cluster. This uses the keepalived service to migrate this shared virtual
+# ip address between cluster server nodes. The server node defined first
+# will automatically be the Primary server node and when it is running
+# all API requests will go through it.
+
+# Also you should define k3s_token so that servers can talk together securely
+
+# apiserver_endpoint: "{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}"
+apiserver_endpoint: 192.168.30.10
+k3s_token: "mysupersecuretoken"
+
+# Enable virtual IP address on server nodes to provide control plane api high availability
+keepalived_enabled: true
+
+extra_server_args: ""
+extra_agent_args: ""
