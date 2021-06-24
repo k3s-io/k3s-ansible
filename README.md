@@ -43,11 +43,23 @@ server
 agent
 ```
 
+If needed, you can also edit `inventory/my-cluster/group_vars/all.yml` to match your environment.
+
+### Control Plane High Availability
+
 If multiple hosts are in the server group, the playbook will automatically setup k3s in HA mode with etcd.
 https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/
 This requires at least k3s version 1.19.1
 
-If needed, you can also edit `inventory/my-cluster/group_vars/all.yml` to match your environment.
+To configure fail-over for the k3s server api add the following to your `inventory/my-cluster/group_vars/all.yml`
+
+```yaml
+apiserver_endpoint: 192.168.30.10  # update this to a non-cluster ip address
+
+keepalived_enabled: true
+```
+
+See `inventory/sample-ha` for a sample high availability control plane configuration.
 
 Start provisioning of the cluster using the following command:
 

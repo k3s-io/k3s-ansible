@@ -1,3 +1,6 @@
 *
 !.gitignore
-!sample/
+!sample
+!sample/*
+!sample-ha
+!sample-ha/*
