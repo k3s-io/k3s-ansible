@@ -4,11 +4,11 @@ keepalived_enabled: false
 
 ansible_user: root
 server_init_args: >-
-  {% if groups['master'] | length > 1 %}
-    {% if ansible_host == hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) %}
+  {% if groups['server'] | length > 1 %}
+    {% if ansible_host == hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) %}
       --cluster-init
     {% else %}
-      --server https://{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}:6443
+      --server https://{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}:6443
     {% endif %}
     --token {{ k3s_token }}
   {% endif %}
