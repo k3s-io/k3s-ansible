@@ -8,12 +8,12 @@
         state: stopped
         enabled: no
       failed_when: false
-    
+
     - name: Remove keepalived package
       ansible.builtin.package:
         name: keepalived
         state: absent
-    
+
     - name: Remove keepalived configuration
       ansible.builtin.file:
         name: "{{ item }}"
