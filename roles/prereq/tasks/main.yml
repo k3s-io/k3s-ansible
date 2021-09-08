@@ -1,8 +1,25 @@
 ---
-- name: Set SELinux to disabled state
+
+- name: Import variables specific to distribution
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "vars/{{ ansible_facts['distribution'] }}-{{ ansible_facts['distribution_version'] }}.yml"
+    - "vars/{{ ansible_facts['distribution'] }}-{{ ansible_facts['distribution_major_version'] }}.yml"
+    - "vars/{{ ansible_facts['distribution'] }}.yml"
+    - "vars/default.yml"
+
+- name: "Install k3s-selinux package"
+  yum:
+    name: "{{k3s_selinux_packages}}"
+    disable_gpg_check: true
+    state: installed
+  when:
+    - k3s_selinux_enable
+
+- name: Set SELinux state
   selinux:
-    state: disabled
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+    policy: "targeted"
+    state: "{{ 'enforcing' if k3s_selinux_enable else 'disabled' }}"
 
 - name: Enable IPv4 forwarding
   sysctl:

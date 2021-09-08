@@ -5,3 +5,8 @@ systemd_dir: /etc/systemd/system
 master_ip: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}"
 extra_server_args: ""
 extra_agent_args: ""
+
+# Selinux
+k3s_selinux_enable: true
+k3s_selinux_release: v0.3.latest.0
+k3s_selinux_package: k3s-selinux-0.3-0
