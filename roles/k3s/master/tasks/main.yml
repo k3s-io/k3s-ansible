@@ -61,7 +61,7 @@
 
 - name: Replace https://localhost:6443 by https://master-ip:6443
   command: >-
-    k3s kubectl config set-cluster default
+    /usr/local/bin/k3s kubectl config set-cluster default
       --server=https://{{ master_ip }}:6443
       --kubeconfig ~{{ ansible_user }}/.kube/config
   changed_when: true
