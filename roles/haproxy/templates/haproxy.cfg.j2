@@ -16,4 +16,4 @@ frontend k3s
    default_backend k3s_b
 
 backend k3s_b
-    server-template master {{ k3s_masters_amount }} _k3s_master._tcp.service.cluster:6443 resolvers consul resolve-prefer ipv4 resolve-opts allow-dup-ip check
+    server-template master {{ k3s_masters_amount }} _k3s_master._tcp.service.{{ consul_domain_suffix }}:6443 resolvers consul resolve-prefer ipv4 resolve-opts allow-dup-ip check

@@ -4,7 +4,7 @@
     "client_addr": "0.0.0.0",
     "datacenter": "DC1",
     "data_dir": "/opt/consul",
-    "domain": "cluster",
+    "domain": "{{ consul_domain_suffix }}",
     "enable_script_checks": true,
     "dns_config": {
         "enable_truncate": true,

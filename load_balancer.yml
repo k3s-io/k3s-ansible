@@ -4,4 +4,13 @@
   gather_facts: yes
   become: no
   roles:
-    - role: some_echo
+    - role: apt_dependencies
+    - role: ntp
+    - role: consul/node
+      vars:
+        consul_master: yes
+        master_list:
+          - "lb1.local"
+    - role: haproxy
+      vars:
+        k3s_masters_amount: "{{ groups['master'] | length }}"
