@@ -19,6 +19,7 @@ TasksMax=infinity
 TimeoutStartSec=0
 Restart=always
 RestartSec=5s
+Environment="HTTP_PROXY={{ http_proxy | default("") }}" "HTTPS_PROXY={{ https_proxy | default("") }}" "NO_PROXY={{ no_proxy | default("localhost,127.0.0.1,*.local,10.42.0.0/16") }}"
 
 [Install]
 WantedBy=multi-user.target
