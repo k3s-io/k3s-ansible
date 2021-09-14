@@ -21,6 +21,11 @@ on processor architecture:
 Deployment environment must have Ansible 2.4.0+
 Master and nodes must have passwordless SSH access
 
+### Enable passwordless access
+
+- Create a ssh key pair using `ssh-keygen`
+- Run `ssh-copy-id pi@{pi_ip_address}` to copy the ssh key
+
 ## Usage
 
 First create a new directory based on the `sample` directory within the `inventory` directory:
