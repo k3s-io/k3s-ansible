@@ -13,4 +13,9 @@
           - "lb1.local"
     - role: haproxy
       vars:
-        k3s_masters_amount: "{{ groups['master'] | length }}"
+        priority: lb_priority
+        # Not really necessary to specify everything, but it's better to be explicit
+        internal_interface: internal_interface
+        internal_floating_ip: external_floating_ip
+        external_interface: external_interface
+        external_floating_ip: external_floating_ip

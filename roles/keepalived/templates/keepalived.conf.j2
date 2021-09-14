@@ -1,0 +1,42 @@
+vrrp_script chk_haproxy {
+        script "killall -0 haproxy"     # cheaper than pidof
+        interval 2                      # check every 2 seconds
+        weight 2                        # add 2 points of prio if OK
+}
+
+vrrp_sync_group VG1 {
+   group {
+      EX_1
+      IN_1
+   }
+}
+
+vrrp_instance IN_1 {
+        interface {{ internal_interface }}
+        state BACKUP
+        nopreempt
+        virtual_router_id 50
+        priority {{ priority }}
+        advert_int 1
+        virtual_ipaddress {
+            {{ internal_floating_ip }}
+        }
+        track_script {
+            chk_haproxy
+        }
+}
+
+vrrp_instance EX_1 {
+        interface {{ external_interface }}
+        state BACKUP
+        nopreempt
+        virtual_router_id 51
+        priority {{ priority }}
+        advert_int 1
+        virtual_ipaddress {
+            {{ external_floating_ip }}
+        }
+        track_script {
+            chk_haproxy
+        }
+}

@@ -27,4 +27,9 @@ load_balancer:
     lb1:
       ansible_host: lb1.local
       ansible_user: pi
+      lb_priority: 100
+#    lb2:
+#      ansible_host: lb2.local
+#      ansible_user: pi
+#      lb_priority: 99
 
