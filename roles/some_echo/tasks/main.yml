@@ -1,0 +1,5 @@
+---
+
+- name: Echo something
+  debug:
+    msg: "Echoing something"

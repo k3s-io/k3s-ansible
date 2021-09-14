@@ -1,0 +1,7 @@
+---
+
+- hosts: load_balancer
+  gather_facts: yes
+  become: no
+  roles:
+    - role: some_echo
