@@ -1,0 +1,19 @@
+resolvers consul
+   nameserver consul 127.0.0.1:8600
+   accepted_payload_size 8192
+   hold valid 5s
+
+frontend stats
+   bind *:1936
+   mode http
+   stats uri /stats
+   stats enable
+   stats refresh 10s
+   no log
+
+frontend k3s
+   bind *:6443
+   default_backend k3s_b
+
+backend k3s_b
+    server-template master {{ k3s_masters_amount }} _k3s_master._tcp.service.cluster:6443 resolvers consul resolve-prefer ipv4 resolve-opts allow-dup-ip check

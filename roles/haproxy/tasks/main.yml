@@ -1,0 +1,44 @@
+---
+- name: Get ubuntu release name
+  command: "lsb_release -cs"
+  register: release_command
+
+- name: Add haproxy apt key
+  ansible.builtin.apt_key:
+    url: https://haproxy.debian.net/bernat.debian.org.gpg
+    state: present
+  become: yes
+
+- name: Add haproxy apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=armhf] http://haproxy.debian.net {{ release_command.stdout }}-backports-{{ version }} main"
+    state: present
+  become: yes
+
+- name: Install haproxy
+  apt:
+    name: "haproxy"
+    state: latest
+    update_cache: yes
+  become: yes
+
+- name: Add haproxy configuration file
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/haproxy.cfg.j2"
+    dest: /etc/haproxy/haproxy.cfg
+  become: yes
+
+- name: Restart haproxy
+  ansible.builtin.systemd:
+    name: haproxy
+    state: restarted
+    enabled: yes
+  become: yes
+
+#- name: Add haproxy stats URL to MOTD
+#  ansible.builtin.lineinfile:
+#    path: /etc/motd
+#    regexp: '^Haproxy '
+#    line: "Haproxy stats: http://{{ external_gateway_ip }}:1936/stats"
+#  become: yes
+...
