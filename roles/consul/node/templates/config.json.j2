@@ -1,0 +1,22 @@
+{
+    "bind_addr": "0.0.0.0",
+    "bootstrap_expect": {{ 0 if not consul_master else master_list | length }},
+    "client_addr": "0.0.0.0",
+    "datacenter": "DC1",
+    "data_dir": "/opt/consul",
+    "domain": "cluster",
+    "enable_script_checks": true,
+    "dns_config": {
+        "enable_truncate": true,
+        "only_passing": true
+    },
+    "enable_syslog": true,
+    "encrypt": "bnRHLmJ6TeLomirgEOWP2g==",
+    "leave_on_terminate": true,
+    "log_level": "INFO",
+    "rejoin_after_leave": true,
+    "retry_join": ["{{ master_list | join('", "') }}"],
+    "server": {{ "true" if consul_master else "false" }},
+    "start_join": ["{{ master_list | join('", "') }}"],
+    "ui": true
+}

@@ -1,0 +1,19 @@
+---
+- name: Run apt dist-upgrade
+  apt:
+    upgrade: dist
+    update_cache: yes
+  become: yes
+
+- name: Install apt dependencies
+  apt:
+    pkg:
+    - curl
+    - dnsutils
+    - gnupg
+    - jq
+    - software-properties-common
+    - unzip
+    state: latest
+  become: yes
+...

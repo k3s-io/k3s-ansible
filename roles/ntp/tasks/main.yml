@@ -1,0 +1,15 @@
+---
+- name: Install ntp
+  apt:
+    pkg:
+    - ntp
+    state: latest
+  become: yes
+
+- name: Enable and restart ntp
+  ansible.builtin.systemd:
+    name: ntp
+    state: restarted
+    enabled: yes
+  become: yes
+...

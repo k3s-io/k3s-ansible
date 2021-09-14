@@ -1,0 +1,45 @@
+---
+- name: Get ubuntu release name
+  command: "lsb_release -cs"
+  register: release_command
+
+- name: Add consul apt key
+  ansible.builtin.apt_key:
+    url: https://apt.releases.hashicorp.com/gpg
+    state: present
+  become: yes
+
+- name: Add consul apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=armhfv6] https://apt.releases.hashicorp.com {{ release_command.stdout }} main"
+    state: present
+  become: yes
+
+- name: Install consul
+  apt:
+    name: consul
+    state: latest
+    update_cache: yes
+  become: yes
+
+# TODO: make this HCL
+- name: Add node configuration file
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/config.json.j2"
+    dest: /etc/consul.d/config.json
+  become: yes
+
+- name: Enable and restart consul
+  ansible.builtin.systemd:
+    name: consul
+    state: restarted
+    enabled: yes
+  become: yes
+
+#- name: Add consul UI URL to MOTD
+#  ansible.builtin.lineinfile:
+#    path: /etc/motd
+#    regexp: '^Consul '
+#    line: "Consul UI: http://{{ external_gateway_ip }}:8500/ui"
+#  become: yes
+...
