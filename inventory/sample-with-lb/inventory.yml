@@ -1,0 +1,30 @@
+---
+master:
+  hosts:
+    master1:
+      ansible_host: 10.0.2.1
+      ansible_user: pi
+    master2:
+      ansible_host: 10.0.2.2
+      ansible_user: pi
+
+node:
+  hosts:
+    node1:
+      ansible_host: 10.0.2.3
+      ansible_user: pi
+    node2:
+      ansible_host: 10.0.2.4
+      ansible_user: pi
+
+k3s_cluster:
+  children:
+    master:
+    node:
+
+load_balancer:
+  hosts:
+    lb1:
+      ansible_host: lb1.local
+      ansible_user: pi
+
