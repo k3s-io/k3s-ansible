@@ -2,22 +2,24 @@
 master:
   hosts:
     master1:
-      ansible_host: 10.0.2.1
+      ansible_host: master1.local
       ansible_user: pi
     master2:
-      ansible_host: 10.0.2.2
+      ansible_host: master2.local
       ansible_user: pi
 
 node:
   hosts:
     node1:
-      ansible_host: 10.0.2.3
+      ansible_host: node1.local
       ansible_user: pi
     node2:
-      ansible_host: 10.0.2.4
+      ansible_host: node2.local
       ansible_user: pi
 
 k3s_cluster:
+  vars:
+    ansible_ssh_common_args: '-o ForwardAgent=yes -o ProxyCommand="ssh -W %h:%p -q pi@lb1.local"'
   children:
     master:
     node:
@@ -36,5 +38,4 @@ load_balancer:
       lb_priority: 99
       internal_cidr: 10.0.0.3/16
       external_cidr: 192.168.50.152/24
-
-
+...
