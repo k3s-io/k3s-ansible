@@ -10,6 +10,7 @@
     pkg:
     - curl
     - dnsutils
+    - git
     - gnupg
     - jq
     - software-properties-common
