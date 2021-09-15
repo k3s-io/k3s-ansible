@@ -13,3 +13,4 @@ python_version = "3"
 
 [scripts]
 ansible-requirements = "ansible-galaxy install -f -r galaxy-requirements.yml"
+lb_bootstrap = "ansible-playbook load_balancer.yml -i inventory/sample-with-lb/inventory.yml"
