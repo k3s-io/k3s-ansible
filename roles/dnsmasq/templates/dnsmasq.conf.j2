@@ -1,0 +1,29 @@
+# https://www.linux.com/topic/networking/dns-and-dhcp-dnsmasq/
+# GLOBAL options
+domain-needed
+bogus-priv
+no-resolv
+filterwin2k
+expand-hosts
+domain=mydomain.net
+local=/mydomain.net/
+listen-address=127.0.0.1
+#listen-address={{ external_floating_ip }}
+listen-address={{ internal_floating_ip }}
+
+# DHCP range
+dhcp-range=10.0.2.1,10.0.254.254,12h
+#dhcp-lease-max=25
+
+
+# Consul domain services
+#server=/service.##consul_domain##/127.0.0.1#8600
+# Use open source DNS servers
+#server=8.8.8.8
+#server=8.8.4.4
+#server=208.67.220.220
+
+
+#Create custom 'domains'.
+# Custom 'domains' can also be added in /etc/hosts
+#address=/$DOMAIN/$EXTERNAL_IP

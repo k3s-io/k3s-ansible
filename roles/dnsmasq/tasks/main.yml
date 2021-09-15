@@ -1,0 +1,20 @@
+---
+- name: Install dnsmasq
+  apt:
+    name: dnsmasq
+    state: latest
+  become: yes
+
+- name: Add dnsmasq configuration file
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/dnsmasq.conf.j2"
+    dest: /etc/dnsmasq.d/dnsmasq.conf
+  become: yes
+
+- name: Enable and restart dnsmasq
+  ansible.builtin.systemd:
+    name: dnsmasq
+    state: restarted
+    enabled: yes
+  become: yes
+...
