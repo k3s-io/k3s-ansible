@@ -43,9 +43,11 @@ pipenv run ansible-requirements
 pipenv run lb_bootstrap
 ```
 
-Note: the step `TASK [apt_dependencies : Run apt dist-upgrade]` might take a while (~10-15 minutes if system is not up to date)
+## Notes
 
-Note: if you get the error `Failed to initialize nft: Protocol not supported` just run:
+- While it's technically possible to provision the load balancer without LAN connection, some services (e.g. consul) won't work properly until the LAN is connected.
+- the step `TASK [apt_dependencies : Run apt dist-upgrade]` might take a while (~10-15 minutes if system is not up to date)
+- if you get the error `Failed to initialize nft: Protocol not supported` just run:
 
 ```bash
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null 'pi@lb1.local'
@@ -54,4 +56,4 @@ ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null 'pi@lb2.local'
 sudo reboot
 ```
 
-then run `pipenv run lb_bootstrap` again. It happens when the kernel is changed (by `dist-upgrade`) but system has not been yet rebooted. 
+then run `pipenv run lb_bootstrap` again. It happens when the kernel is changed (by `dist-upgrade`) but system has not been yet rebooted.
