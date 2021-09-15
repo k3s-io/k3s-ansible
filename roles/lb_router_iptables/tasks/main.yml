@@ -1,0 +1,30 @@
+---
+- name: Enable net.ipv4.ip_forward
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present
+  become: yes
+
+- name: Verify net.ipv4.ip_forward is enabled
+  command: cat /proc/sys/net/ipv4/ip_forward
+  register: ip_forward_command
+  failed_when: ip_forward_command.stdout != '1'
+
+- name: Install iptables-persistent
+  apt:
+    name: iptables-persistent
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Add iptables rules
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/rules.v4.j2"
+    dest: /etc/iptables/rules.v4
+  become: yes
+
+- name: Load iptables rules
+  shell: "iptables-restore < /etc/iptables/rules.v4"
+  become: yes
+...

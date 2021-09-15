@@ -1,0 +1,52 @@
+*nat
+# Use consul as DNS server
+#-A PREROUTING -p udp -m udp --dport 53 -j REDIRECT --to-ports 8600
+#-A PREROUTING -p tcp -m tcp --dport 53 -j REDIRECT --to-ports 8600
+#-A OUTPUT -d {{ external_floating_ip }} -p udp -m udp --dport 53 -j REDIRECT --to-ports 8600
+#-A OUTPUT -d {{ external_floating_ip }} -p tcp -m tcp --dport 53 -j REDIRECT --to-ports 8600
+
+-A POSTROUTING -o {{ external_interface }} -j MASQUERADE
+#TODO: SNAT is preferred and has lower overhead, configure it properly when we have floating ip setup
+# -A POSTROUTING ! -d 192.168.0.0/16 -o {{ external_interface }} -j SNAT --to-source {{ external_floating_ip }}
+
+#https://terrywang.net/2016/02/02/new-iptables-gotchas.html
+# stick to SNAT for static IP
+#-A POSTROUTING -s 192.168.100.0/24 -o eth0 -j SNAT --to-source ELASTIC_IP
+# don't be lazy, simple but slower due to more overhead
+#-A POSTROUTING -s 192.168.100.0/24 -o eth0 -j MASQUERADE
+COMMIT
+
+
+
+*filter
+-A INPUT -i lo -j ACCEPT
+
+# allow ssh, so that we do not lock ourselves
+-A INPUT -i {{ external_interface }} -d {{ external_ip }} -p tcp -m tcp --dport 22 -j ACCEPT
+# disable ssh from internal nodes
+-A INPUT -i {{ internal_interface }} -d {{ internal_ip }} -p tcp -m tcp --dport 22 -j DROP
+
+#-A INPUT -i {{ external_interface }} -d {{ external_floating_ip }} -p tcp -m tcp --dport 22 -j DROP
+#-A INPUT -i {{ internal_interface }} -d {{ internal_floating_ip }} -p tcp -m tcp --dport 22 -j DROP
+
+# allow web
+-A INPUT -i {{ external_interface }} -p tcp -m tcp --dport 80 -j ACCEPT
+#-A INPUT -i {{ external_interface }} -d {{ external_floating_ip }} -p tcp -m tcp --dport 80 -j ACCEPT
+# allow dns requests
+#-A INPUT -i {{ external_interface }} -d {{ external_floating_ip }} -p tcp -m tcp --dport 53 -j ACCEPT
+#-A INPUT -i {{ external_interface }} -d {{ external_floating_ip }} -p udp -m udp --dport 53 -j ACCEPT
+# allow consul ui
+-A INPUT -i {{ external_interface }} -p tcp -m tcp --dport 8500 -j ACCEPT
+#-A INPUT -i {{ external_interface }} -d {{ external_floating_ip }} -p tcp -m tcp --dport 8500 -j ACCEPT
+# allow haproxy stats
+-A INPUT -i {{ external_interface }} -p tcp -m tcp --dport 1936 -j ACCEPT
+#-A INPUT -i {{ external_interface }} -d {{ external_floating_ip }} -p tcp -m tcp --dport 1936 -j ACCEPT
+
+# allow incoming traffic to the outgoing connections,
+# et al for clients from the private network
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+# prohibit everything else incoming from external network
+-A INPUT -i {{ external_interface }} -d {{ external_floating_ip }} -j DROP
+# -A INPUT -i {{ internal_interface }} -d {{ internal_floating_ip }} -j ACCEPT
+COMMIT

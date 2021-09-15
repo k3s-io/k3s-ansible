@@ -33,4 +33,12 @@
         internal_floating_ip: "{{ lb_internal_floating_ip }}"
         external_interface: "{{ lb_external_interface }}"
         external_floating_ip: "{{ lb_external_floating_ip }}"
+    - role: lb_router_iptables
+      vars:
+        internal_interface: "{{ lb_internal_interface }}"
+        internal_floating_ip: "{{ lb_internal_floating_ip }}"
+        internal_ip: "{{ internal_cidr | regex_replace('((?:[0-9]{1,3}\\.){3}[0-9]{1,3})(?:\\/[0-9]{1,2})+', '\\1' ) }}"
+        external_interface: "{{ lb_external_interface }}"
+        external_floating_ip: "{{ lb_external_floating_ip }}"
+        external_ip: "{{ external_cidr | regex_replace('((?:[0-9]{1,3}\\.){3}[0-9]{1,3})(?:\\/[0-9]{1,2})+', '\\1' ) }}"
 
