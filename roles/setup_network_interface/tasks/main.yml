@@ -12,24 +12,4 @@
     dest: "/etc/network/interfaces.d/{{ interface }}"
   become: yes
   when: type == 'manual'
-
-#- name: "Start interface {{ interface }}"
-#  shell: "ifup {{ interface }}"
-#  become: yes
-
-#- name: "Start interface {{ interface }}:0"
-#  shell: "ifup {{ interface }}:0"
-#  become: yes
-#  when: secondary_address is defined
-
-- name: Setup avahi host
-  ansible.builtin.lineinfile:
-    path: /etc/avahi/hosts
-    regexp: '^{{ ip }} '
-    line: "{{ ip }} {{ ansible_host }}"
-    state: "{{ 'present' if with_avahi else 'absent' }}"
-  become: yes
-  when: type == 'manual'
-  vars:
-    ip: "{{ address | regex_replace('((?:[0-9]{1,3}\\.){3}[0-9]{1,3})(?:\\/[0-9]{1,2})+', '\\1' ) }}"
 ...

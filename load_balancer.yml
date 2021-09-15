@@ -7,10 +7,7 @@
     - role: setup_network_interface
       vars:
         interface: "{{ lb_external_interface }}"
-        address: "{{ external_cidr }}"
-        default_gateway: 192.168.50.1
-        type: "manual"
-        with_avahi: yes
+        type: "dhcp"
     - role: setup_network_interface
       vars:
         interface: "{{ lb_internal_interface }}"
@@ -40,7 +37,6 @@
         internal_ip: "{{ internal_cidr | regex_replace('((?:[0-9]{1,3}\\.){3}[0-9]{1,3})(?:\\/[0-9]{1,2})+', '\\1' ) }}"
         external_interface: "{{ lb_external_interface }}"
         external_floating_ip: "{{ lb_external_floating_ip }}"
-        external_ip: "{{ external_cidr | regex_replace('((?:[0-9]{1,3}\\.){3}[0-9]{1,3})(?:\\/[0-9]{1,2})+', '\\1' ) }}"
     - role: dnsmasq
       vars:
         internal_floating_ip: "{{ lb_internal_floating_ip }}"

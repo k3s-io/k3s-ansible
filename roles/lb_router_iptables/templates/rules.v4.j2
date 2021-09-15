@@ -22,7 +22,7 @@ COMMIT
 -A INPUT -i lo -j ACCEPT
 
 # allow ssh, so that we do not lock ourselves
--A INPUT -i {{ external_interface }} -d {{ external_ip }} -p tcp -m tcp --dport 22 -j ACCEPT
+-A INPUT -i {{ external_interface }} -p tcp -m tcp --dport 22 -j ACCEPT
 # disable ssh from internal nodes
 -A INPUT -i {{ internal_interface }} -d {{ internal_ip }} -p tcp -m tcp --dport 22 -j DROP
 

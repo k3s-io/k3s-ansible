@@ -1,21 +1,10 @@
 ---
-master:
-  hosts:
-    master1:
-      ansible_host: master1.local
-      ansible_user: pi
-    master2:
-      ansible_host: master2.local
-      ansible_user: pi
-
-node:
-  hosts:
-    node1:
-      ansible_host: node1.local
-      ansible_user: pi
-    node2:
-      ansible_host: node2.local
-      ansible_user: pi
+all:
+  vars:
+    ansible_user: pi
+  children:
+    k3s_cluster:
+    load_balancer:
 
 k3s_cluster:
   vars:
@@ -24,18 +13,28 @@ k3s_cluster:
     master:
     node:
 
+master:
+  hosts:
+    master1:
+      ansible_host: master1.local
+    master2:
+      ansible_host: master2.local
+
+node:
+  hosts:
+    node1:
+      ansible_host: node1.local
+    node2:
+      ansible_host: node2.local
+
 load_balancer:
   hosts:
     lb1:
       ansible_host: lb1.local
-      ansible_user: pi
       lb_priority: 100
       internal_cidr: 10.0.0.2/16
-      external_cidr: 192.168.50.151/24
     lb2:
       ansible_host: lb2.local
-      ansible_user: pi
       lb_priority: 99
       internal_cidr: 10.0.0.3/16
-      external_cidr: 192.168.50.152/24
 ...

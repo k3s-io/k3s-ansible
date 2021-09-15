@@ -16,18 +16,4 @@
     - unzip
     state: latest
   become: yes
-
-- name: Disable ipv6
-  ansible.posix.sysctl:
-    name: net.ipv6.conf.all.disable_ipv6
-    value: '1'
-    state: present
-  become: yes
-
-- name: Disable ipv6
-  ansible.posix.sysctl:
-    name: net.ipv6.conf.default.disable_ipv6
-    value: '1'
-    state: present
-  become: yes
 ...
