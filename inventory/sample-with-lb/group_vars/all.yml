@@ -8,7 +8,8 @@ extra_agent_args: ""
 
 
 consul_domain_suffix: "cluster"
-internal_floating_ip: "10.0.0.1"
-internal_interface: "eth0"
-external_floating_ip: "192.168.50.150"
-external_interface: "eth0"
+lb_internal_floating_ip: "10.0.0.1"
+lb_internal_interface: "eth0"
+lb_external_floating_ip: "192.168.50.150"
+lb_external_interface: "wlan0"
+...

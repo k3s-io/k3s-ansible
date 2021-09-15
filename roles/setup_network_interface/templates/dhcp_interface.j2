@@ -1,0 +1,7 @@
+auto {{ interface }}
+iface {{ interface }} inet dhcp
+
+{% if secondary_address is defined %}
+iface {{ interface }}:0 inet static
+      address {{ secondary_address }}
+{% endif %}

@@ -1,25 +1,82 @@
 ---
-- name: Get ubuntu release name
-  command: "lsb_release -cs"
-  register: release_command
+# Hashicorp doesn't support arm in apt repository :facepalm:
 
-- name: Add consul apt key
-  ansible.builtin.apt_key:
-    url: https://apt.releases.hashicorp.com/gpg
-    state: present
-  become: yes
+#- name: Get ubuntu release name
+#  command: "lsb_release -cs"
+#  register: release_command
+#
+#- name: Add consul apt key
+#  ansible.builtin.apt_key:
+#    url: https://apt.releases.hashicorp.com/gpg
+#    state: present
+#  become: yes
+#
+#- name: Add consul apt repository
+#  ansible.builtin.apt_repository:
+#    repo: "deb [arch=armhfv6] https://apt.releases.hashicorp.com {{ release_command.stdout }} main"
+#    state: present
+#  become: yes
 
-- name: Add consul apt repository
-  ansible.builtin.apt_repository:
-    repo: "deb [arch=armhfv6] https://apt.releases.hashicorp.com {{ release_command.stdout }} main"
-    state: present
-  become: yes
 
+# We still install outdated package to be sure dependencies are installed
 - name: Install consul
   apt:
     name: consul
     state: latest
     update_cache: yes
+  become: yes
+
+- name: Remove tmp directory
+  ansible.builtin.file:
+    path: consul_repack
+    state: absent
+  become: yes
+
+- name: Download consul pkg
+  command:
+    cmd: "apt-get download consul"
+
+- name: Find consul file
+  find:
+    paths: .
+    file_type: file
+    use_regex: yes
+    patterns: ['^consul_']
+  register: consul_files
+
+- name: Unpack consul deb
+  command:
+    cmd: "dpkg-deb -R {{ item.path }} consul_repack"
+  become: yes
+  with_items: "{{ consul_files.files }}"
+
+- name: Download and unpack updated consul
+  ansible.builtin.unarchive:
+    src: "https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_linux_{{ consul_arch }}.zip"
+    dest: consul_repack/usr/bin
+    remote_src: yes
+  become: yes
+
+- name: Repack deb package
+  command:
+    cmd: "dpkg-deb -b consul_repack updated_consul.deb"
+
+- name: Install updated deb package
+  command:
+    cmd: "dpkg -i updated_consul.deb"
+  become: yes
+
+- name: Remove consul original deb package
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  become: yes
+  with_items: "{{ consul_files.files }}"
+
+- name: Remove updated consul deb package
+  ansible.builtin.file:
+    path: updated_consul.deb
+    state: absent
   become: yes
 
 # TODO: make this HCL

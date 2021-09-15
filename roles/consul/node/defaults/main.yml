@@ -1,3 +1,5 @@
 ---
 consul_master: no
+consul_version: "1.10.2"
+consul_arch: "armhfv6"
 ...

@@ -1,0 +1,11 @@
+auto {{ interface }}
+iface {{ interface }} inet static
+      address {{ address }}
+{% if default_gateway is defined %}
+      post-up ip route add default via {{ default_gateway }}
+{% endif %}
+
+{% if secondary_address is defined %}
+iface {{ interface }}:0 inet static
+      address {{ secondary_address }}
+{% endif %}

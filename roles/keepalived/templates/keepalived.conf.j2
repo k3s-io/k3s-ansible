@@ -1,14 +1,7 @@
 vrrp_script chk_haproxy {
-        script "killall -0 haproxy"     # cheaper than pidof
+        script "/usr/bin/killall -0 haproxy"     # cheaper than pidof
         interval 2                      # check every 2 seconds
         weight 2                        # add 2 points of prio if OK
-}
-
-vrrp_sync_group VG1 {
-   group {
-      EX_1
-      IN_1
-   }
 }
 
 vrrp_instance IN_1 {

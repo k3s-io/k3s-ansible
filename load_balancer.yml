@@ -4,18 +4,33 @@
   gather_facts: yes
   become: no
   roles:
+    - role: setup_network_interface
+      vars:
+        interface: "{{ lb_external_interface }}"
+        address: "{{ external_cidr }}"
+        default_gateway: 192.168.50.1
+        type: "manual"
+        with_avahi: yes
+    - role: setup_network_interface
+      vars:
+        interface: "{{ lb_internal_interface }}"
+        address: "{{ internal_cidr }}"
+        type: "manual"
     - role: apt_dependencies
     - role: ntp
     - role: consul/node
       vars:
         consul_master: yes
-        master_list:
-          - "lb1.local"
+        bind_addr: "{{ internal_cidr | regex_replace('((?:[0-9]{1,3}\\.){3}[0-9]{1,3})(?:\\/[0-9]{1,2})+', '\\1' ) }}"
+        master_list: "{{ groups['load_balancer'] | map('extract', hostvars, 'internal_cidr') | map('regex_replace', '((?:[0-9]{1,3}\\.){3}[0-9]{1,3})(?:\\/[0-9]{1,2})+', '\\1') | list }}"
     - role: haproxy
       vars:
-        priority: lb_priority
-        # Not really necessary to specify everything, but it's better to be explicit
-        internal_interface: internal_interface
-        internal_floating_ip: external_floating_ip
-        external_interface: external_interface
-        external_floating_ip: external_floating_ip
+        k3s_masters_amount: "{{ groups['master'] | length }}"
+    - role: keepalived
+      vars:
+        priority: "{{ lb_priority }}"
+        internal_interface: "{{ lb_internal_interface }}"
+        internal_floating_ip: "{{ lb_internal_floating_ip }}"
+        external_interface: "{{ lb_external_interface }}"
+        external_floating_ip: "{{ lb_external_floating_ip }}"
+

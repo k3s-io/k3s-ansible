@@ -12,4 +12,4 @@ ansible = "*"
 python_version = "3.9"
 
 [scripts]
-ansible-requirements = "ansible-galaxy install -r galaxy-requirements.yml"
+ansible-requirements = "ansible-galaxy install -f -r galaxy-requirements.yml"

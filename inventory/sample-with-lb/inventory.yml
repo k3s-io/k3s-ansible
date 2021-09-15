@@ -28,8 +28,13 @@ load_balancer:
       ansible_host: lb1.local
       ansible_user: pi
       lb_priority: 100
-#    lb2:
-#      ansible_host: lb2.local
-#      ansible_user: pi
-#      lb_priority: 99
+      internal_cidr: 10.0.0.2/16
+      external_cidr: 192.168.50.151/24
+    lb2:
+      ansible_host: lb2.local
+      ansible_user: pi
+      lb_priority: 99
+      internal_cidr: 10.0.0.3/16
+      external_cidr: 192.168.50.152/24
+
 
