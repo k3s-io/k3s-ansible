@@ -24,13 +24,13 @@
     content: "br_netfilter"
     dest: /etc/modules-load.d/br_netfilter.conf
     mode: "u=rw,g=,o="
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux','RedHat']
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'RedHat', 'Archlinux']
 
 - name: Load br_netfilter
   community.general.modprobe:
     name: br_netfilter
     state: present
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux','RedHat']
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'RedHat', 'Archlinux']
 
 - name: Set bridge-nf-call-iptables (just to be sure)
   ansible.posix.sysctl:
@@ -38,7 +38,7 @@
     value: "1"
     state: present
     reload: true
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux','RedHat']
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'RedHat', 'Archlinux']
   loop:
     - net.bridge.bridge-nf-call-iptables
     - net.bridge.bridge-nf-call-ip6tables
