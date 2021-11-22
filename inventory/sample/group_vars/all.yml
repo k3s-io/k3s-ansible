@@ -1,4 +1,5 @@
 ---
+# Minimum version for HA etcd is v1.19.5+k3s1
 k3s_version: v1.22.3+k3s1
 ansible_user: debian
 systemd_dir: /etc/systemd/system
