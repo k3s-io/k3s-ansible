@@ -1,4 +1,5 @@
 ---
+k3s_server_location: /var/lib/rancher/k3s
 ansible_user: root
 server_init_args: >-
   {% if groups['master'] | length > 1 %}
