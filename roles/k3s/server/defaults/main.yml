@@ -4,6 +4,7 @@ server_init_args: >-
   {% if groups['k3s_server'] | length > 1 %}
     {% if ansible_host == hostvars[groups['k3s_server'][0]]['ansible_host'] | default(groups['k3s_server'][0]) %}
       --cluster-init
+      --tls-san {{ apiserver_endpoint }}
     {% else %}
       --server https://{{ hostvars[groups['k3s_server'][0]]['ansible_host'] | default(groups['k3s_server'][0]) }}:6443
     {% endif %}
