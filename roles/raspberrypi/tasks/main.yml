@@ -1,6 +1,7 @@
 ---
 - name: Test for raspberry pi /proc/cpuinfo
   command: grep -E "Raspberry Pi|BCM2708|BCM2709|BCM2835|BCM2836" /proc/cpuinfo
+  check_mode: no
   register: grep_cpuinfo_raspberrypi
   failed_when: false
   changed_when: false
