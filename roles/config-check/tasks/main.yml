@@ -1,0 +1,6 @@
+---
+- name: Check for correct server configuration (1 = non-HA; 3+ = HA)
+  ansible.builtin.fail:
+    msg: "HA configuration requires a minimum of three (3) servers."
+  when: groups['server'] | length == 2
+
