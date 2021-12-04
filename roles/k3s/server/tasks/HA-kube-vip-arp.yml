@@ -1,0 +1,26 @@
+---
+- name: Create manifest directory kube-vip-arp
+  file:
+    path: "{{ k3s_server_location }}/server/manifests/{{ ha_lb_method }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+  register: manifest_dir
+
+- name: Copy RBAC manifest
+  template:
+    src: "{{ ha_lb_method }}/kube-vip-rbac.yaml.j2"
+    dest: "{{ manifest_dir.path }}/kube-vip-rbac.yaml"
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Copy arp daemonset manifest
+  template:
+    src: "{{ ha_lb_method }}/kube-vip-arp-ds.yaml.j2"
+    dest: "{{ manifest_dir.path }}/kube-vip-arp-ds.yaml"
+    owner: root
+    group: root
+    mode: 0600
+

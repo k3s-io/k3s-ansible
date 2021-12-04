@@ -2,12 +2,12 @@
 k3s_server_location: /var/lib/rancher/k3s
 ansible_user: root
 server_init_args: >-
-  {% if groups['server'] | length > 1 %}
-    {% if ansible_host == hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) %}
+  {% if ha_enabled %}
+    {% if ansible_host == first_server %}
       --cluster-init
       --tls-san {{ apiserver_endpoint }}
     {% else %}
-      --server https://{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}:6443
+      --server https://{{ first_server }}:6443
     {% endif %}
     --token {{ k3s_token }}
   {% endif %}

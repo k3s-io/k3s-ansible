@@ -49,6 +49,10 @@
     group: root
     mode: 0644
 
+- name: Perform HA-specific tasks
+  include_tasks: "HA-{{ ha_lb_method }}.yml"
+  when: ha_enabled
+
 - name: Enable and check K3s service
   systemd:
     name: k3s

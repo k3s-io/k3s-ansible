@@ -1,22 +1,7 @@
 ---
-# Minimum version for HA etcd is v1.19.5+k3s1
-k3s_version: v1.22.3+k3s1
+k3s_version: v1.22.4+k3s1
 ansible_user: debian
 systemd_dir: /etc/systemd/system
-
-# If you define multiple servers, you should provide a load-balanced IP that points to
-# all control-plane servers (apiserver_endpoint).  The default value below uses the IP
-# of the first server in the group and is single-point of failure in a HA setup.
-#
-# Note that after an agent initially contacts a control-plane server, it monitors all
-# control-plane servers (see /var/lib/rancher/k3s/agent/etc/k3s-agent-load-balancer.json).
-# The initial server it contacts is "ServerURL" in the json file which should be set to
-# the value of apiserver_endpoint.
-#
-# The apiserver_endpoint is also needed for transparent external access where the value
-# is used in ~/.kube/config, etc..
-#
-apiserver_endpoint: "{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}"
 
 # This token is used to secure communication between nodes.
 #
@@ -24,3 +9,41 @@ k3s_token: "MySuperSecureServerToken"
 
 extra_server_args: ""
 extra_agent_args: ""
+
+# High-availability using an embedded DB is an option as of v1.19.5+k3s1.
+# (See https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/.)
+# To enable HA, set ha_enabled to true.  Other options, external to the cluster,
+# are also available but not implemented here.  Note: there must be at least
+# three server nodes in your cluster to use an embedded DB.
+#
+ha_enabled: false
+
+# When using HA, a cluster VIP should be in front of the control-plane servers
+# for agent configuration as well as cluster definition in # .kube/config.  Set
+# ha_lb_vip to the IP address for your cluster VIP.  Note: This is an IP address
+# different than the cluster nodes.  Today, this is a static IP provided in this
+# file.  It is possible to get an IP dynamically but not implemented here (yet).
+# 
+ha_lb_vip: 192.168.1.254
+
+# When using HA, a method must be chosen to manage the cluster VIP.  The methods
+# implemented today are:
+#   1) external - requires a load-balancer external to the cluster
+#   2) kube-vip-arp - https//kube-vip.io, using arp
+#
+# Other load-balancing options are available (e.g., keepalived) but are not
+# implemented here (yet).  ha_lb_version specifies the version of the method to
+# be used.
+#
+ha_lb_method: kube-vip-arp
+ha_lb_version: v0.4.0
+
+
+###################################
+# Don't change variables below here
+# TODO: Move these to a different file
+#
+first_server: "{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}"
+
+apiserver_endpoint: "{{ ha_lb_vip if ha_enabled else first_server }}"
+
