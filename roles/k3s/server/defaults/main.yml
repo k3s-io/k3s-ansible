@@ -5,6 +5,7 @@ server_init_args: >-
   {% if groups['server'] | length > 1 %}
     {% if ansible_host == hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) %}
       --cluster-init
+      --tls-san {{ apiserver_endpoint }}
     {% else %}
       --server https://{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}:6443
     {% endif %}
