@@ -4,15 +4,15 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: kube-vip
-  namespace: kube-system
+  name: {{ kube_vip_serviceaccount_name }}
+  namespace: {{ kube_vip_namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   annotations:
     rbac.authorization.kubernetes.io/autoupdate: "true"
-  name: system:kube-vip-role
+  name: system:{{ kube_vip_clusterrole_name }}
 rules:
   - apiGroups: ["coordination.k8s.io"]
     resources: ["leases"]
@@ -24,12 +24,12 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: system:kube-vip-binding
+  name: system:{{ kube_vip_clusterrolebinding_name }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: system:kube-vip-role
+  name: system:{{ kube_vip_clusterrole_name }}
 subjects:
 - kind: ServiceAccount
-  name: kube-vip
-  namespace: kube-system
+  name: {{ kube_vip_serviceaccount_name }}
+  namespace: {{ kube_vip_namespace }}

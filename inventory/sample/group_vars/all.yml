@@ -29,13 +29,13 @@ ha_lb_vip: 192.168.1.254
 # When using HA, a method must be chosen to manage the cluster VIP.  The methods
 # implemented today are:
 #   1) external - requires a load-balancer external to the cluster
-#   2) kube-vip-arp - https//kube-vip.io, using arp
+#   2) kube-vip - https//kube-vip.io, arp-based daemonset using leader election
 #
 # Other load-balancing options are available (e.g., keepalived) but are not
 # implemented here (yet).  ha_lb_version specifies the version of the method to
 # be used.
 #
-ha_lb_method: kube-vip-arp
+ha_lb_method: kube-vip
 ha_lb_version: v0.4.0
 
 

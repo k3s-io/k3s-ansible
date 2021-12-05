@@ -1,5 +1,5 @@
 ---
-- name: Create manifest directory kube-vip-arp
+- name: Create manifest directory kube-vip
   file:
     path: "{{ k3s_server_location }}/server/manifests/{{ ha_lb_method }}"
     state: directory
