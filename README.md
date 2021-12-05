@@ -4,7 +4,8 @@ Author: <https://github.com/itwars>
 
 ## K3s Ansible Playbook
 
-Build a Kubernetes cluster using Ansible with k3s. The goal is easily install a Kubernetes cluster on machines running:
+Build a Kubernetes cluster using Ansible with k3s.  The goal is easily install a Kubernetes cluster
+on machines running:
 
 - [X] Debian
 - [X] Ubuntu
@@ -29,7 +30,8 @@ First create a new directory based on the `sample` directory within the `invento
 cp -R inventory/sample inventory/my-cluster
 ```
 
-Second, edit `inventory/my-cluster/hosts.ini` to match the system information gathered above.  For example:
+Second, edit `inventory/my-cluster/hosts.ini` to match the system information gathered above.
+For example:
 
 ```bash
 [server]
@@ -43,11 +45,15 @@ server
 agent
 ```
 
-If multiple hosts are in the server group, the playbook will automatically setup k3s in HA mode with etcd.
-https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/
-This requires at least k3s version v1.19.5+k3s1.
+If multiple hosts are in the server group and HA is enabled, the playbook will automatically
+setup high availability with an embedded database (etcd).  This requires at least k3s version
+v1.19.5+k3s1.  See https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/.
 
-If needed, you can also edit `inventory/my-cluster/group_vars/all.yml` to match your environment.
+You must set `ha_enabled` to **true** in `inventory/my-cluster/group_vars/all.yml`.  HA expects
+that there is a cluster virtual IP (`ha_lb_vip`) in front of the control-plane servers.  And,
+there are multiple methods supported to implement the cluster VIP.
+
+Edit the remaining variables in this file to best match your environment.
 
 Start provisioning of the cluster using the following command:
 
@@ -57,8 +63,6 @@ ansible-playbook site.yml -i inventory/my-cluster/hosts.ini
 
 ## Kubeconfig
 
-To get access to your **Kubernetes** cluster just
+A copy of your cluster's config will be put in `./cluster.config`.  Copy this into your `~/.kube/config`
+to get access to your new **k3s** cluster.
 
-```bash
-scp debian@apiserver_endpoint:~/.kube/config ~/.kube/config
-```
