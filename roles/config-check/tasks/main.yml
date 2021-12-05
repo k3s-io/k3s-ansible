@@ -10,12 +10,15 @@
   when: ha_enabled and (groups['server'] | length < 3)
 
 - name: Check for minimum k3s version for HA configuration
+  vars:
+    short_version: "{{ k3s_version | regex_search('v([^+]+)+', '\\1') | first }}"
   ansible.builtin.fail:
     msg: "HA configurations require k3s v1.19.5+k3s1 or greater.  {{ k3s_version }} was specified."
-  vars:
-    # TODO: How do I set short_version in one step?
-    short_version_array: "{{ k3s_version | regex_search('v([^+]+)+', '\\1') }}"
-    short_version: "{{ short_version_array[0] }}"
   when:
     - ha_enabled
     - short_version is version('1.19.5', 'lt', True)
+
+# TODO: check if ha_lb_vip is set
+# TODO: check if ha_lb_method is set properly
+# TODO: check if ha_lb_version is set
+
