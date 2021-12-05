@@ -18,7 +18,17 @@
   roles:
     - role: k3s/server
 
+- hosts: server
+  tasks:
+    - name: Copy .kube/config for new cluster
+      fetch:
+        src: "~{{ ansible_user }}/.kube/config"
+        dest: ./cluster.config
+        flat: yes
+      run_once: true
+
 - hosts: agent
   become: yes
   roles:
     - role: k3s/agent
+

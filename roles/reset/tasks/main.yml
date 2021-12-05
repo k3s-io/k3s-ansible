@@ -39,7 +39,7 @@
     - /var/lib/rancher/k3s
 
 # Recommended in https://kube-vip.io/usage/k3s/
-# See Clean Environment
+# See "Clean Environment".
 - name: Reset local interface
   command: "{{ item }}"
   with_items:
