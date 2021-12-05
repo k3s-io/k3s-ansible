@@ -1,16 +1,21 @@
 ---
-- name: Check for correct server configuration (1 = non-HA; 3+ = HA)
+- name: Check for correct single server configuration
+  ansible.builtin.fail:
+    msg: "Single server configuration requires exactly one (1) server."
+  when: not ha_enabled and (groups['server'] | length != 1)
+
+- name: Check for correct HA configuration
   ansible.builtin.fail:
     msg: "HA configuration requires a minimum of three (3) servers."
-  when: groups['server'] | length == 2
+  when: ha_enabled and (groups['server'] | length < 3)
 
 - name: Check for minimum k3s version for HA configuration
   ansible.builtin.fail:
     msg: "HA configurations require k3s v1.19.5+k3s1 or greater.  {{ k3s_version }} was specified."
   vars:
-    # How do I set short_version in one step?
+    # TODO: How do I set short_version in one step?
     short_version_array: "{{ k3s_version | regex_search('v([^+]+)+', '\\1') }}"
     short_version: "{{ short_version_array[0] }}"
   when:
-    - groups['server'] | length >= 3
+    - ha_enabled
     - short_version is version('1.19.5', 'lt', True)
