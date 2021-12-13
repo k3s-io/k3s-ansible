@@ -1,42 +1,198 @@
 ---
+
+# TODO: Should we use k3s-uninstall.sh from https://get/k3s.io instead so that
+#       we don't have to track the updates in the future?
+
+###########################
+# Start of k3s-killall.sh #
+###########################
+
+#
+# for service in /etc/systemd/system/k3s*.service; do
+#    [ -s $service ] && systemctl stop $(basename $service)
+# done
+#
 - name: Disable services
   systemd:
     name: "{{ item }}"
     state: stopped
     enabled: no
   failed_when: false
-  with_items:
-    - k3s
-    - k3s-node
+  loop: "{{ k3s_services }}"
 
-- name: pkill -9 -f "k3s/data/[^/]+/bin/containerd-shim-runc"
-  register: pkill_containerd_shim_runc
-  command: pkill -9 -f "k3s/data/[^/]+/bin/containerd-shim-runc"
-  changed_when: "pkill_containerd_shim_runc.rc == 0"
+#
+# killtree $({ set +x; } 2>/dev/null; getshims; set -x)
+#
+- name: pkill -9 -f "k3s/data/[^/]+/bin/containerd-shim"
+  register: pkill_containerd_shim
+  command: pkill -9 -f "k3s/data/[^/]+/bin/containerd-shim"
+  changed_when: "pkill_containerd_shim.rc == 0"
   failed_when: false
 
-- name: Umount k3s filesystems
+#
+# do_unmount_and_remove [the list]
+#
+- name: Umount k3s filesystems and remove mount points
   include_tasks: umount_with_children.yml
-  with_items:
+  loop:
     - /run/k3s
-    - /var/lib/kubelet
-    - /run/netns
     - /var/lib/rancher/k3s
+    - /var/lib/kubelet/pods
+    - /var/lib/kubelet/plugins
+    - /run/netns/cni-
   loop_control:
     loop_var: mounted_fs
 
-- name: Remove service files, binaries and data
+#
+# Remove CNI namespaces
+# ip netns show 2> /dev/null | grep cni- | xargs -r -t -n 1 ip netns delete
+#
+- name: Show CNI namespaces
+  register: ip_netns_show
+  command: ip -j netns show master cni0
+
+- name: Remove CNI namespaces
+  command: ip netns delete {{ item }}
+  loop: "{{ ip_netns_show.stdout | from_json | json_query('[*].name') }}"
+
+#
+# Remove CNI interfaces
+# ip link show 2>/dev/null | grep 'master cni0'
+#
+# BUG: Possible bug in ip-link(8).
+# "ip -j link show master cni0" exits 255 when cni0 does not exist where
+# "ip -j netns show master cni0" returns "[ ]", which is preferred.
+#
+- name: Get list of network interface(s) that match 'master cni0'
+  register: ip_link_show
+  shell: ip -j link show master cni0 || echo "[ ]"
+
+- name: Remove CNI interfaces
+  command: ip link delete {{ item }}
+  loop: "{{ ip_link_show.stdout | from_json | json_query('[*].ifname') }}"
+
+#
+# Remove other interfaces and files
+#
+- name: Remove other interfaces
+  command: ip link delete {{ item }}
+  when: item in ansible_interfaces
+  loop:
+    - cni0
+    - flannel.1
+    - flannel-v6.1
+
+- name: Remove CNI files
   file:
-    name: "{{ item }}"
+    name: /var/lib/cni
     state: absent
-  with_items:
-    - /usr/local/bin/k3s
-    - "{{ systemd_dir }}/k3s.service"
-    - "{{ systemd_dir }}/k3s-node.service"
-    - /etc/rancher/k3s
-    - /var/lib/kubelet
-    - /var/lib/rancher/k3s
+
+#
+# iptables-save | grep -v KUBE- | grep -v CNI- | iptables-restore
+# TODO: Replace with appropriate ansible module
+#
+- name: Get list of KUBE- chains
+  register: iptables_save_restore
+  shell: iptables-save | egrep -v '(KUBE|CNI)-' | iptables-restore
+
+#########################
+# End of k3s-killall.sh #
+#########################
+
+#
+# systemctl disable k3s
+# systemctl reset-failed k3s
+# systemctl daemon-reload
+#
+- name: Disable services
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: no
+  failed_when: false
+  loop: "{{ k3s_services }}"
 
 - name: daemon_reload
   systemd:
     daemon_reload: yes
+
+#
+# rm -f /etc/systemd/system/k3s.service
+# rm -f /etc/systemd/system/k3s.service.env
+#
+- name: Remove service files
+  file:
+    name: "{{ systemd_dir }}/{{ item }}"
+    state: absent
+  loop: "{{ k3s_services | product(k3s_service_file_extensions) | map('join', '.') }}"
+
+#
+# if (ls /etc/systemd/system/k3s*.service || ls /etc/init.d/k3s*) >/dev/null 2>&1; then
+#     set +x; echo 'Additional k3s services installed, skipping uninstall of k3s'; set -x
+#    exit
+# fi
+#
+# Should this be done rather than focusing on a discrete list of services (k3s_services)?
+
+#
+# for cmd in kubectl crictl ctr; do
+#    if [ -L /usr/local/bin/$cmd ]; then
+#        rm -f /usr/local/bin/$cmd
+#    fi
+# done
+#
+- name: Command files
+  register: stat_command_files
+  stat:
+    name: "/usr/local/bin/{{ item }}"
+  loop:
+    - kubectl
+    - crictl
+    - ctr
+
+- name: Remove command files
+  file:
+    name: "{{ item.stat.path }}"
+    state: absent
+  when: (item.stat.exists | default(false)) and (item.stat.islnk | default(false))
+  loop: "{{ stat_command_files.results }}"
+  loop_control: 
+    label: "{{ item.item }}"
+
+# Remove files and directories
+- name: Remove files, binaries and data
+  file:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/rancher/k3s
+    - /run/k3s
+    - /run/flannel
+    - /var/lib/rancher/k3s
+    - /var/lib/kubelet
+    - /usr/local/bin/k3s
+    - /usr/local/bin/k3s-killall.sh
+    - /usr/local/bin/k3s-uninstall.sh
+
+- name: Remove package k3s-selinux
+  yum:
+    name: k3s-selinux
+    state: remove
+  when: ansible_pkg_mgr == "yum"
+
+- name: Remove package k3s-selinux
+  zypper:
+    name: k3s-selinux
+    state: remove
+  when: ansible_pkg_mgr == "zypper"
+
+- name: Remove yum repo files
+  shell: 'rm -f /etc/yum.repos.d/rancher-k3s-common*.repo'
+  register: remove_repo_files
+  when: ansible_pkg_mgr == "yum"
+
+- name: Remove zypper repo files
+  shell: 'rm -f /etc/zypp/repos.d/rancher-k3s-common*.repo'
+  register: remove_repo_files
+  when: ansible_pkg_mgr == "zypper"
+
