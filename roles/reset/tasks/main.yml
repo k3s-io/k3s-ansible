@@ -36,7 +36,7 @@
   include_tasks: umount_with_children.yml
   loop:
     - /run/k3s
-    - /var/lib/rancher/k3s
+    - "{{ k3s_server_location }}"
     - /var/lib/kubelet/pods
     - /var/lib/kubelet/plugins
     - /run/netns/cni-
@@ -168,7 +168,7 @@
     - /etc/rancher/k3s
     - /run/k3s
     - /run/flannel
-    - /var/lib/rancher/k3s
+    - "{{ k3s_server_location }}"
     - /var/lib/kubelet
     - /usr/local/bin/k3s
     - /usr/local/bin/k3s-killall.sh

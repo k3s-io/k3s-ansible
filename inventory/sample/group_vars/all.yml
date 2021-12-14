@@ -5,6 +5,8 @@ master_ip: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['m
 extra_server_args: ""
 extra_agent_args: ""
 
+k3s_server_location: /var/lib/rancher/k3s
+
 # Services information
 systemd_dir: /etc/systemd/system
 
