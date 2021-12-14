@@ -43,9 +43,9 @@
     - net.bridge.bridge-nf-call-iptables
     - net.bridge.bridge-nf-call-ip6tables
 
-- name: Add /usr/local/bin to sudo secure_path
+- name: Add {{ bin_dir }} to sudo secure_path
   lineinfile:
-    line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
+    line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:{{ bin_dir }}'
     regexp: "Defaults(\\s)*secure_path(\\s)*="
     state: present
     insertafter: EOF

@@ -21,9 +21,9 @@ ansible_user: debian
 # - INSTALL_K3S_SYMLINK
 #   If set to 'skip' will not create symlinks, 'force' will overwrite,
 #   default will symlink if command does not exist in path.
-#   (NOT YET IMPLEMENTED)
+#   (NOT YET IMPLEMENTED: behaves as if 'force' is chosen)
 #
-#install_k3s_symlink: 'skip'
+#install_k3s_symlink: 'force'
 
 # - INSTALL_K3S_SKIP_ENABLE
 #   If set to true will not enable or start k3s service.
@@ -54,7 +54,7 @@ ansible_user: debian
 # - INSTALL_K3S_BIN_DIR
 #   Directory to install k3s binary, links, and uninstall script to, or use
 #   /usr/local/bin as the default
-#   (NOT YET IMPLEMENTED)
+#   (IMPLEMENTED)
 #
 #install_k3s_bin_dir: '/usr/local/bin'
 

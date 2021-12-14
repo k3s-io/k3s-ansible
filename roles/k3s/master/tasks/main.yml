@@ -63,7 +63,7 @@
   register: k3s_symlink
   template:
     src: "k3s.sh.j2"
-    dest: "/usr/local/bin/k3s.sh"
+    dest: "{{ bin_dir }}/k3s.sh"
     owner: root
     group: root
     mode: 0755
@@ -71,18 +71,19 @@
     - k3s_server_location is defined
     - k3s_server_location != '/var/lib/rancher/k3s'
 
-- name: Create symlink'd commands (kubectl, crictl)
+- name: Create symlink'd commands (kubectl, crictl, ctr)
   file:
-    src: "{{ '/usr/local/bin/k3s.sh' if k3s_server_location != '/var/lib/rancher/k3s' else '/usr/local/bin/k3s' | default('/usr/local/bin/k3s') }}"
-    dest: "/usr/local/bin/{{ item }}"
+    src: "{{ '{{ bin_dir }}/k3s.sh' if k3s_server_location != '/var/lib/rancher/k3s' else '{{ bin_dir }}/k3s' | default('{{ bin_dir }}/k3s') }}"
+    dest: "{{ bin_dir }}/{{ item }}"
     state: link
   with_items:
     - kubectl
     - crictl
+    - ctr
 
 - name: Replace https://localhost:6443 by https://master-ip:6443
   command: >-
-    /usr/local/bin/kubectl config set-cluster default
+    {{ bin_dir }}/kubectl config set-cluster default
       --server=https://{{ master_ip }}:6443
       --kubeconfig ~{{ ansible_user }}/.kube/config
   changed_when: true

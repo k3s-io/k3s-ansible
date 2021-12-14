@@ -42,7 +42,7 @@
   get_url:
     url: "{{ binary_url }}"
     checksum: "sha256:{{ hash_url }}"
-    dest: /usr/local/bin/k3s
+    dest: "{{ bin_dir }}/k3s"
     owner: root
     group: root
     mode: 0755
