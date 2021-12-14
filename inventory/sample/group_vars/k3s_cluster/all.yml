@@ -1,0 +1,24 @@
+---
+# These variables are not meant to be changed.
+# All changes should happen in "group_vars/all.yml".
+
+k3s_version: "{{ install_k3s_version | default('v1.22.4+k3s1') }}"
+
+extra_server_args: "{{ install_k3s_server_args | default('') }}"
+extra_agent_args: "{{ install_k3s_agent_args | default('') }}"
+
+systemd_dir: "{{ install_k3s_systemd_dir | default('/etc/systemd/system') }}"
+
+k3s_server_location: /var/lib/rancher/k3s
+
+master_ip: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}"
+
+# Services information
+k3s_services:
+  - k3s
+  - k3s-node
+
+k3s_service_file_extensions:
+  - service
+  - service.env
+
