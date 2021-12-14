@@ -12,6 +12,9 @@ bin_dir: "{{ install_k3s_bin_dir | default('/usr/local/bin') }}"
 
 k3s_server_location: /var/lib/rancher/k3s
 
+symlink: "{{ install_k3s_symlink | default('force') }}"
+bin_dir_read_only: "{{ install_k3s_bin_dir_read_only | default(false) }}"
+
 master_ip: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}"
 
 # Services information

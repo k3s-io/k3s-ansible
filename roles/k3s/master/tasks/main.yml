@@ -80,6 +80,9 @@
     - kubectl
     - crictl
     - ctr
+  when:
+    - not bin_dir_read_only
+    - not (symlink == 'skip')
 
 - name: Replace https://localhost:6443 by https://master-ip:6443
   command: >-
