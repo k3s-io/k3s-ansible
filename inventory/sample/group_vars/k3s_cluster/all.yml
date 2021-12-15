@@ -9,8 +9,7 @@ extra_agent_args: "{{ install_k3s_agent_args | default('') }}"
 
 systemd_dir: "{{ install_k3s_systemd_dir | default('/etc/systemd/system') }}"
 bin_dir: "{{ install_k3s_bin_dir | default('/usr/local/bin') }}"
-
-k3s_server_location: /var/lib/rancher/k3s
+data_dir: "{{ install_k3s_data_dir | default('/var/lib/rancher/k3s') }}"
 
 symlink: "{{ install_k3s_symlink | default('force') }}"
 bin_dir_read_only: "{{ install_k3s_bin_dir_read_only | default(false) }}"

@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # k3s.sh is used to supply the --data-dir argument to k3s for symlink'd commands.
-# Note: this file is only present when k3s_server_location is defined.
+# Note: this file is only present when data_dir is defined.
 
 K3S_BIN="/usr/local/bin/k3s"
-DATA_DIR="{{ k3s_server_location }}"
+DATA_DIR="{{ data_dir }}"
 
 BASENAME="${0##*/}"
 

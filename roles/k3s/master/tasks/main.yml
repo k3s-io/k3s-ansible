@@ -18,21 +18,21 @@
 
 - name: Wait for node-token
   wait_for:
-    path: "{{ k3s_server_location }}/server/node-token"
+    path: "{{ data_dir }}/server/node-token"
 
 - name: Register node-token file access mode
   stat:
-    path: "{{ k3s_server_location }}/server/node-token"
+    path: "{{ data_dir }}/server/node-token"
   register: p
 
 - name: Change file access node-token
   file:
-    path: "{{ k3s_server_location }}/server/node-token"
+    path: "{{ data_dir }}/server/node-token"
     mode: "g+rx,o+rx"
 
 - name: Read node-token from master
   slurp:
-    path: "{{ k3s_server_location }}/server/node-token"
+    path: "{{ data_dir }}/server/node-token"
   register: node_token
 
 - name: Store Master node-token
@@ -41,7 +41,7 @@
 
 - name: Restore node-token file access
   file:
-    path: "{{ k3s_server_location }}/server/node-token"
+    path: "{{ data_dir }}/server/node-token"
     mode: "{{ p.stat.mode }}"
 
 - name: Create directory .kube
@@ -68,12 +68,16 @@
     group: root
     mode: 0755
   when:
-    - k3s_server_location is defined
-    - k3s_server_location != '/var/lib/rancher/k3s'
+    - data_dir is defined
+    - data_dir != '/var/lib/rancher/k3s'
+
+- name: Determine k3s bin target
+  set_fact:
+    k3s_bin_target: "{{ '{{ bin_dir }}/k3s.sh' if data_dir != '/var/lib/rancher/k3s' else '{{ bin_dir }}/k3s' | default('{{ bin_dir }}/k3s') }}"
 
 - name: Create symlink'd commands (kubectl, crictl, ctr)
   file:
-    src: "{{ '{{ bin_dir }}/k3s.sh' if k3s_server_location != '/var/lib/rancher/k3s' else '{{ bin_dir }}/k3s' | default('{{ bin_dir }}/k3s') }}"
+    src: "{{ k3s_bin_target }}"
     dest: "{{ bin_dir }}/{{ item }}"
     state: link
   with_items:

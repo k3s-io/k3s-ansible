@@ -1,11 +1,12 @@
 ---
 
-# This is the SSH user used to configure your hosts
+# This is the SSH user used by ansible to configure your hosts
 ansible_user: debian
 
-###############################################
-# k3s-install.sh flags, from https://get.k3s.io
-#
+########################################################
+# Begin: k3s-install.sh flags, from https://get.k3s.io #
+########################################################
+
 # - INSTALL_K3S_SKIP_DOWNLOAD
 #   If set to true will not download k3s hash or binary.
 #   (NOT YET IMPLEMENTED)
@@ -123,4 +124,15 @@ ansible_user: debian
 #   (NOT YET IMPLEMENTED)
 #
 #install_k3s_channel: 'stable'
+
+########################################################
+# End: k3s-install.sh flags, from https://get.k3s.io #
+########################################################
+
+# - INSTALL_K3S_DATA_DIR
+#   Change the data directory for the k3s server.  Defaults to '/var/lib/rancher/k3s'.
+#   TODO: submit PR to k3s-io/k3s
+#   (IMPLEMENTED)
+#
+#install_k3s_data_dir: '/var/lib/rancher/k3s'
 
