@@ -104,7 +104,7 @@
 # iptables-save | grep -v KUBE- | grep -v CNI- | iptables-restore
 # TODO: Replace with appropriate ansible module
 #
-- name: Get list of KUBE- chains
+- name: Remove KUBE and CNI chains from iptables
   register: iptables_save_restore
   shell: iptables-save | egrep -v '(KUBE|CNI)-' | iptables-restore
 
