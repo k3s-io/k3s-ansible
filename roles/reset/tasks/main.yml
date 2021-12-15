@@ -97,7 +97,7 @@
 
 - name: Remove CNI files
   file:
-    name: /var/lib/cni
+    path: /var/lib/cni
     state: absent
 
 #
@@ -135,7 +135,7 @@
 #
 - name: Remove service files
   file:
-    name: "{{ systemd_dir }}/{{ item }}"
+    path: "{{ systemd_dir }}/{{ item }}"
     state: absent
   loop: "{{ k3s_services | product(k3s_service_file_extensions) | map('join', '.') }}"
 
@@ -157,7 +157,7 @@
 - name: Command files
   register: stat_command_files
   stat:
-    name: "/usr/local/bin/{{ item }}"
+    path: "/usr/local/bin/{{ item }}"
   loop:
     - kubectl
     - crictl
@@ -165,7 +165,7 @@
 
 - name: Remove command files
   file:
-    name: "{{ item.stat.path }}"
+    path: "{{ item.stat.path }}"
     state: absent
   when: (item.stat.exists | default(false)) and (item.stat.islnk | default(false))
   loop: "{{ stat_command_files.results }}"
@@ -175,7 +175,7 @@
 # Remove files and directories
 - name: Remove files, binaries and data
   file:
-    name: "{{ item }}"
+    path: "{{ item }}"
     state: absent
   loop:
     - /etc/rancher/k3s
