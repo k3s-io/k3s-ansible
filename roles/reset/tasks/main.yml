@@ -188,6 +188,12 @@
     - /usr/local/bin/k3s-killall.sh
     - /usr/local/bin/k3s-uninstall.sh
 
+- name: Remove ~{{ ansible_user }}/.kube/config
+  file:
+    path: "~{{ ansible_user }}/.kube/config"
+    state: absent
+  when: inventory_hostname in groups['master']
+
 - name: Remove package k3s-selinux
   yum:
     name: k3s-selinux
