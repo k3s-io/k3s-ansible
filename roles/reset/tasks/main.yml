@@ -184,6 +184,7 @@
     - "{{ k3s_server_location if inventory_hostname in groups['master'] else '/var/lib/rancher/k3s' | default('/var/lib/rancher/k3s') }}"
     - /var/lib/kubelet
     - /usr/local/bin/k3s
+    - /usr/local/bin/k3s.sh
     - /usr/local/bin/k3s-killall.sh
     - /usr/local/bin/k3s-uninstall.sh
 

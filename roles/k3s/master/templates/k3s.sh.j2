@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# k3s.sh is used to supply the --data-dir argument to k3s for symlink'd commands.
+# Note: this file is only present when k3s_server_location is defined.
+
+K3S_BIN="/usr/local/bin/k3s"
+DATA_DIR="{{ k3s_server_location }}"
+
+BASENAME="${0##*/}"
+
+if [ -z "${DATA_DIR}" ]
+then
+	echo "k3s.sh: DATA_DIR is not set.  Something went wrong with the ansible installation." 1>&2
+	exit 255
+fi
+
+if [ "${BASENAME}" = "k3s.sh" ]
+then
+	"${K3S_BIN}" --data-dir "${DATA_DIR}" "${@}"
+else
+	"${K3S_BIN}" --data-dir "${DATA_DIR}" "${BASENAME}" "${@}"
+fi
+
