@@ -9,15 +9,11 @@ ansible_user: debian
 
 # - INSTALL_K3S_SKIP_DOWNLOAD
 #   If set to true will not download k3s hash or binary.
-#   (NOT YET IMPLEMENTED)
-#
-#install_k3s_skip_download: false
+#   (WILL NOT BE IMPLEMENTED)
 
 # - INSTALL_K3S_FORCE_RESTART
-#   If set to true will always restart the K3s service
-#   (NOT YET IMPLEMENTED)
-#
-#install_k3s_force_restart: false
+#   k3s-ansible always restarts the service.
+#   (WILL NOT BE IMPLEMENTED)
 
 # - INSTALL_K3S_SYMLINK
 #   If set to 'skip' will not create symlinks, 'force' will overwrite,
@@ -30,16 +26,12 @@ ansible_user: debian
 #install_k3s_symlink: 'force'
 
 # - INSTALL_K3S_SKIP_ENABLE
-#   If set to true will not enable or start k3s service.
-#   (NOT YET IMPLEMENTED)
-#
-#install_k3s_skip_enable: false
+#   k3s-ansble always enables the service.
+#   (WILL NOT BE IMPLEMENTED)
 
 # - INSTALL_K3S_SKIP_START
-#   If set to true will not start k3s service.
-#   (NOT YET IMPLEMENTED)
-#
-#install_k3s_skip_start: false
+#   k3s-ansible always starts the service.
+#   (WILL NOT BE IMPLEMENTED)
 
 # - INSTALL_K3S_VERSION
 #   Version of k3s to download from github. Will attempt to download from the
