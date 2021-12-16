@@ -130,7 +130,7 @@ ansible_user: debian
 ########################################################
 
 # - INSTALL_K3S_DATA_DIR
-#   Change the data directory for the k3s server.  Defaults to '/var/lib/rancher/k3s'.
+#   Change the data directory for the k3s service.  Defaults to '/var/lib/rancher/k3s'.
 #   TODO: submit PR to k3s-io/k3s
 #   (IMPLEMENTED)
 #
