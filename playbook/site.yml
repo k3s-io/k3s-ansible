@@ -11,9 +11,9 @@
 - hosts: master
   become: yes
   roles:
-    - role: k3s/master
+    - role: k3s/server
 
 - hosts: node
   become: yes
   roles:
-    - role: k3s/node
+    - role: k3s/agent
