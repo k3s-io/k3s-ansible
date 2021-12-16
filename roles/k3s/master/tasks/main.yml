@@ -1,5 +1,9 @@
 ---
 
+################################################################################
+# Setup k3s service
+#
+
 - name: Copy K3s service file
   register: k3s_service
   template:
@@ -15,6 +19,10 @@
     daemon_reload: yes
     state: restarted
     enabled: yes
+
+################################################################################
+# node-token tasks
+#
 
 - name: Wait for node-token
   wait_for:
@@ -44,20 +52,9 @@
     path: "{{ data_dir }}/server/node-token"
     mode: "{{ p.stat.mode }}"
 
-- name: Create directory .kube
-  file:
-    path: ~{{ ansible_user }}/.kube
-    state: directory
-    owner: "{{ ansible_user }}"
-    mode: "u=rwx,g=rx,o="
-
-- name: Copy config file to user home directory
-  copy:
-    src: /etc/rancher/k3s/k3s.yaml
-    dest: ~{{ ansible_user }}/.kube/config
-    remote_src: yes
-    owner: "{{ ansible_user }}"
-    mode: "u=rw,g=,o="
+################################################################################
+# Create ctl commands
+#
 
 - name: Copy k3s.sh for symlink'd commands
   register: k3s_symlink
@@ -87,6 +84,25 @@
   when:
     - not bin_dir_read_only
     - not (symlink == 'skip')
+
+################################################################################
+# Setup {{ ansible_user }}/.kube/config
+#
+
+- name: Create directory .kube
+  file:
+    path: ~{{ ansible_user }}/.kube
+    state: directory
+    owner: "{{ ansible_user }}"
+    mode: "u=rwx,g=rx,o="
+
+- name: Copy config file to user home directory
+  copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: ~{{ ansible_user }}/.kube/config
+    remote_src: yes
+    owner: "{{ ansible_user }}"
+    mode: "u=rw,g=,o="
 
 - name: Replace https://localhost:6443 by https://master-ip:6443
   command: >-
