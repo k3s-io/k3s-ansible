@@ -180,7 +180,7 @@
   file:
     path: "~{{ ansible_user }}/.kube/config"
     state: absent
-  when: inventory_hostname in groups['master']
+  when: inventory_hostname in groups['k3s_server']
 
 - name: Remove package k3s-selinux
   yum:

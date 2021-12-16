@@ -38,12 +38,12 @@
     path: "{{ data_dir }}/server/node-token"
     mode: 0644
 
-- name: Read node-token from master
+- name: Read node-token from the server
   slurp:
     path: "{{ data_dir }}/server/node-token"
   register: node_token
 
-- name: Store Master node-token
+- name: Store the server node-token
   set_fact:
     token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
 

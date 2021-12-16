@@ -19,7 +19,7 @@ on processor architecture:
 ## System requirements
 
 Deployment environment must have Ansible 2.4.0+
-Master and nodes must have passwordless SSH access
+Server and agents must have passwordless SSH access
 
 ## Usage
 
@@ -32,15 +32,15 @@ cp -R inventory/sample inventory/my-cluster
 Second, edit `inventory/my-cluster/hosts.ini` to match the system information gathered above. For example:
 
 ```bash
-[master]
+[k3s_server]
 192.16.35.12
 
-[node]
+[k3s_agent]
 192.16.35.[10:11]
 
 [k3s_cluster:children]
-master
-node
+k3s_server
+k3s_agent
 ```
 
 If needed, you can also edit `inventory/my-cluster/group_vars/all.yml` to match your environment.

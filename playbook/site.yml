@@ -8,12 +8,12 @@
     - role: download
     - role: raspberrypi
 
-- hosts: master
+- hosts: k3s_server
   become: yes
   roles:
     - role: k3s/server
 
-- hosts: node
+- hosts: k3s_agent
   become: yes
   roles:
     - role: k3s/agent
