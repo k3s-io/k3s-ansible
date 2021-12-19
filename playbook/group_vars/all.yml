@@ -1,6 +1,6 @@
 ---
 # These variables are not meant to be changed.
-# All changes should happen in "group_vars/all.yml".
+# All changes should happen in "inventory/x/group_vars/all.yml".
 
 k3s_version: "{{ install_k3s_version | default('undefined') }}"
 
