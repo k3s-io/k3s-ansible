@@ -101,10 +101,10 @@
     owner: "{{ ansible_user }}"
     mode: "u=rw,g=,o="
 
-- name: Replace https://localhost:6443 by https://master-ip:6443
+- name: Replace https://localhost:6443 by https://server_ip:6443
   command: >-
     {{ bin_dir }}/kubectl config set-cluster default
-      --server=https://{{ master_ip }}:6443
+      --server=https://{{ server_ip }}:6443
       --kubeconfig ~{{ ansible_user }}/.kube/config
   changed_when: true
 
