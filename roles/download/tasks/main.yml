@@ -25,6 +25,34 @@
     - ansible_facts.architecture is search("arm")
     - ansible_facts.userspace_bits == "32"
 
+# Determine version to download
+- name: Determine version from channel
+  vars:
+    version_url: "{{ k3s_channel_url }}/{{ k3s_channel }}"
+  shell: "curl -w '%{url_effective}' -L -s -S {{ version_url }} -o /dev/null | sed -e 's|.*/||'"
+  register: curl_output
+  when: k3s_version == 'undefined'
+  run_once: true
+
+- name: Output channel information
+  debug:
+    msg:
+      - "k3s_channel_url: {{ k3s_channel_url }}"
+      - "k3s_channel: {{ k3s_channel }}"
+  when: k3s_version == 'undefined'
+  run_once: true
+
+- name: Set version from channel
+  set_fact:
+    k3s_version: "{{ curl_output.stdout_lines[0] }}"
+  when: k3s_version == 'undefined'
+  run_once: true
+
+- name: Output version
+  debug:
+    msg: "k3s_version: {{ k3s_version }}"
+  run_once: true
+
 # Set binary and hash file URLs
 - name: Determine GitHub URLs
   set_fact:

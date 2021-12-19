@@ -2,7 +2,10 @@
 # These variables are not meant to be changed.
 # All changes should happen in "group_vars/all.yml".
 
-k3s_version: "{{ install_k3s_version | default('v1.22.4+k3s1') }}"
+k3s_version: "{{ install_k3s_version | default('undefined') }}"
+
+k3s_channel_url: "{{ install_k3s_channel_url | default('https://update.k3s.io/v1-release/channels') }}"
+k3s_channel: "{{ install_k3s_channel | default('stable') }}"
 
 extra_server_args: "{{ install_k3s_server_args | default('') }}"
 extra_agent_args: "{{ install_k3s_agent_args | default('') }}"

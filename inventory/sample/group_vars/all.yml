@@ -36,9 +36,9 @@ ansible_user: debian
 # - INSTALL_K3S_VERSION
 #   Version of k3s to download from github. Will attempt to download from the
 #   stable channel if not specified.
-#   (IMPLEMENTED: only specifying the version; the channels are not implemented.)
+#   (IMPLEMENTED)
 #
-#install_k3s_version: v1.22.4+k3s1
+#install_k3s_version: v1.22.5+k3s1
 
 # - INSTALL_K3S_COMMIT
 #   Commit of k3s to download from temporary cloud storage.
@@ -106,7 +106,7 @@ ansible_user: debian
 #   Channel URL for fetching k3s download URL.
 #   Defaults to 'https://update.k3s.io/v1-release/channels'.
 #   Must only be https:// URLs
-#   (NOT YET IMPLEMENTED)
+#   (IMPLEMENTED)
 #
 #install_k3s_channel_url: 'https://update.k3s.io/v1-release/channels'
 
@@ -115,7 +115,7 @@ ansible_user: debian
 #   Defaults to 'stable'.
 #   (NOT YET IMPLEMENTED)
 #
-#install_k3s_channel: 'stable'
+#install_k3s_channel: 'latest'
 
 ########################################################
 # End: k3s-install.sh flags, from https://get.k3s.io #
