@@ -23,7 +23,7 @@ ansible_user: debian
 #      - 'force' is the default behavior
 #      - It does not check if the command already exists in the path)
 #
-#install_k3s_symlink: 'force'
+#install_k3s_symlink: 'skip'
 
 # - INSTALL_K3S_SKIP_ENABLE
 #   k3s-ansble always enables the service.
