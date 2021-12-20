@@ -3,6 +3,7 @@
 # All changes should happen in "inventory/x/group_vars/all.yml".
 
 k3s_version: "{{ install_k3s_version | default('undefined') }}"
+k3s_commit: "{{ install_k3s_commit | default('undefined') }}"
 
 k3s_channel_url: "{{ install_k3s_channel_url | default('https://update.k3s.io/v1-release/channels') }}"
 k3s_channel: "{{ install_k3s_channel | default('stable') }}"
