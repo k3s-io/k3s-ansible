@@ -3,3 +3,5 @@
 github_url: "https://github.com/k3s-io/k3s/releases"
 storage_url: "https://storage.googleapis.com/k3s-ci-builds"
 
+report_download_urls: false
+
