@@ -55,11 +55,8 @@ ansible_user: debian
 #install_k3s_bin_dir: '/usr/local/bin'
 
 # - INSTALL_K3S_BIN_DIR_READ_ONLY
-#   If set to true will not write files to INSTALL_K3S_BIN_DIR, forces
-#   setting INSTALL_K3S_SKIP_DOWNLOAD=true
-#   (IMPLEMENTED)
-#
-#install_k3s_bin_dir_read_only: false
+#   k3s-ansible expects k3s_bin_dir to be writable.
+#   (WILL NOT BE IMPLEMENTED)
 
 # - INSTALL_K3S_SYSTEMD_DIR
 #   Directory to install systemd service and environment files to, or use

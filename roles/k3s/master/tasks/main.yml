@@ -81,9 +81,7 @@
     - kubectl
     - crictl
     - ctr
-  when:
-    - not bin_dir_read_only
-    - not (symlink == 'skip')
+  when: not (symlink == 'skip')
 
 ################################################################################
 # Setup {{ ansible_user }}/.kube/config
