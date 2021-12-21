@@ -3,6 +3,9 @@
 # This is the user that has SSH password-less access to configure your hosts
 ansible_user: debian
 
+# The location of where to capture the kube config of the new cluster
+cluster_config: cluster.conf
+
 ########################################
 # Install flags, like https://get.k3s.io
 

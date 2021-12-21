@@ -12,9 +12,11 @@ which is then used throughout **k3s-ansible**.
 
 ## General flags
 
-**k3s-ansible** requires SSH password-less access to configure your hosts.
-Use **ansible_user** to specify the username with this access.
+- **ansible_user**: specifies the username that has SSH password-less access to configure your hosts.
+The default is `debian`.
 
+- **cluster_config**: specifies the location of where to capture the kube config of the new cluster.
+The default is `playbook/cluster.conf`.
 
 ### Flags that control the version of k3s downloaded
 
