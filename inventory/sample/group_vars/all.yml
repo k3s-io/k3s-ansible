@@ -1,26 +1,17 @@
 ---
 
+# See README.md for more options
+
 # This is the user that has SSH password-less access to configure your hosts
 ansible_user: debian
 
 # The location of where to capture the kube config of the new cluster
 cluster_config: cluster.conf
 
-########################################
-# Install flags, like https://get.k3s.io
-
-# Flags that control the version of k3s downloaded
-#install_k3s_channel_url: 'https://update.k3s.io/v1-release/channels'
-#install_k3s_channel: 'latest'
-#install_k3s_version: v1.22.5+k3s1
-#install_k3s_commit:
-
-# Flags that control the location of things
-#install_k3s_systemd_dir: '/etc/systemd/system'
-#install_k3s_bin_dir: '/usr/local/bin'
-#install_k3s_data_dir: '/var/lib/rancher/k3s'
+# Use the latest version
+install_k3s_channel: 'latest'
 
 # Flags for the k3s executable
-#install_k3s_server_args: ''
-#install_k3s_agent_args: ''
+install_k3s_server_args: ''
+install_k3s_agent_args: ''
 
