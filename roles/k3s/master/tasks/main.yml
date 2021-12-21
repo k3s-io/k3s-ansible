@@ -33,10 +33,10 @@
     path: "{{ data_dir }}/server/node-token"
   register: p
 
-- name: Change file access node-token
+- name: Make node-token world-readable
   file:
     path: "{{ data_dir }}/server/node-token"
-    mode: "g+rx,o+rx"
+    mode: 0644
 
 - name: Read node-token from master
   slurp:
