@@ -18,12 +18,9 @@ ansible_user: debian
 # - INSTALL_K3S_SYMLINK
 #   If set to 'skip' will not create symlinks, 'force' will overwrite,
 #   default will symlink if command does not exist in path.
-#   (Partially IMPLEMENTED:
-#      - 'force' and 'skip' are implemented
-#      - 'force' is the default behavior
-#      - It does not check if the command already exists in the path)
+#   (NOT YET IMPLEMENTED)
 #
-#install_k3s_symlink: 'skip'
+#install_k3s_symlink:
 
 # - INSTALL_K3S_SKIP_ENABLE
 #   k3s-ansble always enables the service.

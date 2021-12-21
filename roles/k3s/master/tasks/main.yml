@@ -81,7 +81,6 @@
     - kubectl
     - crictl
     - ctr
-  when: not (symlink == 'skip')
 
 ################################################################################
 # Setup {{ ansible_user }}/.kube/config

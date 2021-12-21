@@ -15,8 +15,6 @@ systemd_dir: "{{ install_k3s_systemd_dir | default('/etc/systemd/system') }}"
 bin_dir: "{{ install_k3s_bin_dir | default('/usr/local/bin') }}"
 data_dir: "{{ install_k3s_data_dir | default('/var/lib/rancher/k3s') }}"
 
-symlink: "{{ install_k3s_symlink | default('force') }}"
-
 # The location of where to capture the new cluster information
 cluster_config: cluster.conf
 
