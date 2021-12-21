@@ -31,18 +31,22 @@
       vars:
           version_url: "{{ k3s_channel_url }}/{{ k3s_channel }}"
       block:
-        - name: Get version from channel
-          shell: "curl -w '%{url_effective}' -L -s -S {{ version_url }} -o /dev/null | sed -e 's|.*/||'"
-          register: curl_output
-
         - name: Output channel information
           debug:
             var: version_url
           when: report_download_urls
 
+        - name: Get version from channel
+          uri:
+            url: "{{ version_url }}"
+            follow_redirects: safe
+            force: true
+            return_content: false
+          register: channel_version_info
+
         - name: Set version from channel
           set_fact:
-            k3s_version: "{{ curl_output.stdout_lines[0] }}"
+            k3s_version: "{{ channel_version_info.url.split('/')[-1] }}"
 
       when: k3s_version == 'undefined'
       run_once: true
