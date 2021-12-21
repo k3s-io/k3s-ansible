@@ -3,122 +3,21 @@
 # This is the user that has SSH password-less access to configure your hosts
 ansible_user: debian
 
-########################################################
-# Begin: k3s-install.sh flags, from https://get.k3s.io #
-########################################################
+########################################
+# Install flags, like https://get.k3s.io
 
-# - INSTALL_K3S_SKIP_DOWNLOAD
-#   If set to true will not download k3s hash or binary.
-#   (WILL NOT BE IMPLEMENTED)
-
-# - INSTALL_K3S_FORCE_RESTART
-#   k3s-ansible always restarts the service.
-#   (WILL NOT BE IMPLEMENTED)
-
-# - INSTALL_K3S_SYMLINK
-#   If set to 'skip' will not create symlinks, 'force' will overwrite,
-#   default will symlink if command does not exist in path.
-#   (NOT YET IMPLEMENTED)
-#
-#install_k3s_symlink:
-
-# - INSTALL_K3S_SKIP_ENABLE
-#   k3s-ansble always enables the service.
-#   (WILL NOT BE IMPLEMENTED)
-
-# - INSTALL_K3S_SKIP_START
-#   k3s-ansible always starts the service.
-#   (WILL NOT BE IMPLEMENTED)
-
-# - INSTALL_K3S_VERSION
-#   Version of k3s to download from github. Will attempt to download from the
-#   stable channel if not specified.
-#   (IMPLEMENTED)
-#
+# Flags that control the version of k3s downloaded
+#install_k3s_channel_url: 'https://update.k3s.io/v1-release/channels'
+#install_k3s_channel: 'latest'
 #install_k3s_version: v1.22.5+k3s1
-
-# - INSTALL_K3S_COMMIT
-#   Commit of k3s to download from temporary cloud storage.
-#   * (for developer & QA use)
-#   (IMPLEMENTED: need the full commit #)
-#
 #install_k3s_commit:
 
-# - INSTALL_K3S_BIN_DIR
-#   Directory to install k3s binary, links, and uninstall script to, or use
-#   /usr/local/bin as the default
-#   (IMPLEMENTED)
-#
-#install_k3s_bin_dir: '/usr/local/bin'
-
-# - INSTALL_K3S_BIN_DIR_READ_ONLY
-#   k3s-ansible expects k3s_bin_dir to be writable.
-#   (WILL NOT BE IMPLEMENTED)
-
-# - INSTALL_K3S_SYSTEMD_DIR
-#   Directory to install systemd service and environment files to, or use
-#   /etc/systemd/system as the default
-#   (IMPLEMENTED)
-#
+# Flags that control the location of things
 #install_k3s_systemd_dir: '/etc/systemd/system'
+#install_k3s_bin_dir: '/usr/local/bin'
+#install_k3s_data_dir: '/var/lib/rancher/k3s'
 
-# - INSTALL_K3S_EXEC
-#   This is replaced by specific variables for servers and agents.
-#   These will provide extra arguments to the "k3s" application.
-#   (IMPLEMENTED)
-#
+# Flags for the k3s executable
 #install_k3s_server_args: ''
 #install_k3s_agent_args: ''
-
-# - INSTALL_K3S_NAME
-#   Name of systemd service to create, will default from the k3s exec command
-#   if not specified. If specified the name will be prefixed with 'k3s-'.
-#   (NOT YET IMPLEMENTED)
-#
-#install_k3s_name: ''
-
-# - INSTALL_K3S_TYPE
-#   Type of systemd service to create, will default from the k3s exec command
-#   if not specified.
-#   (NOT YET IMPLEMENTED)
-#
-#install_k3s_type: ''
-
-# - INSTALL_K3S_SELINUX_WARN
-#   If set to true will continue if k3s-selinux policy is not found.
-#   (NOT YET IMPLEMENTED)
-#
-#install_k3s_selinux_warn: false
-
-# - INSTALL_K3S_SKIP_SELINUX_RPM
-#   If set to true will skip automatic installation of the k3s RPM.
-#   (NOT YET IMPLEMENTED)
-#
-#install_k3s_skip_selinux_rpm: false
-
-# - INSTALL_K3S_CHANNEL_URL
-#   Channel URL for fetching k3s download URL.
-#   Defaults to 'https://update.k3s.io/v1-release/channels'.
-#   Must only be https:// URLs
-#   (IMPLEMENTED)
-#
-#install_k3s_channel_url: 'https://update.k3s.io/v1-release/channels'
-
-# - INSTALL_K3S_CHANNEL
-#   Channel to use for fetching k3s download URL.
-#   Defaults to 'stable'.
-#   (NOT YET IMPLEMENTED)
-#
-#install_k3s_channel: 'latest'
-
-######################################################
-# End: k3s-install.sh flags, from https://get.k3s.io #
-######################################################
-
-# - INSTALL_K3S_DATA_DIR
-#   Change the data directory for the k3s service.  Defaults to '/var/lib/rancher/k3s'.
-#   TODO: submit PR to k3s-io/k3s
-#   (IMPLEMENTED)
-#
-#install_k3s_data_dir: '/var/lib/rancher/k3s'
 
