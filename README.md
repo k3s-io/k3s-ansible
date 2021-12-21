@@ -53,8 +53,8 @@ ansible-playbook playbook/site.yml -i inventory/my-cluster/hosts.ini
 
 ## Kubeconfig
 
-To get access to your **Kubernetes** cluster just
+To get access to your new **Kubernetes** cluster, just use the generated kube config.
 
 ```bash
-scp debian@master_ip:~/.kube/config ~/.kube/config
+kubectl --kubeconfig playbook/cluster.conf ...
 ```

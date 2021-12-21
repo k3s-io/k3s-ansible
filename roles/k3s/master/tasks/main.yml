@@ -111,3 +111,11 @@
       --kubeconfig ~{{ ansible_user }}/.kube/config
   changed_when: true
 
+# Fetch a copy of the cluster config for use in one's ~/.kube/config.
+- name: Copy .kube/config for new cluster
+  fetch:
+    src: "~{{ ansible_user }}/.kube/config"
+    dest: "{{ cluster_config }}"
+    flat: yes
+  run_once: true
+

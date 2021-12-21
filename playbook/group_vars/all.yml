@@ -18,6 +18,9 @@ data_dir: "{{ install_k3s_data_dir | default('/var/lib/rancher/k3s') }}"
 symlink: "{{ install_k3s_symlink | default('force') }}"
 bin_dir_read_only: "{{ install_k3s_bin_dir_read_only | default(false) }}"
 
+# The location of where to capture the new cluster information
+cluster_config: cluster.conf
+
 master_ip: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}"
 
 # Services information
