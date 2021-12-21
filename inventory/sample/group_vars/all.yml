@@ -1,6 +1,6 @@
 ---
 
-# This is the SSH user used by ansible to configure your hosts
+# This is the user that has SSH password-less access to configure your hosts
 ansible_user: debian
 
 ########################################################
@@ -117,9 +117,9 @@ ansible_user: debian
 #
 #install_k3s_channel: 'latest'
 
-########################################################
+######################################################
 # End: k3s-install.sh flags, from https://get.k3s.io #
-########################################################
+######################################################
 
 # - INSTALL_K3S_DATA_DIR
 #   Change the data directory for the k3s service.  Defaults to '/var/lib/rancher/k3s'.
