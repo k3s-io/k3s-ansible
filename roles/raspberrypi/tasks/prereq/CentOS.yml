@@ -1,5 +1,5 @@
 ---
-- name: Enable cgroup via boot commandline if not already enabled for Centos
+- name: Enable cgroup support if not already enabled
   lineinfile:
     path: /boot/cmdline.txt
     backrefs: yes

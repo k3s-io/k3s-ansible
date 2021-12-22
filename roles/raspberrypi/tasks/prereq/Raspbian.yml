@@ -1,10 +1,10 @@
 ---
-- name: Activating cgroup support
+- name: Enable cgroup support if not already enabled
   lineinfile:
     path: /boot/cmdline.txt
+    backrefs: yes
     regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$'
     line: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
-    backrefs: true
   notify: reboot
 
 - name: Flush iptables before changing to iptables-legacy

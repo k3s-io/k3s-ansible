@@ -1,5 +1,5 @@
 ---
-- name: Enable cgroup via boot commandline if not already enabled for Ubuntu on a Raspberry Pi
+- name: Enable cgroup support if not already enabled
   lineinfile:
     path: /boot/firmware/cmdline.txt
     backrefs: yes
