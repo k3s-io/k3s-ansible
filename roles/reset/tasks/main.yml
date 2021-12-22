@@ -52,17 +52,21 @@
   register: ip_netns_show
   command: ip -j netns show master cni0
 
+#
+# BUG: Possible bug in ip-netns(8) on Raspbian.
+# "ip -j netns show master cni0" does not always report "[ ]" but returns 0 when there is no master.
+#
 - name: Remove CNI namespaces
   command: ip netns delete {{ item }}
-  loop: "{{ ip_netns_show.stdout | from_json | json_query('[*].name') }}"
+  loop: "{{ (ip_netns_show.stdout if ip_netns_show.stdout != '' else  '[ ]') | from_json | json_query('[*].name') }}"
 
 #
 # Remove CNI interfaces
 # ip link show 2>/dev/null | grep 'master cni0'
 #
-# BUG: Possible bug in ip-link(8).
+# BUG: Possible bug in ip-link(8) on Raspbian.
 # "ip -j link show master cni0" exits 255 when cni0 does not exist where
-# "ip -j netns show master cni0" returns "[ ]", which is preferred.
+# "ip -j netns show master cni0" reports "[ ]", which is preferred.
 #
 - name: Get list of network interface(s) that match 'master cni0'
   register: ip_link_show
