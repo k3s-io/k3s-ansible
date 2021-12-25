@@ -18,7 +18,7 @@
     cmd: "systemd-run -p RestartSec=2 \
                       -p Restart=on-failure \
                       --unit=k3s-init \
-                      k3s server {{ server_init_args }}"
+                      {{ bin_dir }}/k3s server {{ server_init_args }}"
     creates: "{{ systemd_dir }}/k3s.service"
   args:
     warn: false  # The ansible systemd module does not support transient units
@@ -27,7 +27,7 @@
   block:
     - name: Verify that all nodes actually joined (check k3s-init.service if this fails)
       command:
-        cmd: k3s kubectl get nodes -l "node-role.kubernetes.io/master=true" -o=jsonpath="{.items[*].metadata.name}"
+        cmd: "{{ bin_dir }}/k3s kubectl get nodes -l 'node-role.kubernetes.io/master=true' -o=jsonpath='{.items[*].metadata.name}'"
       register: nodes
       until: nodes.rc == 0 and (nodes.stdout.split() | length) == (groups['k3s_server'] | length)
       retries: 20
