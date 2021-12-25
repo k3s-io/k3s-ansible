@@ -51,7 +51,7 @@
     dest: "{{ systemd_dir }}/k3s.service"
     owner: root
     group: root
-    mode: 0644
+    mode: "u=rw,g=r,o=r"
 
 - name: Enable and check K3s service
   systemd:
@@ -76,7 +76,7 @@
 - name: Make node-token world-readable
   file:
     path: "{{ data_dir }}/server/node-token"
-    mode: 0644
+    mode: "u=rw,g=r,o=r"
 
 - name: Read node-token from the server
   slurp:
@@ -103,7 +103,7 @@
     dest: "{{ bin_dir }}/k3s.sh"
     owner: root
     group: root
-    mode: 0755
+    mode: "u=rwx,g=rx,o=rx"
   when:
     - data_dir is defined
     - data_dir != '/var/lib/rancher/k3s'

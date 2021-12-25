@@ -91,5 +91,5 @@
     dest: "{{ bin_dir }}/k3s"
     owner: root
     group: root
-    mode: 0755
+    mode: "u=rwx,g=rx,o=rx"
 
