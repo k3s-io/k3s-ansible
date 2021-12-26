@@ -4,6 +4,8 @@
   gather_facts: yes
   become: yes
   roles:
+    - role: config-check
+      run_once: true
     - role: prereq
     - role: download
     - role: raspberrypi
