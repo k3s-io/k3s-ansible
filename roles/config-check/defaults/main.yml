@@ -1,0 +1,9 @@
+---
+
+k3s_channel_url: 'https://update.k3s.io/v1-release/channels'
+k3s_channel: 'stable'
+k3s_version: 'undefined'
+k3s_commit: 'undefined'
+
+report_version_info: false
+
