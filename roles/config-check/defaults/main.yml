@@ -1,5 +1,7 @@
 ---
 
+ha_enabled: false
+
 k3s_channel_url: 'https://update.k3s.io/v1-release/channels'
 k3s_channel: 'stable'
 k3s_version: 'undefined'
