@@ -1,8 +1,25 @@
 ---
-- name: Check for correct server configuration (1 = non-HA; 3+ = HA)
+- name: Check for correct single server configuration
   fail:
-    msg: "HA configuration requires a minimum of three (3) servers."
-  when: groups['k3s_server'] | length == 2
+    msg: "Single server configuration requires exactly one (1) server."
+  when:
+    - not ha_enabled
+    - groups['k3s_server'] | length != 1
+
+# Purposefully do the HA check in two steps
+- name: Check for correct HA configuration (minimum)
+  fail:
+    msg: "HA configuration requires an odd number of servers > 1 (i.e., minimum is three)."
+  when:
+    - ha_enabled
+    - groups['k3s_server'] | length < 3
+
+- name: Check for correct HA configuration (odd number)
+  fail:
+    msg: "HA configuration requires an ODD number of servers."
+  when:
+    - ha_enabled
+    - groups['k3s_server'] | length is divisibleby 2
 
 - name: Determine version to download
   block:
@@ -44,7 +61,7 @@
     short_version: "{{ k3s_version | regex_search('v([^+]+)+', '\\1') | first }}"
   when:
     - k3s_commit == 'undefined'
-    - groups['k3s_server'] | length >= 3
+    - ha_enabled
     - short_version is version('1.19.5', 'lt', True)
 
 - name: No check when k3s_commit is specified
@@ -52,6 +69,6 @@
     msg: "There is no version check for HA support when a k3s_commit is specified.  We assume you know what you are doing."
   when:
     - k3s_commit != 'undefined'
-    - groups['k3s_server'] | length >= 3
+    - ha_enabled
     - report_version_info
 

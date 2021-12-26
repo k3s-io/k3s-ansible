@@ -1,7 +1,7 @@
 ---
 ansible_user: root
 server_init_args: >-
-  {% if groups['k3s_server'] | length > 1 %}
+  {% if ha_enabled %}
     {% if ansible_host == first_server %}
       --cluster-init
       --tls-san {{ apiserver_endpoint }}

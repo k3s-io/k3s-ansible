@@ -18,6 +18,9 @@ The default is `debian`.
 - **cluster_config**: specifies the location of where to capture the kube config of the new cluster.
 The default is `playbook/cluster.conf`.
 
+- **ha_enabled**: specifies if the cluster will have an HA embedded database using **etcd**.
+The default is `false`.
+
 ### Flags that control the version of k3s downloaded
 
 There are four (4) flags that control which version of **k3s** is installed on your hosts.

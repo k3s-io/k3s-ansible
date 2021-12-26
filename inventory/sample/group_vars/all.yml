@@ -8,6 +8,9 @@ ansible_user: debian
 # The location of where to capture the kube config of the new cluster
 cluster_config: cluster.conf
 
+# Set up this cluster with an HA embedded database using etcd
+ha_enabled: false
+
 # Use the latest version
 install_k3s_channel: 'latest'
 
