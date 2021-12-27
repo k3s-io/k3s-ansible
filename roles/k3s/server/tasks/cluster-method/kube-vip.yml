@@ -1,0 +1,26 @@
+---
+- name: Create manifest directory {{ ha_cluster_method }}
+  file:
+    path: "{{ data_dir }}/server/manifests/{{ ha_cluster_method }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "u=rwx,g=,o="
+  register: manifest_dir
+
+- name: Copy RBAC manifest
+  template:
+    src: "cluster-method/{{ ha_cluster_method }}/kube-vip-rbac.yaml.j2"
+    dest: "{{ manifest_dir.path }}/kube-vip-rbac.yaml"
+    owner: root
+    group: root
+    mode: "u=rw,g=,o="
+
+- name: Copy arp daemonset manifest
+  template:
+    src: "cluster-method/{{ ha_cluster_method }}/kube-vip-arp-ds.yaml.j2"
+    dest: "{{ manifest_dir.path }}/kube-vip-arp-ds.yaml"
+    owner: root
+    group: root
+    mode: "u=rw,g=,o="
+

@@ -12,6 +12,7 @@ cluster_config: cluster.conf
 ha_enabled: false
 
 ha_cluster_vip: 192.168.1.254
+ha_cluster_method: external
 
 # Use the latest version
 install_k3s_channel: 'latest'

@@ -18,14 +18,23 @@ The default is `debian`.
 - **cluster_config**: specifies the location of where to capture the kube config of the new cluster.
 The default is `playbook/cluster.conf`.
 
+## High-Availability (HA) Flags
+
 - **ha_enabled**: specifies if the cluster will have an HA embedded database using **etcd**.
 The default is `false`.
 
-- **ha_cluster_vip**: specifies the virtual IP address in front of the control-plane servers for
+- **ha_cluster_vip**: specifies the virtual IP (VIP) address in front of the control-plane servers for
 agent configuration as well as cluster definition in .kube/config.
 Note: This is an IP address different than those of the cluster nodes.
 Today, this is a static IP address provided in this file.
 It is possible to get an IP address dynamically but that is not implemented here.
+
+- **ha_cluster_method**: specifies the method of clustering to use for the virtual IP.
+The methods implemented today are:
+1. **external** - requires a load-balancer external to the cluster
+2. **kube-vip** - [https://kube-vip.io](https://kube-vip.io), arp-based daemonset using leader election
+
+Other load-balancing options are available (e.g., **keepalived**) but are not implemented here (yet).
 
 ### Flags that control the version of k3s downloaded
 
