@@ -44,6 +44,7 @@ k3s_agent
 ```
 
 Third, edit `inventory/my-cluster/group_vars/all.yml` to best match your environment.
+See, `inventory/sample/group_vars/README.md` for more details.
 
 Start provisioning of the cluster using the following command:
 
@@ -62,8 +63,9 @@ kubectl --kubeconfig playbook/cluster.conf ...
 ## High Availability
 If you enable high availability (`ha_enabled`), the playbook will setup an embedded database using **etcd**.
 High availability requires at least k3s version **v1.19.5+k3s1** and an odd number of servers (minimum of three).
-See [https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/](https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/).
+See the [HA-embedded documentation](https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/) for more details.
 
-HA expects that there is a cluster virtual IP (`ha_cluster_vip`) in front of the control-plane servers.
-Currently, the only supported method is to use a virtual IP, external to the cluster.
+HA expects that there is a virtual IP (`ha_cluster_vip`) in front of the control-plane servers.
+A few methods have been implemented to provide and manage this VIP.
+See `inventory/sample/group_vars/README.md` for more details.
 
