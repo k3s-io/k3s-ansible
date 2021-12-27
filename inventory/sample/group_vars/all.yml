@@ -1,23 +1,14 @@
 ---
+# See inventory/sample/group_vars/README.md for more options.
+# If this file is empty, default values will be used for all mandatory fields.
 
-# See README.md for more options
-
-# This is the user that has SSH password-less access to configure your hosts
+# The user that has password-less ssh access to configure your hosts
 ansible_user: debian
 
 # The location of where to capture the kube config of the new cluster
+# Relative paths are relative to the playbook directory.
 cluster_config: cluster.conf
 
-# Set up this cluster with an HA embedded database using etcd
-ha_enabled: false
-
-ha_cluster_vip: 192.168.1.254
-ha_cluster_method: external
-
-# Use the latest version
+# Use the latest k3s version instead of 'stable'
 install_k3s_channel: 'latest'
-
-# Flags for the k3s executable
-install_k3s_server_args: ''
-install_k3s_agent_args: ''
 
