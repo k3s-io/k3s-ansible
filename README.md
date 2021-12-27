@@ -18,8 +18,8 @@ on processor architecture:
 
 ## System requirements
 
-Deployment environment must have Ansible 2.4.0+
-Server and agents must have passwordless SSH access
+Deployment environment must have Ansible 2.4.0+.
+Server and agents must have passwordless SSH access.
 
 ## Usage
 
@@ -43,11 +43,7 @@ k3s_server
 k3s_agent
 ```
 
-If multiple hosts are in the server group, the playbook will automatically setup k3s in HA mode with etcd.
-https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/
-This requires at least k3s version 1.19.1
-
-If needed, you can also edit `inventory/my-cluster/group_vars/all.yml` to match your environment.
+Third, edit `inventory/my-cluster/group_vars/all.yml` to best match your environment.
 
 Start provisioning of the cluster using the following command:
 
@@ -57,8 +53,17 @@ ansible-playbook playbook/site.yml -i inventory/my-cluster/hosts.ini
 
 ## Kubeconfig
 
-To get access to your new **Kubernetes** cluster, just use the generated kube config.
+To get access to your new **Kubernetes** cluster, just use the generated kube configuration file.
 
 ```bash
 kubectl --kubeconfig playbook/cluster.conf ...
 ```
+
+## High Availability
+If you enable high availability (`ha_enabled`), the playbook will setup an embedded database using **etcd**.
+High availability requires at least k3s version **v1.19.5+k3s1** and an odd number of servers (minimum of three).
+See [https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/](https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/).
+
+HA expects that there is a cluster virtual IP (`ha_cluster_vip`) in front of the control-plane servers.
+Currently, the only supported method is to use a virtual IP, external to the cluster.
+

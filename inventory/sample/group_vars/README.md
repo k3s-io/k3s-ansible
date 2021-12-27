@@ -21,6 +21,12 @@ The default is `playbook/cluster.conf`.
 - **ha_enabled**: specifies if the cluster will have an HA embedded database using **etcd**.
 The default is `false`.
 
+- **ha_cluster_vip**: specifies the virtual IP address in front of the control-plane servers for
+agent configuration as well as cluster definition in .kube/config.
+Note: This is an IP address different than those of the cluster nodes.
+Today, this is a static IP address provided in this file.
+It is possible to get an IP address dynamically but that is not implemented here.
+
 ### Flags that control the version of k3s downloaded
 
 There are four (4) flags that control which version of **k3s** is installed on your hosts.
