@@ -40,13 +40,13 @@
   when: k3s_commit != 'undefined'
   check_mode: no
 
-- name: Output URLs
+- name: Report Download URLs
   block:
-    - name: Binary URL
+    - name: Report URL for binary
       debug:
         var: binary_url
 
-    - name: Hash URL
+    - name: Report URL for hash
       debug:
         var: hash_url
   when: report_download_urls
