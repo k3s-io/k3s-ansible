@@ -11,6 +11,8 @@ cluster_config: cluster.conf
 # Set up this cluster with an HA embedded database using etcd
 ha_enabled: false
 
+ha_cluster_vip: 192.168.1.254
+
 # Use the latest version
 install_k3s_channel: 'latest'
 
