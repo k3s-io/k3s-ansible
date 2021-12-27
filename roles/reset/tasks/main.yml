@@ -146,6 +146,7 @@
   include_tasks: "cluster-method/{{ ha_cluster_method }}.yml"
   when:
     - ha_enabled
+    - ha_cluster_method is defined
 
 #
 # for cmd in kubectl crictl ctr; do

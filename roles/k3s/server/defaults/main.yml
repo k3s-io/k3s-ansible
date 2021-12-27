@@ -1,5 +1,8 @@
 ---
-ansible_user: root
+ansible_user: debian
+cluster_config: cluster.conf
+ha_enabled: false
+
 server_init_args: >-
   {% if ha_enabled %}
     {% if ansible_host == first_server %}
