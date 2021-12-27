@@ -17,6 +17,16 @@
   roles:
     - role: k3s/server
 
+# Wait for control-plane before setting up agents
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: Wait for control-plane at {{ apiserver_endpoint }}:6443
+      wait_for:
+        host: "{{ apiserver_endpoint }}"
+        port: "6443"
+        timeout: 10
+
 # Install the k3s agents
 - hosts: k3s_agent
   become: yes
