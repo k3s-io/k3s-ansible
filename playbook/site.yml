@@ -1,5 +1,6 @@
 ---
 
+# Get hosts ready for k3s installation
 - hosts: k3s_cluster
   gather_facts: yes
   become: yes
@@ -10,11 +11,13 @@
     - role: download
     - role: raspberrypi
 
+# Install the k3s servers
 - hosts: k3s_server
   become: yes
   roles:
     - role: k3s/server
 
+# Install the k3s agents
 - hosts: k3s_agent
   become: yes
   roles:
