@@ -16,8 +16,7 @@ bin_dir: "{{ install_k3s_bin_dir | default('/usr/local/bin') }}"
 data_dir: "{{ install_k3s_data_dir | default('/var/lib/rancher/k3s') }}"
 
 first_server: "{{ hostvars[groups['k3s_server'][0]]['ansible_host'] | default(groups['k3s_server'][0]) }}"
-apiserver_endpoint: "{{ ha_cluster_vip if ha_enabled else first_server }}"
-
+apiserver_endpoint: "{{ (ha_cluster_vip | mandatory) if (ha_enabled | default(false)) else first_server }}"
 
 k3s_token: "MySuperSecureToken"
 
