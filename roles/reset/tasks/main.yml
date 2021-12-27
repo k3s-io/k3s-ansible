@@ -165,7 +165,7 @@
     label: "{{ item.item }}"
 
 # Remove files and directories
-- name: Remove files, binaries and data
+- name: Remove files and data
   file:
     path: "{{ item }}"
     state: absent
@@ -175,10 +175,17 @@
     - /run/flannel
     - "{{ data_dir }}"
     - /var/lib/kubelet
-    - "{{ bin_dir }}/k3s"
     - "{{ bin_dir }}/k3s.sh"
     - "{{ bin_dir }}/k3s-killall.sh"
     - "{{ bin_dir }}/k3s-uninstall.sh"
+
+- name: Remove downloaded binaries
+  file:
+    path: "{{ item }}"
+    state: absent
+  when: not keep_binaries
+  loop:
+    - "{{ bin_dir }}/k3s"
 
 - name: Remove ~{{ ansible_user }}/.kube/config
   file:

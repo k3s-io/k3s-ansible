@@ -1,0 +1,5 @@
+---
+
+# Changing this flag will keep the downloaded binaries after a reset
+keep_binaries: false
+
