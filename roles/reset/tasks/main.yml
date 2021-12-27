@@ -140,6 +140,14 @@
 # Should this be done rather than focusing on a discrete list of services (k3s_services)?
 
 #
+# Perform HA cluster-method-specific tasks
+#
+- name: Remove HA cluster method
+  include_tasks: "cluster-method/{{ ha_cluster_method }}.yml"
+  when:
+    - ha_enabled
+
+#
 # for cmd in kubectl crictl ctr; do
 #    if [ -L {{ bin_dir }}/$cmd ]; then
 #        rm -f {{ bin_dir }}/$cmd

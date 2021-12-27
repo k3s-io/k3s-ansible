@@ -8,6 +8,10 @@
   include_tasks: k3s-init.yml
   when: ha_enabled
 
+- name: Perform HA-specific tasks
+  include_tasks: "cluster-method/{{ ha_cluster_method }}.yml"
+  when: ha_enabled
+
 ################################################################################
 # Setup k3s service
 #

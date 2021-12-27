@@ -1,0 +1,78 @@
+#
+# This configuration implements an arp-based failover in a daemonset using leader election.
+# Original: https://kube-vip.io/manifests/v0.4.0/kube-vip-arp-ds.yaml
+#
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  creationTimestamp: null
+  name: {{ kube_vip_daemonset_name }}
+  namespace: {{ kube_vip_namespace }}
+spec:
+  selector:
+    matchLabels:
+      name: {{ kube_vip_daemonset_name }}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        name: {{ kube_vip_daemonset_name }}
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+            - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+      containers:
+      - args:
+        - manager
+        env:
+        - name: vip_arp
+          value: "true"
+        - name: port
+          value: "6443"
+        - name: vip_interface
+          value: "{{ kube_vip_interface }}"
+        - name: vip_cidr
+          value: "{{ kube_vip_cidr }}"
+        - name: cp_enable
+          value: "true"
+        - name: cp_namespace
+          value: "{{ kube_vip_namespace }}"
+        - name: vip_ddns
+          value: "false"
+        - name: svc_enable
+          value: "true"
+        - name: vip_leaderelection
+          value: "true"
+        - name: vip_leaseduration
+          value: "{{ kube_vip_leaseduration }}"
+        - name: vip_renewdeadline
+          value: "{{ kube_vip_renewdeadline }}"
+        - name: vip_retryperiod
+          value: "{{ kube_vip_retryperiod }}"
+        - name: vip_address
+          value: "{{ ha_cluster_vip }}"
+        image: ghcr.io/kube-vip/kube-vip:{{ kube_vip_version }}
+        imagePullPolicy: Always
+        name: {{ kube_vip_container_name }}
+        resources: {}
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN
+            - NET_RAW
+            - SYS_TIME
+      hostNetwork: true
+      serviceAccountName: {{ kube_vip_serviceaccount_name }}
+      tolerations:
+      - effect: NoSchedule
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+  updateStrategy: {}

@@ -1,0 +1,10 @@
+---
+# Recommended in https://kube-vip.io/usage/k3s/
+# See "Clean Environment".
+- name: Reset local interface
+  command: "{{ item }}"
+  with_items:
+    - ip addr flush dev lo
+    - ip addr add 127.0.0.1/8 dev lo
+  failed_when: false
+
