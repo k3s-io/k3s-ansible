@@ -29,3 +29,8 @@ k3s_service_file_extensions:
   - service
   - service.env
 
+# Supported HA Cluster Methods
+k3s_cluster_methods:
+  - external
+  - kube-vip
+
