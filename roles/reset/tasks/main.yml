@@ -147,6 +147,7 @@
   when:
     - ha_enabled
     - ha_cluster_method is defined
+    - inventory_hostname in groups['k3s_server']
 
 #
 # for cmd in kubectl crictl ctr; do
