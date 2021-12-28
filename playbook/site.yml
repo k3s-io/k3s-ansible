@@ -25,7 +25,7 @@
       wait_for:
         host: "{{ apiserver_endpoint }}"
         port: "6443"
-        timeout: 10
+        timeout: 60
 
 # Install the k3s agents
 - hosts: k3s_agent
