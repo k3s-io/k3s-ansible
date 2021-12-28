@@ -193,7 +193,7 @@
   file:
     path: "{{ item }}"
     state: absent
-  when: not keep_binaries
+  when: remove_packages
   loop:
     - "{{ bin_dir }}/k3s"
 
@@ -207,21 +207,29 @@
   yum:
     name: k3s-selinux
     state: remove
-  when: ansible_pkg_mgr == "yum"
+  when:
+    - ansible_pkg_mgr == "yum"
+    - remove_packages
 
 - name: Remove package k3s-selinux
   zypper:
     name: k3s-selinux
     state: remove
-  when: ansible_pkg_mgr == "zypper"
+  when:
+    - ansible_pkg_mgr == "zypper"
+    - remove_packages
 
 - name: Remove yum repo files
   shell: 'rm -f /etc/yum.repos.d/rancher-k3s-common*.repo'
   register: remove_repo_files
-  when: ansible_pkg_mgr == "yum"
+  when:
+    - ansible_pkg_mgr == "yum"
+    - remove_packages
 
 - name: Remove zypper repo files
   shell: 'rm -f /etc/zypp/repos.d/rancher-k3s-common*.repo'
   register: remove_repo_files
-  when: ansible_pkg_mgr == "zypper"
+  when:
+    - ansible_pkg_mgr == "zypper"
+    - remove_packages
 
