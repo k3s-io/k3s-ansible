@@ -8,3 +8,9 @@
     - ip addr add 127.0.0.1/8 dev lo
   failed_when: false
 
+# Remove cluster VIP from interface
+- name: Remove {{ ha_cluster_vip }}/32 from {{ kube_vip_interface }}
+  command: "ip address delete {{ ha_cluster_vip }}/32 dev {{ kube_vip_interface }}"
+  register: ipaddr_delete
+  when: ha_cluster_vip in (ansible_all_ipv4_addresses | list)
+
