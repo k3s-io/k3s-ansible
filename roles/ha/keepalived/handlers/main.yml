@@ -1,0 +1,9 @@
+---
+
+- name: Restart keepalived service
+  service:
+    name: keepalived
+    state: restarted
+    enabled: yes
+  listen: restart-keepalived-service
+

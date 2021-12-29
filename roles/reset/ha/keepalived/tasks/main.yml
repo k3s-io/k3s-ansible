@@ -1,0 +1,54 @@
+---
+
+- name: Include vars
+  include_vars: "../roles/ha/keepalived/defaults/main.yml"
+
+###################
+# Stop the service
+
+- name: Stop keepalived service
+  service:
+    name: keepalived
+    enabled: no
+    state: stopped
+
+#####################################################
+# Make sure the cluster VIP is removed from interface
+# Note: keepalived does this for us but just in case
+
+- name: Remove {{ ha_cluster_vip }}/{{ keepalived_network_mask }} from {{ keepalived_interface }}
+  command: "ip address delete {{ ha_cluster_vip }}/{{ keepalived_network_mask }} dev {{ keepalived_interface }}"
+  register: ipaddr_delete
+  when: ha_cluster_vip in (ansible_all_ipv4_addresses | list)
+
+##################################
+# Delete the configuration
+
+- name: Delete the keepalived configuration
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ keepalived_etc_dir }}"
+    - "{{ keepalived_lib_dir }}"
+    - "{{ keepalived_run_dir }}/{{ keepalived_script_output }}"
+#   - "{{ keepalived_etc_dir }}/{{ keepalived_config_file }}"
+#   - "{{ keepalived_lib_dir }}/{{ keepalived_script_name }}"
+#   - "{{ keepalived_lib_dir }}/{{ keepalived_script_kubeconfig }}"
+
+- name: Remove keepalived script user, {{ keepalived_script_user }}
+  user:
+    name: "{{ keepalived_script_user }}"
+    state: absent
+    remove: yes
+    force: yes
+
+##################################
+# Uninstall the keepalived package
+
+- name: Uninstall package keepalived
+  package:
+    name: keepalived
+    state: absent
+  when: remove_packages | default(true) | bool
+
