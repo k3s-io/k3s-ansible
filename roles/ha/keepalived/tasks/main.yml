@@ -1,0 +1,136 @@
+---
+
+################################
+# Install the keepalived package
+
+- name: Install package keepalived
+  package:
+    name: keepalived
+    state: "{{ keepalived_package_state }}"
+  notify: restart-keepalived-service
+
+######################################
+# Create the script user, if necessary
+
+- name: Create keepalived script user, {{ keepalived_script_user }}
+  user:
+    name: "{{ keepalived_script_user }}"
+    group: "{{ keepalived_script_group }}"
+    comment: "User to run keepalived scripts"
+    home: "{{ keepalived_lib_dir }}"
+    shell: "{{ keepalived_script_login }}"
+    append: no
+    create_home: no
+    system: yes
+
+##################################
+# Install/Update the configuration
+
+- name: Create keepalived etc directory, {{ keepalived_etc_dir }}
+  file:
+    path: "{{ keepalived_etc_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "u=rwx,g=,o="
+
+- name: Create keepalived lib directory, {{ keepalived_lib_dir }}
+  file:
+    path: "{{ keepalived_lib_dir }}"
+    state: directory
+    owner: "{{ keepalived_script_user }}"
+    group: "{{ keepalived_script_group }}"
+    mode: "u=rwx,g=,o="
+
+# This is here for the case when someone changes the default
+- name: Verify keepalived run directory exists, {{ keepalived_run_dir }}
+  register: run_dir
+  stat:
+    path: "{{ keepalived_run_dir }}/."  # Use '/." to traverse a symlink, if necessary
+  failed_when: not (run_dir.stat.isdir is defined and run_dir.stat.isdir)
+
+# This is here for the case when someone changes the default
+- name: Verify keepalived tmp directory exists, {{ keepalived_tmp_dir }}
+  register: tmp_dir
+  stat:
+    path: "{{ keepalived_tmp_dir }}/."  # Use '/." to traverse a symlink, if necessary
+  failed_when: not (tmp_dir.stat.isdir is defined and tmp_dir.stat.isdir)
+
+- name: Create keepalived configuration, {{ path }}
+  vars:
+    path: "{{ keepalived_etc_dir }}/{{ keepalived_config_file }}"
+  template:
+    src: "keepalived.conf.j2"
+    dest: "{{ path }}"
+    owner: root
+    group: root
+    mode: "u=r,g=,o="
+  notify: restart-keepalived-service
+
+- name: Create keepalived k3s check script, {{ path }}
+  vars:
+    path: "{{ keepalived_lib_dir }}/{{ keepalived_script_name }}"
+  template:
+    src: "keepalived_check_k3s.sh.j2"
+    dest: "{{ path }}"
+    owner: "{{ keepalived_script_user }}"
+    group: "{{ keepalived_script_group }}"
+    mode: "u=rwx,g=rx,o=rx"
+
+# You have to stat first because touch will ALWAYS change an existing file
+- name: Check for the keepalived k3s script output file, {{ path }}"
+  vars:
+    path: "{{ keepalived_run_dir }}/{{ keepalived_script_output }}"
+  stat:
+    path: "{{ path }}"
+  register: output
+
+- name: Create keepalived k3s script output file, {{ path }}
+  vars:
+    path: "{{ keepalived_run_dir }}/{{ keepalived_script_output }}"
+  file:
+    path: "{{ path }}"
+    state: touch
+    owner: "{{ keepalived_script_user }}"
+    group: "{{ keepalived_script_group }}"
+    mode: "u=rw,g=r,o=r"
+  when: not output.stat.exists
+
+- name: Copy the kubeconfig, {{ keepalived_kubeconfig_src }}, to {{ path }}
+  vars:
+    path: "{{ keepalived_lib_dir }}/{{ keepalived_script_kubeconfig }}"
+  copy:
+    remote_src: yes
+    src: "{{ keepalived_kubeconfig_src }}"
+    dest: "{{ path }}"
+    owner: "{{ keepalived_script_user }}"
+    group: "{{ keepalived_script_group }}"
+    mode: "u=r,g=,o="
+
+#####################################
+# Ensure non-local binding is enabled
+
+- name: Ensure ipv4 nonlocal binding is enabled
+  sysctl:
+    name: net.ipv4.ip_nonlocal_bind
+    value: "1"
+    state: present
+    reload: yes
+
+- name: Ensure ipv6 nonlocal binding is enabled
+  sysctl:
+    name: net.ipv6.ip_nonlocal_bind
+    value: "1"
+    state: present
+    reload: yes
+
+###################
+# Start the service
+
+- name: Start keepalived service
+  register: started
+  service:
+    name: keepalived
+    enabled: yes
+    state: started
+

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+OUTPUT_FILE="{{ keepalived_run_dir }}/{{ keepalived_script_output }}"
+TMP_FILE="{{ keepalived_tmp_dir }}/{{ keepalived_script_output }}-${$}"
+
+export KUBECONFIG="{{ keepalived_lib_dir }}/{{ keepalived_script_kubeconfig }}"
+
+trap 'rm -f "${TMP_FILE}"' EXIT
+
+{{ bin_dir }}/k3s kubectl get --raw='/livez?verbose' 1> "${TMP_FILE}"
+
+if [ "${?}" != 0 ]
+then
+        exit 1
+fi
+
+date 1>> "${TMP_FILE}"
+
+# Don't assume mv will work
+cp "${TMP_FILE}" "${OUTPUT_FILE}"
+

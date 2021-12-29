@@ -1,0 +1,38 @@
+---
+
+# This file is used to configure the keepalived configuration files.  It typically does
+# not need to be changed but you can at your discretion to suit your environment.
+# These variables are used only when HA is enabled and the method chosen is keepalived.
+
+keepalived_etc_dir: '/etc/keepalived'
+keepalived_lib_dir: '/var/lib/keepalived'
+keepalived_run_dir: '/var/run'
+keepalived_tmp_dir: '/var/tmp'
+
+keepalived_kubeconfig_src: '/etc/rancher/k3s/k3s.yaml'
+
+keepalived_config_file: 'keepalived.conf'
+
+keepalived_script_name: 'keepalived_check_k3s.sh'
+keepalived_script_output: 'keepalived_check_k3s.out'
+keepalived_script_kubeconfig: 'kubeconfig'
+keepalived_script_user: 'keepalived'
+keepalived_script_group: 'nogroup'
+keepalived_script_login: '/usr/sbin/nologin'
+
+keepalived_package_state: 'latest'
+
+keepalived_instance_name: 'K3S_VI_1'
+keepalived_interface: "{{ ansible_default_ipv4.interface }}"
+keepalived_vr_id: 51
+keepalived_master_priority: 11
+keepalived_backup_priority: 10
+keepalived_advertisement_interval: 1
+keepalived_network_mask: 24
+keepalived_password: 'MySuperSecretVRRPPassword'
+
+keepalived_check_interval: 2
+keepalived_check_timeout: 5
+keepalived_check_rise: 3
+keepalived_check_fall: 3
+

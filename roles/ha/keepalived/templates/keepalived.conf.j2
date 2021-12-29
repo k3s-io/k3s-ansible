@@ -1,0 +1,33 @@
+
+vrrp_script k3s_check {
+	script "{{ keepalived_lib_dir }}/{{ keepalived_script_name }}"
+	user {{ keepalived_script_user }}
+	interval {{ keepalived_check_interval }}
+	timeout {{ keepalived_check_timeout }}
+	rise {{ keepalived_check_rise }}
+	fall {{ keepalived_check_fall }}
+}
+
+vrrp_instance {{ keepalived_instance_name }} {
+{% if ansible_host == first_server %}
+	state MASTER
+	priority {{ keepalived_master_priority }}
+{% else %}
+	state BACKUP
+	priority {{ keepalived_backup_priority }}
+{% endif %}
+	interface {{ keepalived_interface }}
+	virtual_router_id {{ keepalived_vr_id }}
+	advert_int {{ keepalived_advertisement_interval }}
+	authentication {
+		auth_type PASS
+		auth_pass {{ keepalived_password }}
+	}
+	virtual_ipaddress {
+		{{ ha_cluster_vip }}/{{ keepalived_network_mask }}
+	}
+	track_script {
+		k3s_check
+	}
+}
+
