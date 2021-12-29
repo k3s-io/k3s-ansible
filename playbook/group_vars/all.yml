@@ -33,4 +33,5 @@ k3s_service_file_extensions:
 k3s_cluster_methods:
   - external
   - kube-vip
+  - keepalived
 
