@@ -176,23 +176,26 @@
 #    fi
 # done
 #
-- name: Command files
-  register: stat_command_files
-  stat:
-    path: "{{ bin_dir }}/{{ item }}"
-  loop:
-    - kubectl
-    - crictl
-    - ctr
+- name: Remove command files if they are symlink'd
+  block:
+    - name: Stat command files
+      register: stat_command_files
+      stat:
+        path: "{{ bin_dir }}/{{ item }}"
+      loop:
+        - kubectl
+        - crictl
+        - ctr
 
-- name: Remove command files
-  file:
-    path: "{{ item.stat.path }}"
-    state: absent
-  when: (item.stat.exists | default(false)) and (item.stat.islnk | default(false))
-  loop: "{{ stat_command_files.results }}"
-  loop_control: 
-    label: "{{ item.item }}"
+    - name: Remove command files
+      file:
+        path: "{{ item.stat.path }}"
+        state: absent
+      when: (item.stat.exists | default(false)) and (item.stat.islnk | default(false))
+      loop: "{{ stat_command_files.results }}"
+      loop_control: 
+        label: "{{ item.item }}"
+  when: inventory_hostname in groups['k3s_server']
 
 # Remove files and directories
 - name: Remove files and data
