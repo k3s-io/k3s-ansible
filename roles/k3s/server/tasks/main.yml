@@ -8,10 +8,6 @@
   include_tasks: k3s-init.yml
   when: ha_enabled
 
-- name: Perform HA-specific tasks
-  include_tasks: "cluster-method/{{ ha_cluster_method }}.yml"
-  when: ha_enabled
-
 ################################################################################
 # Setup k3s service
 #
@@ -113,11 +109,10 @@
     owner: "{{ ansible_user }}"
     mode: "u=rw,g=,o="
 
-# Use first_server here; Let the ha_cluster_method update to apiserver_endpoint
-- name: Replace https://localhost:6443 by https://{{ first_server }}:6443
+- name: Replace https://localhost:6443 by https://{{ apiserver_endpoint }}:6443
   command: >-
     {{ bin_dir }}/kubectl config set-cluster default
-      --server=https://{{ first_server }}:6443
+      --server=https://{{ apiserver_endpoint }}:6443
       --kubeconfig ~{{ ansible_user }}/.kube/config
   changed_when: true
 
@@ -128,3 +123,16 @@
     dest: "{{ cluster_config }}"
     flat: yes
   run_once: true
+
+##########################
+# Set up HA cluster method
+
+- name: Include role, {{ role }}
+  vars:
+    role: "ha/{{ ha_cluster_method }}"
+  include_role:
+    name: "{{ role }}"
+  when:
+    - ha_enabled
+    - ha_cluster_method != 'external'
+

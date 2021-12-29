@@ -1,7 +1,17 @@
 ---
 
-# TODO: Should we use k3s-uninstall.sh from https://get/k3s.io instead so that
-#       we don't have to track the updates in the future?
+##########################
+# Remove HA cluster method
+
+- name: Include role, {{ role }}
+  vars:
+    role: "reset/ha/{{ ha_cluster_method }}"
+  include_role:
+    name: "{{ role }}"
+  when:
+    - ha_enabled
+    - ha_cluster_method != 'external'
+    - inventory_hostname in groups['k3s_server']
 
 ###########################
 # Start of k3s-killall.sh #
@@ -140,16 +150,6 @@
 # Should this be done rather than focusing on a discrete list of services (k3s_services)?
 
 #
-# Perform HA cluster-method-specific tasks
-#
-- name: Remove HA cluster method
-  include_tasks: "cluster-method/{{ ha_cluster_method }}.yml"
-  when:
-    - ha_enabled
-    - ha_cluster_method is defined
-    - inventory_hostname in groups['k3s_server']
-
-#
 # for cmd in kubectl crictl ctr; do
 #    if [ -L {{ bin_dir }}/$cmd ]; then
 #        rm -f {{ bin_dir }}/$cmd
@@ -186,16 +186,14 @@
     - "{{ data_dir }}"
     - /var/lib/kubelet
     - "{{ bin_dir }}/k3s.sh"
-    - "{{ bin_dir }}/k3s-killall.sh"
-    - "{{ bin_dir }}/k3s-uninstall.sh"
+    - "{{ bin_dir }}/k3s-killall.sh"    # From https://get.k3s.io
+    - "{{ bin_dir }}/k3s-uninstall.sh"  # From https://get.k3s.io
 
-- name: Remove downloaded binaries
+- name: Remove downloaded k3s binary
   file:
-    path: "{{ item }}"
+    path: "{{ bin_dir }}/k3s"
     state: absent
   when: remove_packages
-  loop:
-    - "{{ bin_dir }}/k3s"
 
 - name: Remove ~{{ ansible_user }}/.kube/config
   file:

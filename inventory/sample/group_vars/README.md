@@ -31,8 +31,7 @@ It is possible to get an IP address dynamically but that is not implemented here
 The methods implemented today are:
   1. `external` - requires a load-balancer external to the cluster
   2. `kube-vip` - [https://kube-vip.io](https://kube-vip.io), arp-based daemonset using leader election
-
-Other load-balancing options are available (e.g., *keepalived*) but are not implemented here (yet).
+  3. `keepalived` - all *k3s* servers are configured with [keepalived](https://www.redhat.com/sysadmin/keepalived-basics) to manage a VRRP instance
 
 ## Install Variables
 
