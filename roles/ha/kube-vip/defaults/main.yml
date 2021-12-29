@@ -3,10 +3,11 @@
 # This file is used to configure the kube-vip manifest files.  It typically does
 # not need to be changed but you can at your discretion to suit your environment.
 # These variables are used only when HA is enabled and the method chosen is kube-vip.
+# More options can be found in ../templates//kube-vip-arp-ds.yaml.j2
 
 # These are commonly changed values for kube-vip.
 kube_vip_version: 'v0.4.0'
-kube_vip_interface: 'eth0'
+kube_vip_interface: "{{ ansible_default_ipv4.interface }}"
 
 # These are less commonly changed values for kube-vip.
 kube_vip_cidr: '32'
@@ -20,7 +21,4 @@ kube_vip_container_name: 'kube-vip'
 kube_vip_serviceaccount_name: 'kube-vip'
 kube_vip_clusterrole_name: 'kube-vip-role'
 kube_vip_clusterrolebinding_name: 'kube-vip-binding'
-
-# More options can be found in ...
-# roles/k3s/server/templates/cluster-method/kube-vip/kube-vip-arp-ds.yaml.j2
 

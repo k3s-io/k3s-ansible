@@ -1,25 +1,36 @@
 ---
+
+###############################################
 # Recommended in https://kube-vip.io/usage/k3s/
 # See "Clean Environment".
+
 - name: Reset local interface
   command: "{{ item }}"
   with_items:
     - ip addr flush dev lo
     - ip addr add 127.0.0.1/8 dev lo
   failed_when: false
+  changed_when: false
 
-- name: Create manifest directory {{ ha_cluster_method }}
-  file:
+#######################################################
+# Deploy kube-vip manifests
+# TODO: Figure out how to do this using kubernetes.core
+
+- name: Create manifest directory {{ path }}
+  vars:
     path: "{{ data_dir }}/server/manifests/{{ ha_cluster_method }}"
+  file:
+    path: "{{ path }}"
     state: directory
     owner: root
     group: root
     mode: "u=rwx,g=,o="
   register: manifest_dir
 
+# TODO: Should we download this instead? (See Step 2, https://kube-vip.chipzoller.dev/docs/usage/k3s/)
 - name: Copy RBAC manifest
   template:
-    src: "cluster-method/{{ ha_cluster_method }}/kube-vip-rbac.yaml.j2"
+    src: "kube-vip-rbac.yaml.j2"
     dest: "{{ manifest_dir.path }}/kube-vip-rbac.yaml"
     owner: root
     group: root
@@ -27,9 +38,13 @@
 
 - name: Copy arp daemonset manifest
   template:
-    src: "cluster-method/{{ ha_cluster_method }}/kube-vip-arp-ds.yaml.j2"
+    src: "kube-vip-arp-ds.yaml.j2"
     dest: "{{ manifest_dir.path }}/kube-vip-arp-ds.yaml"
     owner: root
     group: root
     mode: "u=rw,g=,o="
+
+- name: Apply kube-vip manifests
+  command: "{{ bin_dir }}/k3s kubectl apply -f {{ manifest_dir.path }}"
+  run_once: true
 
