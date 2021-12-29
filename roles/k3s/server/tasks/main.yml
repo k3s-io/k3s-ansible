@@ -4,8 +4,9 @@
 # Setup servers in cluster using k3s-init
 #
 
-- name: Initialize k3s cluster
-  include_tasks: k3s-init.yml
+- name: Initialize k3s HA embedded database, etcd
+  include_role:
+    name: "ha/etcd"
   when: ha_enabled
 
 ################################################################################
