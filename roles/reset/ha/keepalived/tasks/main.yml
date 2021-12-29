@@ -12,15 +12,6 @@
     enabled: no
     state: stopped
 
-#####################################################
-# Make sure the cluster VIP is removed from interface
-# Note: keepalived does this for us but just in case
-
-- name: Remove {{ ha_cluster_vip }}/{{ keepalived_network_mask }} from {{ keepalived_interface }}
-  command: "ip address delete {{ ha_cluster_vip }}/{{ keepalived_network_mask }} dev {{ keepalived_interface }}"
-  register: ipaddr_delete
-  when: ha_cluster_vip in (ansible_all_ipv4_addresses | list)
-
 ##################################
 # Delete the configuration
 
