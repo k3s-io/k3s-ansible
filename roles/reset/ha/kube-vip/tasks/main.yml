@@ -1,16 +1,53 @@
 ---
+
+- name: Include vars
+  include_vars: "../roles/ha/kube-vip/defaults/main.yml"
+
+#################################################
+# Remove kube-vip
+# TODO: Learn how to do this with kubernetes.core
+
+- name: Remove kube-vip resource and files
+  vars:
+    path: "{{ data_dir }}/server/manifests/{{ ha_cluster_method }}"
+  block:
+    - name: Check for the manifest directory, {{ path }}
+      register: manifest_dir
+      stat:
+        path: "{{ path }}/."  # Use /. just in case it is a symlink
+
+    - name: Remove kube-vip resources found in {{ path }}
+      register: resources
+      shell: "{{ bin_dir }}/kubectl delete -f {{ path }}"
+      run_once: true
+      when:
+        - manifest_dir.stat.isdir is defined
+        - manifest_dir.stat.isdir
+
+    - name: Remove manifest directory, {{ path }}
+      register: files
+      file:
+        path: "{{ path }}"
+        state: absent
+
+###################################
+# Remove cluster VIP from interface
+# kube-vip does not do this for you
+
+- name: Remove {{ ha_cluster_vip }}/{{ kube_vip_cidr }} from {{ kube_vip_interface }}
+  command: "ip address delete {{ ha_cluster_vip }}/{{ kube_vip_cidr }} dev {{ kube_vip_interface }}"
+  register: ipaddr_delete
+  when: ha_cluster_vip in (ansible_all_ipv4_addresses | list)
+
+###############################################
 # Recommended in https://kube-vip.io/usage/k3s/
 # See "Clean Environment".
+
 - name: Reset local interface
   command: "{{ item }}"
   with_items:
     - ip addr flush dev lo
     - ip addr add 127.0.0.1/8 dev lo
   failed_when: false
-
-# Remove cluster VIP from interface
-- name: Remove {{ ha_cluster_vip }}/32 from {{ kube_vip_interface }}
-  command: "ip address delete {{ ha_cluster_vip }}/32 dev {{ kube_vip_interface }}"
-  register: ipaddr_delete
-  when: ha_cluster_vip in (ansible_all_ipv4_addresses | list)
+  changed_when: false
 

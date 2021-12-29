@@ -113,10 +113,11 @@
     owner: "{{ ansible_user }}"
     mode: "u=rw,g=,o="
 
-- name: Replace https://localhost:6443 by https://{{ apiserver_endpoint }}:6443
+# Use first_server here; Let the ha_cluster_method update to apiserver_endpoint
+- name: Replace https://localhost:6443 by https://{{ first_server }}:6443
   command: >-
     {{ bin_dir }}/kubectl config set-cluster default
-      --server=https://{{ apiserver_endpoint }}:6443
+      --server=https://{{ first_server }}:6443
       --kubeconfig ~{{ ansible_user }}/.kube/config
   changed_when: true
 
