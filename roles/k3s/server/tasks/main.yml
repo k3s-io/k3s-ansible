@@ -101,15 +101,16 @@
     mode: "u=rw,g=,o="
 
 # Fetch a copy of the cluster config for use in one's ~/.kube/config.
-# The playbook will update the IP address.
+# The playbook will update the IP address using the cluster-config role.
 - name: Fetch {{ src }} for use in one's ~/.kube/config
   vars:
     src: "/etc/rancher/k3s/k3s.yaml"
   fetch:
     src: "{{ src }}"
-    dest: "{{ cluster_config }}"
+    dest: "{{ cluster_config }}.tmp"
     flat: yes
   run_once: true
+  changed_when: false
 
 ##########################
 # Set up HA cluster method
