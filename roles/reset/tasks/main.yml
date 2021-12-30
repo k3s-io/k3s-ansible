@@ -216,7 +216,7 @@
   file:
     path: "{{ bin_dir }}/k3s"
     state: absent
-  when: remove_packages
+  when: remove_packages | bool
 
 - name: Remove ~{{ ansible_user }}/.kube directory
   file:
@@ -230,7 +230,7 @@
     state: remove
   when:
     - ansible_pkg_mgr == "yum"
-    - remove_packages
+    - remove_packages | bool
 
 - name: Remove package k3s-selinux
   zypper:
@@ -238,19 +238,19 @@
     state: remove
   when:
     - ansible_pkg_mgr == "zypper"
-    - remove_packages
+    - remove_packages | bool
 
 - name: Remove yum repo files
   shell: 'rm -f /etc/yum.repos.d/rancher-k3s-common*.repo'
   register: remove_repo_files
   when:
     - ansible_pkg_mgr == "yum"
-    - remove_packages
+    - remove_packages | bool
 
 - name: Remove zypper repo files
   shell: 'rm -f /etc/zypp/repos.d/rancher-k3s-common*.repo'
   register: remove_repo_files
   when:
     - ansible_pkg_mgr == "zypper"
-    - remove_packages
+    - remove_packages | bool
 

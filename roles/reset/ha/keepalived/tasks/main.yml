@@ -41,5 +41,5 @@
   package:
     name: keepalived
     state: absent
-  when: remove_packages | default(true) | bool
+  when: keepalived_package_remove | bool
 
