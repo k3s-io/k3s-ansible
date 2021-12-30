@@ -4,12 +4,24 @@ Author: <https://github.com/itwars>
 
 ## Introduction to *k3s-ansible*
 
-The goal of *k3s-ansible* is to easily install a Kubernetes cluster on a variety of operating systems running on machines with different architectures.
+The goal of *k3s-ansible* is to easily install a Kubernetes cluster on a variety of
+operating systems running on machines with different architectures.
 In general, users of *k3s-ansible* should only need to edit two files:
 - `inventory/sample/group_vars/all.yml`
 - `inventory/sample/hosts.ini`
 
-The intention is to support what *k3s* supports.\
+All you need to get started is a list of IP addresses for the hosts that you want to
+participate in the cluster and a username that has password-less *ssh* access to all
+those hosts.  That's it!
+No need to futz with lots of settings and variables (unless you like that sort of thing;
+then, have at it).
+
+And, to setup an HA cluster, you need one more IP address - not of a host,
+but for your cluster virtual IP address.
+You don't need to know how to setup a clustering solution since *k3s-ansible* does it for you.
+But, for HA, you just need at least three hosts.
+
+The intention is for *k3s-ansible* to support what *k3s* supports.\
 Here is what has been tested (:heavy_check_mark:) with *k3s-ansible*.
 
 | Operating System | amd64 | arm64 | armhf |
@@ -22,6 +34,7 @@ Here is what has been tested (:heavy_check_mark:) with *k3s-ansible*.
 
 - The deployment environment must have *ansible* v2.4.0+.
 - Hosts in the cluster must have password-less *ssh* access.
+- HA requires at least three hosts.
 
 ## Usage
 
