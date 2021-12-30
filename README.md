@@ -6,8 +6,8 @@ Author: <https://github.com/itwars>
 
 The goal of *k3s-ansible* is to easily install a Kubernetes cluster on a variety of operating systems running on machines with different architectures.
 In general, users of *k3s-ansible* should only need to edit two files:
-- inventory/sample/group_vars/all.yml
-- inventory/sample/hosts.ini
+- `inventory/sample/group_vars/all.yml`
+- `inventory/sample/hosts.ini`
 
 The intention is to support what *k3s* supports.\
 Here is what has been tested (:heavy_check_mark:) with *k3s-ansible*.
