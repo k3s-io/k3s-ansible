@@ -212,45 +212,9 @@
     - "{{ bin_dir }}/k3s-killall.sh"    # From https://get.k3s.io
     - "{{ bin_dir }}/k3s-uninstall.sh"  # From https://get.k3s.io
 
-- name: Remove downloaded k3s binary
-  file:
-    path: "{{ bin_dir }}/k3s"
-    state: absent
-  when: remove_packages | bool
-
 - name: Remove ~{{ ansible_user }}/.kube directory
   file:
     path: "~{{ ansible_user }}/.kube"
     state: absent
   when: inventory_hostname in groups['k3s_server']
-
-- name: Remove package k3s-selinux
-  yum:
-    name: k3s-selinux
-    state: remove
-  when:
-    - ansible_pkg_mgr == "yum"
-    - remove_packages | bool
-
-- name: Remove package k3s-selinux
-  zypper:
-    name: k3s-selinux
-    state: remove
-  when:
-    - ansible_pkg_mgr == "zypper"
-    - remove_packages | bool
-
-- name: Remove yum repo files
-  shell: 'rm -f /etc/yum.repos.d/rancher-k3s-common*.repo'
-  register: remove_repo_files
-  when:
-    - ansible_pkg_mgr == "yum"
-    - remove_packages | bool
-
-- name: Remove zypper repo files
-  shell: 'rm -f /etc/zypp/repos.d/rancher-k3s-common*.repo'
-  register: remove_repo_files
-  when:
-    - ansible_pkg_mgr == "zypper"
-    - remove_packages | bool
 

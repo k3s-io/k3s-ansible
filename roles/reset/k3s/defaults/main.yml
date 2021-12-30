@@ -1,0 +1,7 @@
+---
+ansible_user: debian
+ha_enabled: false
+
+# Changing this flag will keep the downloaded binaries after a reset
+remove_packages: true
+
