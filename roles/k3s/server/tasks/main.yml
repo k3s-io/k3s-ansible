@@ -80,32 +80,33 @@
 # Setup {{ ansible_user }}/.kube/config
 #
 
-- name: Create directory .kube
+- name: Create local kube directory, {{ path }}
+  vars:
+    path: "~{{ ansible_user }}/.kube"
   file:
-    path: ~{{ ansible_user }}/.kube
+    path: "{{ path }}"
     state: directory
     owner: "{{ ansible_user }}"
     mode: "u=rwx,g=rx,o="
 
-- name: Copy config file to user home directory
+- name: Copy kubeconfig file, {{ src }}, to {{ dest }}
+  vars:
+    src: "/etc/rancher/k3s/k3s.yaml"
+    dest: "~{{ ansible_user }}/.kube/config"
   copy:
-    src: /etc/rancher/k3s/k3s.yaml
-    dest: ~{{ ansible_user }}/.kube/config
+    src: "{{ src }}"
+    dest: "{{ dest }}"
     remote_src: yes
     owner: "{{ ansible_user }}"
     mode: "u=rw,g=,o="
 
-- name: Replace https://localhost:6443 by https://{{ apiserver_endpoint }}:6443
-  command: >-
-    {{ bin_dir }}/kubectl config set-cluster default
-      --server=https://{{ apiserver_endpoint }}:6443
-      --kubeconfig ~{{ ansible_user }}/.kube/config
-  changed_when: true
-
 # Fetch a copy of the cluster config for use in one's ~/.kube/config.
-- name: Copy .kube/config for new cluster
+# The playbook will update the IP address.
+- name: Fetch {{ src }} for use in one's ~/.kube/config
+  vars:
+    src: "/etc/rancher/k3s/k3s.yaml"
   fetch:
-    src: "~{{ ansible_user }}/.kube/config"
+    src: "{{ src }}"
     dest: "{{ cluster_config }}"
     flat: yes
   run_once: true
@@ -113,7 +114,7 @@
 ##########################
 # Set up HA cluster method
 
-- name: Include role, {{ role }}
+- name: Setup HA cluster method, {{ ha_cluster_method | default('n/a') }}
   vars:
     role: "ha/{{ ha_cluster_method }}"
   include_role:
