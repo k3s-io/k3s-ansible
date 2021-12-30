@@ -39,7 +39,7 @@
   when:
     - detected_distribution | default("") == "Raspbian"
 
-- name: execute OS related tasks on the Raspberry Pi
+- name: Execute OS related tasks on the Raspberry Pi
   include_tasks: "{{ item }}"
   with_first_found:
     - "prereq/{{ detected_distribution }}-{{ detected_distribution_major_version }}.yml"
