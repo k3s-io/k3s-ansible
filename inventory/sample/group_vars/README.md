@@ -1,5 +1,5 @@
 
-## Introduction
+# Introduction
 
 `inventory/x/group_vars/all.yml` is meant to be modified appropriately for your environment.
 
