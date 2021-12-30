@@ -62,17 +62,17 @@ Please, try it out.
 | Role                  | Role Type  | Idempotent         | Only Real Changes  | Defaults           | commands | TODOs | BUGs  |
 | :-------------------- | :--------: | :---:              | :---:              | :---:              | :---:    | :---: | :---: |
 | cluster-config        | install    | :heavy_check_mark: | :heavy_check_mark: |                    | -        | -     | -     |
-| config-check          | install    | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | -        | -     | -     |
+| config-check          | install    | :heavy_check_mark: | :heavy_check_mark: | *under review*     | -        | -     | -     |
 | prereq                | install    | :heavy_check_mark: | :heavy_check_mark: | **n/a**            | -        | -     | -     |
-| download              | install    | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | -        | -     | -     |
+| download              | install    | :heavy_check_mark: | :heavy_check_mark: | *under review*     | -        | -     | -     |
 | raspberrypi           | install    | :heavy_check_mark: | :heavy_check_mark: | **n/a**            | 2        | 1     | -     |
-| ha/etcd               | HA-only    |                    | unknown            | :heavy_check_mark: | 3        | 1     | -     |
-| ha/keepalived         | HA-only    | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | 1        | 1     | -     |
-| ha/kube-vip           | HA-only    | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | 2        | 3     | -     |
-| k3s/server            | install    | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | -        | -     | -     |
+| ha/etcd               | HA-only    |                    | unknown            | *under review*     | 3        | 1     | -     |
+| ha/keepalived         | HA-only    | :heavy_check_mark: | :heavy_check_mark: | *under review*     | 1        | 1     | -     |
+| ha/kube-vip           | HA-only    | :heavy_check_mark: | :heavy_check_mark: | *under review*     | 2        | 3     | -     |
+| k3s/server            | install    | :heavy_check_mark: | :heavy_check_mark: | *under review*     | -        | -     | -     |
 | k3s/agent             | install    | :heavy_check_mark: | :heavy_check_mark: |                    | -        | -     | -     |
-| reset/download        | uninstall  | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | 2        | 1     | -     |
+| reset/download        | uninstall  | :heavy_check_mark: | :heavy_check_mark: | *under review*     | 2        | 1     | -     |
 | reset/ha/keepalived   | uninstall  | :heavy_check_mark: | :heavy_check_mark: | *by ref*           | -        | -     | -     |
 | reset/ha/kube-vip     | uninstall  | :heavy_check_mark: | :heavy_check_mark: | *by ref*           | 3        | 1     | -     |
-| reset/k3s             | uninstall  | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | 9        | 1     | 2     |
+| reset/k3s             | uninstall  | :heavy_check_mark: | :heavy_check_mark: | *under review*     | 9        | 1     | 2     |
 
