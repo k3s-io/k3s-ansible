@@ -85,7 +85,7 @@
         state: absent
       when: (item.stat.exists | default(false)) and (item.stat.islnk | default(false))
       loop: "{{ stat_command_files.results }}"
-      loop_control: 
+      loop_control:
         label: "{{ item.item }}"
   when: inventory_hostname in groups['k3s_server']
 
