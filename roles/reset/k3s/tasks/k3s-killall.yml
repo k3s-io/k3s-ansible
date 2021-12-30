@@ -1,0 +1,121 @@
+---
+
+###############################################################
+# The tasks below mimic k3s-killall.sh from https://get.k3s.io.
+# The comments are taken from this script to make it easier to
+# track changes and maintain parity.
+#
+
+#
+# for service in /etc/systemd/system/k3s*.service; do
+#    [ -s $service ] && systemctl stop $(basename $service)
+# done
+#
+- name: Disable services
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: no
+  failed_when: false
+  loop: "{{ k3s_services }}"
+
+#
+# killtree $({ set +x; } 2>/dev/null; getshims; set -x)
+#
+- name: pkill -9 -f "{{ data_dir }}/data/[^/]+/bin/containerd-shim"
+  register: pkill_containerd_shim
+  command: pkill -9 -f "{{ data_dir }}/data/[^/]+/bin/containerd-shim"
+  changed_when: "pkill_containerd_shim.rc == 0"
+  failed_when: false
+
+#
+#
+# do_unmount_and_remove [the list]
+#
+- name: Umount k3s filesystems and remove mount points
+  include_tasks: umount_with_children.yml
+  loop:
+    - /run/k3s
+    - "{{ data_dir }}"
+    - /var/lib/kubelet/pods
+    - /var/lib/kubelet/plugins
+    - /run/netns/cni-
+  loop_control:
+    loop_var: mounted_fs
+
+#
+# Remove CNI namespaces
+# ip netns show 2> /dev/null | grep cni- | xargs -r -t -n 1 ip netns delete
+#
+- name: Show CNI namespaces
+  register: ip_netns_show
+  command: ip -j netns show master cni0
+  changed_when: false
+
+#
+# BUG: Possible bug in ip-netns(8) on Raspbian.
+# "ip -j netns show master cni0" does not always report "[ ]" but returns 0 when there is no master.
+#
+- name: Remove CNI namespaces
+  command: ip netns delete {{ item }}
+  loop: "{{ (ip_netns_show.stdout if ip_netns_show.stdout != '' else  '[ ]') | from_json | json_query('[*].name') }}"
+
+#
+# Remove CNI interfaces
+# ip link show 2>/dev/null | grep 'master cni0'
+#
+# BUG: Possible bug in ip-link(8) on Raspbian.
+# "ip -j link show master cni0" exits 255 when cni0 does not exist where
+# "ip -j netns show master cni0" reports "[ ]", which is preferred.
+#
+- name: Get list of network interface(s) that match 'master cni0'
+  register: ip_link_show
+  shell: ip -j link show master cni0 || echo "[ ]"
+  changed_when: false
+
+- name: Remove CNI interfaces
+  command: ip link delete {{ item }}
+  loop: "{{ ip_link_show.stdout | from_json | json_query('[*].ifname') }}"
+
+#
+# Remove other interfaces and files
+#
+- name: Remove other interfaces
+  command: ip link delete {{ item }}
+  when: item in ansible_interfaces
+  loop:
+    - cni0
+    - flannel.1
+    - flannel-v6.1
+
+- name: Remove CNI files
+  file:
+    path: /var/lib/cni
+    state: absent
+
+#
+# iptables-save | grep -v KUBE- | grep -v CNI- | iptables-restore
+# TODO: Replace with appropriate ansible module
+#
+
+- name: Dump iptables
+  register: iptables_saved
+  command: "iptables-save"
+  changed_when: false
+
+- name: Filter entries using regex pattern "{{ pattern }}"
+  vars:
+    pattern: '(KUBE|CNI)-'
+  set_fact:
+    iptables_filtered: >-
+      {{
+        iptables_saved.stdout
+        | regex_replace('^.*'+pattern+'.*$', '#', multiline=true)
+      }}
+
+- name: Remove "(KUBE|CNI)-" iptables entries
+  command:
+    cmd: "iptables-restore"
+    stdin: "{{ iptables_filtered }}"
+  when: iptables_saved.stdout != iptables_filtered
+
