@@ -36,6 +36,12 @@ Here is what has been tested (:heavy_check_mark:) with *k3s-ansible*.
 - Hosts in the cluster must have password-less *ssh* access.
 - HA requires at least three hosts.
 
+##  Caveats
+
+- *k3s-ansible* will overwrite an existing **k3s* installation on the hosts.
+- *k3s-ansible* will overwrite the `.kube` directory of the `ansible_user` specified on each server.
+- An HA configuration using **keepalived** will overwrite an existing **keepalived** configuration.
+
 ## Usage
 
 1. Create a new cluster definition based on the `inventory/sample` directory.
