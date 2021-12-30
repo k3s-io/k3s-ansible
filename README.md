@@ -5,7 +5,8 @@ Author: <https://github.com/itwars>
 ## Introduction to *k3s-ansible*
 
 The goal of *k3s-ansible* is to easily install a Kubernetes cluster on a variety of operating systems running on machines with different architectures.
-The intention is to support what *k3s* supports.  Here is what has been tested (:heavy_check_mark:) with *k3s-ansible*.
+The intention is to support what *k3s* supports.\
+Here is what has been tested (:heavy_check_mark:) with *k3s-ansible*.
 
 | Operating System | amd64 | arm64 | armhf |
 | :--------------- | :---: | :---: | :---: |
@@ -26,7 +27,7 @@ The intention is to support what *k3s* supports.  Here is what has been tested (
 cp -R inventory/sample inventory/my-cluster
 ```
 
-2. Edit `inventory/my-cluster/hosts.ini` to include the hosts that will make up your new cluster.
+2. Edit `inventory/my-cluster/hosts.ini` to include the hosts that will make up your new cluster.\
 For example:
 
 ```bash
@@ -41,7 +42,7 @@ k3s_server
 k3s_agent
 ```
 
-3. Edit `inventory/my-cluster/group_vars/all.yml` to best match your environment.
+3. Edit `inventory/my-cluster/group_vars/all.yml` to best match your environment.\
 See, `inventory/sample/group_vars/README.md` for more details.
 
 4. Provision your new cluster.
