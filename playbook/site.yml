@@ -23,6 +23,13 @@
   connection: local
   gather_facts: no
   tasks:
+    - name: Replace https://localhost:6443 by https://{{ apiserver_endpoint }}:6443
+      lineinfile:
+        path: "{{ cluster_config }}"
+        regexp: '^(.*)https://.*:6443(.*)$'
+        line: '\g<1>https://{{ apiserver_endpoint }}:6443\g<2>'
+        backrefs: yes
+
     - name: Wait for control-plane at {{ apiserver_endpoint }}:6443
       wait_for:
         host: "{{ apiserver_endpoint }}"
@@ -35,3 +42,4 @@
   become: yes
   roles:
     - role: k3s/agent
+
