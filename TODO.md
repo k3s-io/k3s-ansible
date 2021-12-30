@@ -54,6 +54,8 @@ Please, try it out.
     - Should it be deleted?
 8. From where does *k3s-selinux* get installed?
     - The `reset/download` role deletes it.
+9. Document lesser switches to control behavior of roles (e.g., remove_packages)
+10. Create playbooks for other common operations beyond install/uninstall
 
 # Progress Report
 
