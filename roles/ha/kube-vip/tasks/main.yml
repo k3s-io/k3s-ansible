@@ -22,7 +22,7 @@
 
 - name: Create manifest directory {{ path }}
   vars:
-    path: "{{ data_dir }}/server/manifests/{{ ha_cluster_method }}"
+    path: "{{ data_dir }}/server/manifests/{{ k3s_cluster_method }}"
   file:
     path: "{{ path }}"
     state: directory

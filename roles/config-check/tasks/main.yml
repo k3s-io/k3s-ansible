@@ -28,19 +28,12 @@
     - ha_enabled
     - (ha_cluster_vip is not defined) or not (ha_cluster_vip | ansible.netcommon.ipaddr)
 
-- name: Check that ha_cluster_method is defined
-  fail:
-    msg: "When HA is enabled, 'ha_cluster_method' must be defined."
-  when:
-    - ha_enabled
-    - ha_cluster_method is not defined
-
 - name: Check for a proper HA cluster method
   fail:
-    msg: "'{{ ha_cluster_method }}' is not a supported HA cluster method."
+    msg: "'{{ k3s_cluster_method }}' is not a supported HA cluster method."
   when:
     - ha_enabled
-    - ha_cluster_method not in k3s_cluster_methods
+    - k3s_cluster_method not in k3s_cluster_methods
 
 - name: Determine version to download
   block:

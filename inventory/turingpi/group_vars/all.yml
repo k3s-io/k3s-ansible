@@ -1,19 +1,9 @@
 ---
 
-# See inventory/sample/group_vars/README.md for more options.
-# If this file is empty, default values will be used for all mandatory fields.
-
 # The user that has password-less ssh access to configure your hosts
 ansible_user: pirate
 
-# The location of where to capture the kube config of the new cluster
-# Relative paths are relative to the playbook directory.
-cluster_config: cluster.conf
-
 ha_enabled: true
 ha_cluster_vip: 192.168.140.127
-ha_cluster_method: keepalived
 
-# Use the latest k3s version instead of 'stable'
-install_k3s_channel: 'latest'
 

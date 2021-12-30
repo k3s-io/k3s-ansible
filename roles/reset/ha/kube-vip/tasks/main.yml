@@ -9,7 +9,7 @@
 
 - name: Remove kube-vip resource and files
   vars:
-    path: "{{ data_dir }}/server/manifests/{{ ha_cluster_method }}"
+    path: "{{ data_dir }}/server/manifests/{{ k3s_cluster_method }}"
   block:
     - name: Check for the manifest directory, {{ path }}
       register: manifest_dir

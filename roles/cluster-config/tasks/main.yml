@@ -2,21 +2,21 @@
 
 - name: Replace https://localhost:6443 with https://{{ apiserver_endpoint }}:6443
   lineinfile:
-    path: "{{ cluster_config }}.tmp"
+    path: "{{ k3s_cluster_config }}.tmp"
     regexp: '^(.*)https://.*:6443(.*)$'
     line: '\g<1>https://{{ apiserver_endpoint }}:6443\g<2>'
     backrefs: yes
   changed_when: false
 
 # The transfer uses a temporary/intermediate file because a fetched file is always "changed".
-- name: Update cluster config, {{ cluster_config }}
+- name: Update cluster config, {{ k3s_cluster_config }}
   copy:
-    src: "{{ cluster_config }}.tmp"
-    dest: "{{ cluster_config }}"
+    src: "{{ k3s_cluster_config }}.tmp"
+    dest: "{{ k3s_cluster_config }}"
 
 - name: Remove temporary cluster config
   file:
-    path: "{{ cluster_config }}.tmp"
+    path: "{{ k3s_cluster_config }}.tmp"
     state: absent
   changed_when: false
 

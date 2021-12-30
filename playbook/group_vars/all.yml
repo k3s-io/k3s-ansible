@@ -18,6 +18,9 @@ data_dir: "{{ install_k3s_data_dir | default('/var/lib/rancher/k3s') }}"
 first_server: "{{ hostvars[groups['k3s_server'][0]]['ansible_host'] | default(groups['k3s_server'][0]) }}"
 apiserver_endpoint: "{{ (ha_cluster_vip | mandatory) if (ha_enabled | default(false)) else first_server }}"
 
+k3s_cluster_config: "{{ cluster_config | default('cluster.conf') }}"
+k3s_cluster_method: "{{ ha_cluster_method | default('keepalived') }}"
+
 k3s_token: "{{ ha_k3s_token | default('MySuperSecureToken') }}"
 
 # Services information

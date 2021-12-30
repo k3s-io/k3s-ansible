@@ -107,7 +107,7 @@
     src: "/etc/rancher/k3s/k3s.yaml"
   fetch:
     src: "{{ src }}"
-    dest: "{{ cluster_config }}.tmp"
+    dest: "{{ k3s_cluster_config }}.tmp"
     flat: yes
   run_once: true
   changed_when: false
@@ -115,12 +115,12 @@
 ##########################
 # Set up HA cluster method
 
-- name: Setup HA cluster method, {{ ha_cluster_method | default('n/a') }}
+- name: Setup HA cluster method, {{ k3s_cluster_method | default('n/a') }}
   vars:
-    role: "ha/{{ ha_cluster_method }}"
+    role: "ha/{{ k3s_cluster_method }}"
   include_role:
     name: "{{ role }}"
   when:
     - ha_enabled
-    - ha_cluster_method != 'external'
+    - k3s_cluster_method != 'external'
 

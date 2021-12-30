@@ -12,12 +12,12 @@
 
 - name: Include role, {{ role }}
   vars:
-    role: "reset/ha/{{ ha_cluster_method }}"
+    role: "reset/ha/{{ k3s_cluster_method }}"
   include_role:
     name: "{{ role }}"
   when:
     - ha_enabled
-    - ha_cluster_method != 'external'
+    - k3s_cluster_method != 'external'
     - inventory_hostname in groups['k3s_server']
 
 #
