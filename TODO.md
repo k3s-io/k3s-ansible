@@ -72,7 +72,7 @@ Please, try it out.
 | k3s/server            | install    | :heavy_check_mark: | :heavy_check_mark: | *under review*     | -        | -     | -     |
 | k3s/agent             | install    | :heavy_check_mark: | :heavy_check_mark: |                    | -        | -     | -     |
 | reset/download        | uninstall  | :heavy_check_mark: | :heavy_check_mark: | *under review*     | 2        | 1     | -     |
-| reset/ha/keepalived   | uninstall  | :heavy_check_mark: | :heavy_check_mark: | *by ref*           | -        | -     | -     |
-| reset/ha/kube-vip     | uninstall  | :heavy_check_mark: | :heavy_check_mark: | *by ref*           | 3        | 1     | -     |
+| reset/ha/keepalived   | uninstall  | :heavy_check_mark: | :heavy_check_mark: | *by reference*     | -        | -     | -     |
+| reset/ha/kube-vip     | uninstall  | :heavy_check_mark: | :heavy_check_mark: | *by reference*     | 3        | 1     | -     |
 | reset/k3s             | uninstall  | :heavy_check_mark: | :heavy_check_mark: | *under review*     | 9        | 1     | 2     |
 
