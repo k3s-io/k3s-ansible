@@ -25,6 +25,11 @@
     - ansible_facts.architecture is search("arm")
     - ansible_facts.userspace_bits == "32"
 
+- name: Skip if architecture ({{ ansible_facts.architecture }}) is supported
+  fail:
+    msg: "This host does not have a supported architecture ({{ ansible_facts.architecture }})."
+  when: k3s_arch is not defined
+
 # Determine URLs for download
 - name: Determine Github URLs
   set_fact:
