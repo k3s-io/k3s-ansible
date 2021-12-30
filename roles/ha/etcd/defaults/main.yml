@@ -1,5 +1,7 @@
 ---
 
+# TODO: How do we use the first_server node-token instead of k3s_token?
+
 server_init_args: >-
   {% if ansible_host == first_server %}
     --cluster-init
