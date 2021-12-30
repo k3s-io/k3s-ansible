@@ -21,6 +21,7 @@ keepalived_script_group: 'nogroup'
 keepalived_script_login: '/usr/sbin/nologin'
 
 keepalived_package_state: 'latest'
+keepalived_package_remove: remove_packages | default(true) | bool
 
 keepalived_instance_name: 'K3S_VI_1'
 keepalived_interface: "{{ ansible_default_ipv4.interface }}"
