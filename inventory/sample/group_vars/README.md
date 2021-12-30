@@ -29,9 +29,11 @@ It is possible to get an IP address dynamically but that is not implemented here
 
 - **ha_cluster_method**: specifies the method of clustering to use for the virtual IP.
 The methods implemented today are:
-  1. `external` - requires a load-balancer external to the cluster
-  2. `kube-vip` - [https://kube-vip.io](https://kube-vip.io), arp-based daemonset using leader election
-  3. `keepalived` - all *k3s* servers are configured with [keepalived](https://www.redhat.com/sysadmin/keepalived-basics) to manage a VRRP instance
+    1. `external` - requires a load-balancer external to the cluster
+    2. `kube-vip` - [https://kube-vip.io](https://kube-vip.io), arp-based daemonset using leader election
+    3. `keepalived` - all *k3s* servers are configured with [keepalived](https://www.redhat.com/sysadmin/keepalived-basics) to manage a VRRP instance
+
+- **ha_k3s_token**: specifies k3s token used by hosts to join the cluster
 
 ## Install Variables
 
