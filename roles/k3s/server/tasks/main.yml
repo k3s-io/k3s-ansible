@@ -37,16 +37,6 @@
   wait_for:
     path: "{{ data_dir }}/server/node-token"
 
-- name: Register node-token file access mode
-  stat:
-    path: "{{ data_dir }}/server/node-token"
-  register: p
-
-- name: Make node-token world-readable
-  file:
-    path: "{{ data_dir }}/server/node-token"
-    mode: "u=rw,g=r,o=r"
-
 - name: Read node-token from the server
   slurp:
     path: "{{ data_dir }}/server/node-token"
@@ -55,11 +45,6 @@
 - name: Store the server node-token
   set_fact:
     token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
-
-- name: Restore node-token file access
-  file:
-    path: "{{ data_dir }}/server/node-token"
-    mode: "{{ p.stat.mode }}"
 
 ################################################################################
 # Create ctl commands
