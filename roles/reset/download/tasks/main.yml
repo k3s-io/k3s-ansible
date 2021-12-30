@@ -1,0 +1,42 @@
+---
+
+- name: Remove downloaded k3s binary
+  file:
+    path: "{{ bin_dir }}/k3s"
+    state: absent
+  when: remove_packages | bool
+
+#
+# TODO: Where is k3s-selinux getting downloaded?
+#       Are these tasks even necessary?
+#
+- name: Remove package k3s-selinux
+  yum:
+    name: k3s-selinux
+    state: remove
+  when:
+    - ansible_pkg_mgr == "yum"
+    - remove_packages | bool
+
+- name: Remove package k3s-selinux
+  zypper:
+    name: k3s-selinux
+    state: remove
+  when:
+    - ansible_pkg_mgr == "zypper"
+    - remove_packages | bool
+
+- name: Remove yum repo files
+  shell: 'rm -f /etc/yum.repos.d/rancher-k3s-common*.repo'
+  register: remove_repo_files
+  when:
+    - ansible_pkg_mgr == "yum"
+    - remove_packages | bool
+
+- name: Remove zypper repo files
+  shell: 'rm -f /etc/zypp/repos.d/rancher-k3s-common*.repo'
+  register: remove_repo_files
+  when:
+    - ansible_pkg_mgr == "zypper"
+    - remove_packages | bool
+
