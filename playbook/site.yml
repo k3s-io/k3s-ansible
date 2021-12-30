@@ -1,7 +1,7 @@
 ---
 
-# Get hosts ready for k3s installation
-- hosts: k3s_cluster
+- name: Prepare hosts for k3s installation
+  hosts: k3s_cluster
   gather_facts: yes
   become: yes
   roles:
@@ -11,33 +11,22 @@
     - role: download
     - role: raspberrypi
 
-# Install the k3s servers
-- hosts: k3s_server
+- name: Install the k3s servers
+  hosts: k3s_server
   gather_facts: no
   become: yes
   roles:
     - role: k3s/server
 
-# Wait for control-plane before setting up agents
-- hosts: 127.0.0.1
+- name: Fetch cluster config and wait for control-plane before setting up agents
+  hosts: 127.0.0.1
   connection: local
   gather_facts: no
-  tasks:
-    - name: Replace https://localhost:6443 by https://{{ apiserver_endpoint }}:6443
-      lineinfile:
-        path: "{{ cluster_config }}"
-        regexp: '^(.*)https://.*:6443(.*)$'
-        line: '\g<1>https://{{ apiserver_endpoint }}:6443\g<2>'
-        backrefs: yes
+  roles:
+    - role: cluster-config
 
-    - name: Wait for control-plane at {{ apiserver_endpoint }}:6443
-      wait_for:
-        host: "{{ apiserver_endpoint }}"
-        port: "6443"
-        timeout: 60
-
-# Install the k3s agents
-- hosts: k3s_agent
+- name: Install the k3s agents
+  hosts: k3s_agent
   gather_facts: no
   become: yes
   roles:

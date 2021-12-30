@@ -1,0 +1,28 @@
+---
+
+- name: Replace https://localhost:6443 with https://{{ apiserver_endpoint }}:6443
+  lineinfile:
+    path: "{{ cluster_config }}.tmp"
+    regexp: '^(.*)https://.*:6443(.*)$'
+    line: '\g<1>https://{{ apiserver_endpoint }}:6443\g<2>'
+    backrefs: yes
+  changed_when: false
+
+# The transfer uses a temporary/intermediate file because a fetched file is always "changed".
+- name: Update cluster config, {{ cluster_config }}
+  copy:
+    src: "{{ cluster_config }}.tmp"
+    dest: "{{ cluster_config }}"
+
+- name: Remove temporary cluster config
+  file:
+    path: "{{ cluster_config }}.tmp"
+    state: absent
+  changed_when: false
+
+- name: Wait for control-plane at {{ apiserver_endpoint }}:6443
+  wait_for:
+    host: "{{ apiserver_endpoint }}"
+    port: "6443"
+    timeout: 60
+
