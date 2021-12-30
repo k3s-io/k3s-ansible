@@ -218,9 +218,9 @@
     state: absent
   when: remove_packages
 
-- name: Remove ~{{ ansible_user }}/.kube/config
+- name: Remove ~{{ ansible_user }}/.kube directory
   file:
-    path: "~{{ ansible_user }}/.kube/config"
+    path: "~{{ ansible_user }}/.kube"
     state: absent
   when: inventory_hostname in groups['k3s_server']
 
