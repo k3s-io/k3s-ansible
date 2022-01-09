@@ -12,7 +12,7 @@ cluster_config: cluster.conf
 
 ha_enabled: true
 ha_cluster_vip: 192.168.140.127
-ha_cluster_method: keepalived
+ha_cluster_method: kube-vip
 
 # Use the latest k3s version instead of 'stable'
 install_k3s_channel: 'latest'
