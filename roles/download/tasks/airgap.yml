@@ -1,0 +1,20 @@
+---
+- name: Make Airgap dir
+  file:
+    path: /var/lib/rancher/k3s/agent/images
+    state: directory
+
+- name: Copy k3s airgap
+  copy:
+    src: "k3s"
+    dest: /usr/local/bin/k3s
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Copy k3s image airgap
+  copy:
+    src: "k3s-airgap-images.tar"
+    dest: /var/lib/rancher/k3s/agent/images/
+    owner: root
+    group: root

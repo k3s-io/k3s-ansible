@@ -1,0 +1,8 @@
+- name: Download k3s binary armhf
+  get_url:
+    url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-armhf
+    checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-arm.txt
+    dest: /usr/local/bin/k3s
+    owner: root
+    group: root
+    mode: 0755
