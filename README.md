@@ -9,12 +9,14 @@ Build a Kubernetes cluster using Ansible with k3s. The goal is easily install a 
 - [X] Debian
 - [X] Ubuntu
 - [X] CentOS
+- [X] Kali
 
 on processor architecture:
 
 - [X] x64
 - [X] arm64
 - [X] armhf
+- [X] aarch64
 
 ## System requirements
 
