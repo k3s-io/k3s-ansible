@@ -10,7 +10,12 @@ systemd_dir: /etc/systemd/system
 # Also you should define k3s_token so that masters can talk together securely
 
 apiserver_endpoint: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}"
+# External Loadbalancer
+# apiserver_endpoint: "{{ hostvars[groups['loadbalancer'][0]]['ansible_host'] | default(groups['master'][0]) }}"
+
 # k3s_token: "mysupersecuretoken"
 
 extra_server_args: ""
+# External Loadbalancer
+#extra_server_args: "--tls-san {{ hostvars[groups['loadbalancer'][0]]['ansible_host'] | default(groups['master'][0]) }}"
 extra_agent_args: ""
