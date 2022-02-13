@@ -7,6 +7,13 @@
     backrefs: true
   notify: reboot
 
+- name: Install iptables
+  apt:
+    name:
+      - iptables
+    update_cache: yes
+    state: present
+
 - name: Flush iptables before changing to iptables-legacy
   iptables:
     flush: true
