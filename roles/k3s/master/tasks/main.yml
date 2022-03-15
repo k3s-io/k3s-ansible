@@ -82,3 +82,19 @@
     src: /usr/local/bin/k3s
     dest: /usr/local/bin/ctr
     state: link
+
+- name: Copy k3s-killall.sh to /usr/local/bin
+  copy:
+    src: k3s-killall.sh
+    dest: /usr/local/bin/k3s-killall.sh
+    owner: root
+    group: root
+    mode: 'u=rwx,g=rx,o=rx'
+
+- name: Copy k3s-uninstall.sh to /usr/local/bin
+  template:
+    src: k3s-uninstall.sh.j2
+    dest: /usr/local/bin/k3s-uninstall.sh
+    owner: root
+    group: root
+    mode: 0755
