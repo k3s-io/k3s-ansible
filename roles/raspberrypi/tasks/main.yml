@@ -44,8 +44,10 @@
   include_tasks: "{{ item }}"
   with_first_found:
     - "prereq/{{ detected_distribution }}-{{ detected_distribution_major_version }}.yml"
+    - "prereq/{{ detected_distribution }}-{{ detected_distribution_codename }}.yml"
     - "prereq/{{ detected_distribution }}.yml"
     - "prereq/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "prereq/{{ ansible_distribution }}-{{ ansible_distribution_codename }}.yml"
     - "prereq/{{ ansible_distribution }}.yml"
     - "prereq/default.yml"
   when:
