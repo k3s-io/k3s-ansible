@@ -25,6 +25,12 @@
   loop_control:
     loop_var: mounted_fs
 
+- name: Remove useless netns
+  shell:
+    "for ns in $( cd /run/netns; ls -1 cni*); do sudo ip netns del $ns; done"
+  register: shellcmd
+  tags: removenetns
+
 - name: Remove service files, binaries and data
   file:
     name: "{{ item }}"
