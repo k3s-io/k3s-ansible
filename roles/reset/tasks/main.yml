@@ -1,4 +1,7 @@
 ---
+- include: suse_cleanups.yml
+  when: ansible_os_family  == "Suse"
+
 - name: Disable services
   systemd:
     name: "{{ item }}"

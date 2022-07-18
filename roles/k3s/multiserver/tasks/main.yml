@@ -15,6 +15,12 @@
     daemon_reload: yes
     state: restarted
     enabled: yes
+  when: k3s_service.changed
+  retries: 5
+  delay: 5
+  register: result
+  until: result is not failed
+  tags: retry_start_k3s_multiserver
 
 - name: Wait for node-token
   wait_for:

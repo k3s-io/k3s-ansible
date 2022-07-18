@@ -1,4 +1,6 @@
 ---
+- include: suse.yml
+  when: ansible_os_family  == "Suse"
 - name: Set SELinux to disabled state
   selinux:
     state: disabled
