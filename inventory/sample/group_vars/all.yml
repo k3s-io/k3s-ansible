@@ -1,10 +1,10 @@
 ---
 k3s_version: v1.23.6+k3s1
-ansible_user: debian
+ansible_user: root
 systemd_dir: /etc/systemd/system
 master_ip: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}"
 # use option --cluster-init if you want to set up HA with etcd 
-extra_server_args: "--cluster-init"
+extra_server_args: ""
 # if any hosts are specified in the multiserver section they will join the master in an HA setup
 extra_multiserver_args: ""
 extra_agent_args: ""

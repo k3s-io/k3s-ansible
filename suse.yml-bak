@@ -1,0 +1,126 @@
+- debug:
+    msg: "{{ hostvars[item].ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}/{{ cidr }}"
+  vars:
+    cidr: "{{ (ansible_default_ipv4.address + '/' + ansible_default_ipv4.netmask) | ipaddr('prefix') }}"
+  delegate_to: "{{ master_ip }}"
+  when: inventory_hostname in groups['master']
+  with_inventory_hostnames:
+    - all:!master
+  #with_items:  "{{ groups.['all!master] }}"
+  tags: debug_ip
+
+- name: switch firewalld to use iptables
+  lineinfile:
+    path: /etc/firewalld/firewalld.conf
+    regexp: '^FirewallBackend='
+    line: FirewallBackend=iptables
+  register: firewalld_iptables_conf
+  tags: firewalld_iptables
+
+  #- name: Reboot machines if firewalld backend updated
+  #  command: reboot
+  #  async: 1
+  #  poll: 0
+  #when: firewalld_iptables_conf.changed
+
+  #- name: Wait for system to become reachable
+  #  wait_for_connection:
+  #    delay: 1
+  #    timeout: 300
+  #when: firewalld_iptables_conf.changed
+
+- name: restart firewalld 
+  service: 
+    name: firewalld
+    state: restarted
+  when: firewalld_iptables_conf.changed
+  tags: restart_iptables
+
+- name: open API server on the master node
+  firewalld:
+    port: 6443/tcp
+    permanent: yes
+    state: enabled
+    #zone: trusted
+    immediate: yes
+  delegate_to: "{{ master_ip }}"
+  when: inventory_hostname in groups['master']
+  tags: open_api_port
+  
+- name: open API server on the master node
+  firewalld:
+    port: 6443/tcp
+    permanent: yes
+    state: enabled
+    # zone: trusted
+    immediate: yes
+    #delegate_to: "{{ master_ip }}"
+  when: inventory_hostname in groups['multiserver']
+  tags: open_api_port
+
+- name: open internal services network
+  firewalld:
+    source: 10.43.0.0/16
+    permanent: yes
+    state: enabled
+    zone: trusted
+    immediate: yes
+    #delegate_to: "{{ master_ip }}"
+    #when: inventory_hostname in groups['master']
+  tags: open_api_port
+
+- name: open internal pods network
+  firewalld:
+    source: 10.42.0.0/16
+    permanent: yes
+    state: enabled
+    zone: trusted
+    immediate: yes
+    #delegate_to: "{{ master_ip }}"
+    #when: inventory_hostname in groups['multiserver']
+  tags: open_api_port
+
+- name: Open etc ports master-multiserver
+  firewalld:
+    state: enabled
+    permanent: yes
+    immediate: yes
+    port: '{{ item }}'
+  with_items:
+    - 2379/tcp    # etcd client requests
+    - 2380/tcp    # etcd peer communication
+  when: inventory_hostname in groups['multiserver']
+
+- name: Open ports /all
+  firewalld:
+    state: enabled
+    immediate: yes
+    permanent: yes
+    port: '{{ item }}'
+    zone: public
+  with_items:
+    - 80/tcp
+    - 443/tcp
+    - 7946/udp          # MetalLB speaker port
+    - 7946/tcp          # MetalLB speaker port
+    - 8472/udp          # Canal/Flannel VXLAN overlay networking
+    - 9099/tcp          # Canal/Flannel livenessProbe/readinessProbe
+    - 10250-10255/tcp   # kubelet API + Ingress controller livenessProbe/readinessProbe
+    - 30000-32767/tcp   # NodePort port range
+    - 30000-32767/udp   # NodePort port range
+
+  #firewalld:
+    # port: 6443/tcp
+    #  rich_rule: rule family=ipv4 source address={{ hostvars[item].ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}/{{ cidr }} port port=6443 protocol=tcp accept
+    #permanent: yes
+    #state: enabled
+    #immediate: yes
+    #vars:
+    #cidr: "{{ (ansible_default_ipv4.address + '/' + ansible_default_ipv4.netmask) | ipaddr('prefix') }}"
+    #delegate_to: "{{ master_ip }}" 
+    #when: inventory_hostname in groups['master']
+    #with_inventory_hostnames:
+    #- all:!master
+    #tags: open_6443_master
+
+
