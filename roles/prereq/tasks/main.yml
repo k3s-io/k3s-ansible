@@ -1,7 +1,29 @@
 ---
-- name: Set SELinux to disabled state
+- name: Sets SELinux status
   selinux:
-    state: disabled
+    state: "{{ selinux_mode }}"
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+
+- name: Install Rancher GPG key for SELinux policies
+  rpm_key:
+    key: https://rpm.rancher.io/public.lkey
+    state: present
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux'] and selinux_mode is 'enabled'
+
+- name: Install SELinux policies
+  yum:
+    name:
+      - container-selinux
+      - selinux-policy-base
+      - https://github.com/k3s-io/k3s-selinux/releases/download/{{ selinx_policy_version }}/k3s-selinux-{{ selinux_rpm_version }}.el{{ ansible_distribution_major_version }}.noarch.rpm
+    state: present
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux'] and selinux_mode is 'enabled'
+
+- name: Stop and disable firewalld service
+  systemd:
+    name: firewalld
+    enabled: no
+    state: stopped
   when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
 
 - name: Enable IPv4 forwarding
