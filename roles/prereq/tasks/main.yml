@@ -20,12 +20,16 @@
     state: present
   when: ansible_distribution in ['CentOS', 'RedHat'] and selinux_mode in ['enforcing', 'permissive']
 
+- name: Populate service facts for firewalld
+  service_facts:
+  when: ansible_distribution in ['CentOS', 'RedHat']
+
 - name: Stop and disable firewalld service
   systemd:
     name: firewalld
     enabled: no
     state: stopped
-  when: ansible_distribution in ['CentOS', 'RedHat']
+  when: ansible_distribution in ['CentOS', 'RedHat'] and 'firewalld' in services
 
 - name: Enable IPv4 forwarding
   sysctl:
