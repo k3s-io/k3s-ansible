@@ -2,29 +2,30 @@
 - name: Sets SELinux status
   selinux:
     state: "{{ selinux_mode }}"
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+    policy: "{{ 'targeted' if selinux_mode in ['enforcing', 'permissive'] else omit }}"
+  when: ansible_distribution in ['CentOS', 'RedHat']
 
 - name: Install Rancher GPG key for SELinux policies
   rpm_key:
-    key: https://rpm.rancher.io/public.lkey
+    key: https://rpm.rancher.io/public.key
     state: present
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux'] and selinux_mode is 'enabled'
+  when: ansible_distribution in ['CentOS', 'RedHat'] and selinux_mode in ['enforcing', 'permissive']
 
 - name: Install SELinux policies
   yum:
     name:
       - container-selinux
       - selinux-policy-base
-      - https://github.com/k3s-io/k3s-selinux/releases/download/{{ selinx_policy_version }}/k3s-selinux-{{ selinux_rpm_version }}.el{{ ansible_distribution_major_version }}.noarch.rpm
+      - https://github.com/k3s-io/k3s-selinux/releases/download/{{ selinux_policy_version }}/k3s-selinux-{{ selinux_rpm_version }}.el{{ ansible_distribution_major_version }}.noarch.rpm
     state: present
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux'] and selinux_mode is 'enabled'
+  when: ansible_distribution in ['CentOS', 'RedHat'] and selinux_mode in ['enforcing', 'permissive']
 
 - name: Stop and disable firewalld service
   systemd:
     name: firewalld
     enabled: no
     state: stopped
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+  when: ansible_distribution in ['CentOS', 'RedHat']
 
 - name: Enable IPv4 forwarding
   sysctl:
@@ -46,13 +47,13 @@
     content: "br_netfilter"
     dest: /etc/modules-load.d/br_netfilter.conf
     mode: "u=rw,g=,o="
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+  when: ansible_distribution in ['CentOS', 'RedHat']
 
 - name: Load br_netfilter
   modprobe:
     name: br_netfilter
     state: present
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+  when: ansible_distribution in ['CentOS', 'RedHat']
 
 - name: Set bridge-nf-call-iptables (just to be sure)
   sysctl:
@@ -60,7 +61,7 @@
     value: "1"
     state: present
     reload: yes
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+  when: ansible_distribution in ['CentOS', 'RedHat']
   loop:
     - net.bridge.bridge-nf-call-iptables
     - net.bridge.bridge-nf-call-ip6tables
@@ -73,4 +74,4 @@
     insertafter: EOF
     path: /etc/sudoers
     validate: 'visudo -cf %s'
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+  when: ansible_distribution in ['CentOS', 'RedHat']
