@@ -29,7 +29,7 @@
     name: firewalld
     enabled: no
     state: stopped
-  when: ansible_distribution in ['CentOS', 'RedHat'] and 'firewalld' in services
+  when: ansible_distribution in ['CentOS', 'RedHat'] and 'firewalld.service' in services
 
 - name: Enable IPv4 forwarding
   sysctl:
