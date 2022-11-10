@@ -58,3 +58,18 @@ To get access to your **Kubernetes** cluster just
 ```bash
 scp debian@master_ip:~/.kube/config ~/.kube/config
 ```
+
+## Prometheus/Grafana
+```shell
+$ helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+$ helm repo update
+$ kubectl create namespace monitoring
+$ helm install monitoring --namespace monitoring prometheus-community/kube-prometheus-stack --values=kube-prometheus-stack-values.yaml
+```
+
+## ArgoCD
+```shell
+$ helm repo add argo https://argoproj.github.io/argo-helm
+"argo" has been added to your repositories
+$ helm install argocd -n argocd argo/argocd --values=values.yaml
+```

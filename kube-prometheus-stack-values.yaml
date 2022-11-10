@@ -1,0 +1,47 @@
+alertmanager:
+  ingress:
+    enabled: true
+    hosts:
+      - monitoring.k8s-frambozen.net
+    paths:
+      - /alert-manager
+    pathType: ImplementationSpecific
+  alertmanagerSpec:
+    externalUrl: http://monitoring.k8s-frambozen.net/alert-manager
+    routePrefix: /alert-manager
+
+grafana:
+  ingress:
+    enabled: true
+    hosts:
+      - monitoring.k8s-frambozen.net
+    path: /grafana
+
+  grafana.ini:
+    server:
+      domain: monitoring.k8s-frambozen.net
+      root_url: http://monitoring.k8s-frambozen.net/grafana
+      serve_from_sub_path: true
+  sidecar:
+    dashboards:
+      enabled: true
+      label: monitoring.grafana.dashboards
+      searchNamespace: ALL
+
+kube-state-metrics:
+  replicas: 1
+
+prometheus:
+  ingress:
+    enabled: true
+    hosts:
+      - monitoring.k8s-frambozen.net
+    paths:
+      - /prometheus
+    pathType: ImplementationSpecific
+
+  prometheusSpec:
+    exterrnalUrl: 'http://monitoring.k8s-frambozen.net/prometheus'
+    routePrefix: '/prometheus'
+
+
