@@ -1,7 +1,7 @@
 apiVersion: v2
 name: argocd
-version: 1.0.0
+version: 1.1.0
 dependencies:
   - name: argo-cd
     repository: https://argoproj.github.io/argo-helm
-    version: 5.13.8
+    version: 5.16.1
