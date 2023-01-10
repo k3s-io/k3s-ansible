@@ -14,17 +14,3 @@ argo-cd:
         - type: helm
           name: argo-cd
           url: https://argoproj.github.io/argo-helm
-        - type: helm
-          name: k8s-frambozen-argocd
-          url: https://github.com/RalphSmeets/k8s-frambozen-argocd
-      credentialTemplates:
-        ssh-creds:
-          url: git@github.com:RalphSmeets/k8s-frambozen-argocd
-          sshPrivateKey: |
-            -----BEGIN OPENSSH PRIVATE KEY-----
-            b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-            QyNTUxOQAAACBMjoi9wSDAXw9lLsMXzsFULlnHjrWan4+io17M0vxHTgAAAKB044M0dOOD
-            NAAAAAtzc2gtZWQyNTUxOQAAACBMjoi9wSDAXw9lLsMXzsFULlnHjrWan4+io17M0vxHTg
-            AAAEBAgjifLxz50kdDhuw4vBS05NitmETiMkvsaCitnePvckyOiL3BIMBfD2UuwxfOwVQu
-            WceOtZqfj6KjXszS/EdOAAAAFnJhbHBoLnNtZWV0c0BnbWFpbC5jb20BAgMEBQYH
-            -----END OPENSSH PRIVATE KEY-----
