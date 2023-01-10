@@ -1,0 +1,32 @@
+- name: Install argocd helm chart
+  become: no
+  environment:
+    K8S_AUTH_KUBECONFIG: "~/.kube/pi-k8s-config"
+  kubernetes.core.helm:
+    name: argocd
+    release_namespace: argocd
+    create_namespace: true
+    chart_ref: charts/argocd
+
+- name: Get ArgoCD github secret from ssh-keys
+  ansible.builtin.shell: /usr/bin/base64 -i ~/.ssh/argocd
+  register: argocdPrivateKey
+
+- name: Add argcd private key for github
+  become: no
+  environment:
+    K8S_AUTH_KUBECONFIG: "~/.kube/pi-k8s-config"
+  kubernetes.core.k8s:
+    state: present
+    template:
+      - path: github.ralphsmeets.repo.secret.j2
+
+- name: Install root argcd helm chart
+  become: no
+  environment:
+    K8S_AUTH_KUBECONFIG: "~/.kube/pi-k8s-config"
+  kubernetes.core.k8s:
+    state: present
+    namespace: argocd
+    template:
+      - path: root.application.j2

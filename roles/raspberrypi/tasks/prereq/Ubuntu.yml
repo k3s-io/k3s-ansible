@@ -1,4 +1,7 @@
 ---
+- name: Install nfs-common
+  command: sudo apt install -y nfs-common
+
 - name: Enable cgroup via boot commandline if not already enabled for Ubuntu on a Raspberry Pi
   lineinfile:
     path: /boot/firmware/cmdline.txt
