@@ -3,7 +3,7 @@ ansible_user: root
 server_init_args: >-
   {% if groups['master'] | length > 1 %}
     {% if ansible_host == hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) %}
-      --cluster-init
+      --cluster-init --tls-san {{ apiserver_endpoint }}
     {% else %}
       --server https://{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}:6443
     {% endif %}
