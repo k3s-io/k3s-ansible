@@ -29,7 +29,7 @@
         cmd: k3s kubectl get nodes -l "node-role.kubernetes.io/master=true" -o=jsonpath="{.items[*].metadata.name}"
       register: nodes
       until: nodes.rc == 0 and (nodes.stdout.split() | length) == (groups['master'] | length)
-      retries: 20
+      retries: 30
       delay: 10
       changed_when: false
   always:
@@ -98,10 +98,10 @@
     owner: "{{ ansible_user }}"
     mode: "u=rw,g=,o="
 
-- name: Configure kubectl cluster to https://{{ apiserver_endpoint }}:6443
+- name: Configure kubectl cluster to https://{{ apiserver_endpoint | default(hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0])) }}:6443
   command: >-
     k3s kubectl config set-cluster default
-      --server=https://{{ apiserver_endpoint }}:6443
+      --server=https://{{ apiserver_endpoint | default(hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0])) }}:6443
       --kubeconfig ~{{ ansible_user }}/.kube/config
   changed_when: true
 
