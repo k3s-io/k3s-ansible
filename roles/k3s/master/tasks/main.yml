@@ -1,79 +1,123 @@
 ---
 
-- name: Copy K3s service file
-  register: k3s_service
-  template:
-    src: "k3s.service.j2"
-    dest: "{{ systemd_dir }}/k3s.service"
+- name: Clean previous runs of k3s-init
+  ansible.legacy.systemd:
+    name: k3s-init
+    state: stopped
+  failed_when: false
+
+- name: Clean previous runs of k3s-init
+  ansible.legacy.command: systemctl reset-failed k3s-init
+  failed_when: false
+  changed_when: false
+  args:
+    warn: false  # The ansible systemd module does not support reset-failed
+
+- name: Init cluster inside the transient k3s-init service
+  ansible.legacy.command:
+    cmd: "systemd-run -p RestartSec=2 \
+            -p Restart=on-failure \
+            --unit=k3s-init \
+            k3s server {{ k3s_server_args_init }}"
+    creates: "{{ k3s_systemd_dir }}/k3s.service"
+  args:
+    warn: false  # The ansible systemd module does not support transient units
+
+- name: Verification
+  block:
+    - name: Verify that all nodes actually joined (check k3s-init.service if this fails)
+      ansible.legacy.command:
+        cmd: k3s kubectl get nodes -l "node-role.kubernetes.io/master=true" -o=jsonpath="{.items[*].metadata.name}"
+      register: nodes
+      until: nodes.rc == 0 and (nodes.stdout.split() | length) == (groups['master'] | length)
+      retries: 30
+      delay: 10
+      changed_when: false
+  always:
+    - name: Kill the temporary service used for initialization
+      ansible.legacy.systemd:
+        name: k3s-init
+        state: stopped
+      failed_when: false
+
+- name: Copy K3S environment file
+  ansible.legacy.template:
+    src: "k3s.service.env.j2"
+    dest: "{{ k3s_systemd_dir }}/k3s.service.env"
     owner: root
     group: root
     mode: 0644
+  notify: Restart K3S service
 
-- name: Enable and check K3s service
-  systemd:
-    name: k3s
-    daemon_reload: yes
-    state: restarted
-    enabled: yes
+- name: Copy K3S service file
+  ansible.legacy.template:
+    src: "k3s.service.j2"
+    dest: "{{ k3s_systemd_dir }}/k3s.service"
+    owner: root
+    group: root
+    mode: 0644
+  notify: Restart K3S service
 
-- name: Wait for node-token
-  wait_for:
-    path: "{{ k3s_server_location }}/server/node-token"
+- name: Wait for agent-token
+  ansible.legacy.wait_for:
+    path: "{{ k3s_data_dir }}/server/agent-token"
 
-- name: Register node-token file access mode
-  stat:
-    path: "{{ k3s_server_location }}/server/node-token"
+- name: Register agent-token file access mode
+  ansible.legacy.stat:
+    path: "{{ k3s_data_dir }}/server/agent-token"
   register: p
 
-- name: Change file access node-token
-  file:
-    path: "{{ k3s_server_location }}/server/node-token"
+- name: Change file access agent-token
+  ansible.legacy.file:
+    path: "{{ k3s_data_dir }}/server/agent-token"
     mode: "g+rx,o+rx"
 
-- name: Read node-token from master
-  slurp:
-    path: "{{ k3s_server_location }}/server/node-token"
-  register: node_token
+- name: Read agent-token from master
+  ansible.legacy.slurp:
+    path: "{{ k3s_data_dir }}/server/agent-token"
+  register: agent_token
 
-- name: Store Master node-token
-  set_fact:
-    token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
+- name: Store Master agent-token
+  ansible.legacy.set_fact:
+    token: "{{ agent_token.content | b64decode | regex_replace('\n', '') }}"
 
-- name: Restore node-token file access
-  file:
-    path: "{{ k3s_server_location }}/server/node-token"
+- name: Restore agent-token file access
+  ansible.legacy.file:
+    path: "{{ k3s_data_dir }}/server/agent-token"
     mode: "{{ p.stat.mode }}"
 
 - name: Create directory .kube
-  file:
+  ansible.legacy.file:
     path: ~{{ ansible_user }}/.kube
     state: directory
     owner: "{{ ansible_user }}"
     mode: "u=rwx,g=rx,o="
 
 - name: Copy config file to user home directory
-  copy:
+  ansible.legacy.copy:
     src: /etc/rancher/k3s/k3s.yaml
     dest: ~{{ ansible_user }}/.kube/config
     remote_src: yes
     owner: "{{ ansible_user }}"
     mode: "u=rw,g=,o="
+  changed_when: false
 
-- name: Replace https://localhost:6443 by https://master-ip:6443
-  command: >-
-    k3s kubectl config set-cluster default
-      --server=https://{{ master_ip }}:6443
-      --kubeconfig ~{{ ansible_user }}/.kube/config
-  changed_when: true
+- name: Edit default cluster apiserver endpoint
+  ansible.legacy.command:
+    cmd: "k3s kubectl config \
+            set-cluster default \
+            --server=https://{{ k3s_apiserver_endpoint }}:6443 \
+            --kubeconfig ~{{ ansible_user }}/.kube/config"
+  changed_when: false
 
 - name: Create kubectl symlink
-  file:
+  ansible.legacy.file:
     src: /usr/local/bin/k3s
     dest: /usr/local/bin/kubectl
     state: link
 
 - name: Create crictl symlink
-  file:
+  ansible.legacy.file:
     src: /usr/local/bin/k3s
     dest: /usr/local/bin/crictl
     state: link

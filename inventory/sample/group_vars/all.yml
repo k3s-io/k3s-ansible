@@ -1,7 +1,23 @@
 ---
-k3s_version: v1.22.3+k3s1
+
 ansible_user: debian
-systemd_dir: /etc/systemd/system
-master_ip: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}"
-extra_server_args: ""
-extra_agent_args: ""
+
+k3s_version: v1.26.0+k3s2
+
+k3s_server_args_extra: ""
+k3s_agent_args_extra: ""
+
+# k3s_systemd_dir: "/etc/systemd/system"
+# k3s_data_dir: "/var/lib/rancher/k3s"
+
+####################################################################################
+
+# If you define multiple masters you should be providing a loadbalanced
+# apiserver endpoint to all masters here. This default value is only suitable
+# for a non-HA setup, if used in a HA setup, it will not protect you if the
+# first node fails.
+# Also you should define k3s_token so that masters can talk together securely
+
+# k3s_apiserver_endpoint: "myvirtualip"
+# k3s_apiserver_token: "mysupersecuretoken"
+# k3s_apiserver_token_agent: "mynotsosecuretoken"

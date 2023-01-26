@@ -1,0 +1,9 @@
+---
+
+k3s_systemd_dir: "/etc/systemd/system"
+
+k3s_data_dir: "/var/lib/rancher/k3s"
+
+k3s_apiserver_endpoint: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}"
+
+k3s_apiserver_token_agent: "{{ hostvars[groups['master'][0]]['token'] }}"
