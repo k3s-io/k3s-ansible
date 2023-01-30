@@ -23,32 +23,37 @@ Master and nodes must have passwordless SSH access
 
 ## Usage
 
-First create a new directory based on the `sample` directory within the `inventory` directory:
+First copy the sample inventory to `inventory.yml`.
 
 ```bash
-cp -R inventory/sample inventory/my-cluster
+cp inventory-sample.yml inventory.yml
 ```
 
-Second, edit `inventory/my-cluster/hosts.ini` to match the system information gathered above. For example:
-
+Second edit the inventory file to match your cluster setup. For example:
 ```bash
-[master]
-192.16.35.12
-
-[node]
-192.16.35.[10:11]
-
-[k3s_cluster:children]
-master
-node
+k3s_cluster:
+  children:
+    server:
+      hosts:
+        192.16.35.11
+    agent:
+      hosts:
+        192.16.35.12
+        192.16.35.13
 ```
 
-If needed, you can also edit `inventory/my-cluster/group_vars/all.yml` to match your environment.
+If needed, you can also edit `vars` section at the bottom to match your environment.
+
+If multiple hosts are in the server group the playbook will automatically setup k3s in HA mode with embedded etcd.
+An odd number of server nodes is recommended (3,5,7). Read the offical documentation below for more information and options.
+https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/
+Using a loadbalancer or VIP as the API endpoint is preferred but not covered here.
+
 
 Start provisioning of the cluster using the following command:
 
 ```bash
-ansible-playbook site.yml -i inventory/my-cluster/hosts.ini
+ansible-playbook playbook/site.yml -i inventory.yml
 ```
 
 ## Kubeconfig
@@ -56,5 +61,5 @@ ansible-playbook site.yml -i inventory/my-cluster/hosts.ini
 To get access to your **Kubernetes** cluster just
 
 ```bash
-scp debian@master_ip:~/.kube/config ~/.kube/config
+scp debian@server_ip:~/.kube/config ~/.kube/config
 ```
