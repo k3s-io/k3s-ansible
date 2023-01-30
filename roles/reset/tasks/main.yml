@@ -8,8 +8,9 @@
   with_items:
     - k3s
     - k3s-node
+    - k3s-init
 
-- name: Pkill k3s container runtimes"
+- name: Kill container shim
   register: pkill_containerd_shim_runc
   ansible.builtin.command: pkill -9 -f "k3s/data/[^/]+/bin/containerd-shim-runc"
   changed_when: "pkill_containerd_shim_runc.rc == 0"
@@ -37,6 +38,6 @@
     - /var/lib/kubelet
     - /var/lib/rancher/k3s
 
-- name: Daemon_reload
+- name: Systemd daemon reload
   ansible.builtin.systemd:
     daemon_reload: yes

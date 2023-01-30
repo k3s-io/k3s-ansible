@@ -1,4 +1,25 @@
 ---
+- name: Init cluster using temporary service
+  ansible.builtin.command:
+    cmd: "systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server {{ server_init_args }}"
+    creates: "{{ systemd_dir }}/k3s.service"
+
+- name: Verification
+  block:
+    - name: Verify that all nodes joined
+      ansible.builtin.command:
+        cmd: k3s kubectl get nodes -l "node-role.kubernetes.io/control-plane=true" -o=jsonpath="{.items[*].metadata.name}"
+      register: nodes
+      until: nodes.rc == 0 and (nodes.stdout.split() | length) == (groups['server'] | length)
+      retries: 20
+      delay: 10
+      changed_when: false
+  always:
+    - name: Kill the temporary init service
+      ansible.builtin.systemd:
+        name: k3s-init
+        state: stopped
+      failed_when: false
 
 - name: Copy K3s service file
   register: k3s_service
@@ -30,12 +51,12 @@
     path: "{{ k3s_server_location }}/server/node-token"
     mode: "g+rx,o+rx"
 
-- name: Read node-token from master
+- name: Read node-token from server
   ansible.builtin.slurp:
     path: "{{ k3s_server_location }}/server/node-token"
   register: node_token
 
-- name: Store Master node-token
+- name: Store server node-token
   ansible.builtin.set_fact:
     token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
 
@@ -59,10 +80,10 @@
     owner: "{{ ansible_user }}"
     mode: "u=rw,g=,o="
 
-- name: Replace https://localhost:6443 by https://master-ip:6443
+- name: Change server to API endpoint instead of localhost
   ansible.builtin.command: >-
     /usr/local/bin/k3s kubectl config set-cluster default
-      --server=https://{{ master_ip }}:6443
+      --server=https://{{ api_endpoint }}:{{ api_port }}
       --kubeconfig ~{{ ansible_user }}/.kube/config
   changed_when: true
 
