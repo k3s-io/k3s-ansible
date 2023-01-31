@@ -15,7 +15,7 @@
     - role: k3s/server
 
 - name: Setup K3S agent
-  hosts: node
+  hosts: agent
   become: true
   roles:
     - role: k3s/agent
