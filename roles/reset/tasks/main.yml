@@ -1,9 +1,4 @@
 ---
-- name: Clean previous runs of k3s-init
-  command: systemctl reset-failed k3s-init
-  failed_when: false
-  changed_when: false
-
 - name: Disable services
   ansible.builtin.systemd:
     name: "{{ item }}"
@@ -40,7 +35,7 @@
     - "{{ systemd_dir }}/k3s-agent.service"
     - /etc/rancher/k3s
     - /var/lib/kubelet
-    - /var/lib/rancher/k3s
+    - "{{ k3s_server_location }}"
 
 - name: Systemd daemon reload
   ansible.builtin.systemd:

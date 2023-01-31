@@ -10,7 +10,8 @@
       ansible.builtin.command:
         cmd: >
           systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
-          --cluster-init --tls-san {{ api_endpoint }} {{ extra_server_args | default('') }}
+          --cluster-init --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }}
+          {{ extra_server_args | default('') }}
         creates: "{{ systemd_dir }}/k3s-init.service"
       when: groups['server'] | length > 1
 
@@ -18,7 +19,7 @@
       ansible.builtin.command:
         cmd: >
           systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
-           --tls-san {{ api_endpoint }} { extra_server_args | default('') }}
+           --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }} { extra_server_args | default('') }}
         creates: "{{ systemd_dir }}/k3s-init.service"
       when: groups['server'] | length == 1
 
@@ -84,7 +85,7 @@
     cmd: >
       systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server --token "{{ hostvars[groups['server'][0]]['token'] }}"
       --server https://{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}:{{ api_port }}
-          {{ extra_server_args | default('') }}
+      --data-dir {{ k3s_server_location }} {{ extra_server_args | default('') }}
     creates: "{{ systemd_dir }}/k3s-init.service"
   when: ansible_hostname != groups['server'][0]
 
