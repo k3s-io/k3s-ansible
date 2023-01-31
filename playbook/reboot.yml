@@ -3,6 +3,7 @@
   hosts: k3s_cluster
   become: true
   gather_facts: true
+  serial: 1
   tasks:
     - name: Reboot
       ansible.builtin.reboot:

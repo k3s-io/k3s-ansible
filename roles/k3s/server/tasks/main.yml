@@ -1,12 +1,96 @@
 ---
-- name: Init cluster using temporary service
-  ansible.builtin.command:
-    cmd: "systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server {{ server_init_args }}"
-    creates: "{{ systemd_dir }}/k3s.service"
+- name: Clean previous runs of k3s-init
+  ansible.builtin.command: systemctl reset-failed k3s-init
+  failed_when: false
+  changed_when: false
 
-- name: Verification
+- name: Init first server node
   block:
-    - name: Verify that all nodes joined
+    - name: Start temporary service with cluster-init
+      ansible.builtin.command:
+        cmd: >
+          systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
+          --cluster-init --tls-san {{ api_endpoint }} {{ extra_server_args | default('') }}
+        creates: "{{ systemd_dir }}/k3s-init.service"
+      when: groups['server'] | length > 1
+
+    - name: Start temporary service
+      ansible.builtin.command:
+        cmd: >
+          systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
+           --tls-san {{ api_endpoint }} { extra_server_args | default('') }}
+        creates: "{{ systemd_dir }}/k3s-init.service"
+      when: groups['server'] | length == 1
+
+    - name: Wait for node-token
+      ansible.builtin.wait_for:
+        path: "{{ k3s_server_location }}/server/node-token"
+
+    - name: Register node-token file access mode
+      ansible.builtin.stat:
+        path: "{{ k3s_server_location }}/server/node-token"
+      register: p
+
+    - name: Change file access node-token
+      ansible.builtin.file:
+        path: "{{ k3s_server_location }}/server/node-token"
+        mode: "g+rx,o+rx"
+
+    - name: Read node-token from server
+      ansible.builtin.slurp:
+        path: "{{ k3s_server_location }}/server/node-token"
+      register: node_token
+
+    - name: Store server node-token
+      ansible.builtin.set_fact:
+        token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
+
+    - name: Restore node-token file access
+      ansible.builtin.file:
+        path: "{{ k3s_server_location }}/server/node-token"
+        mode: "{{ p.stat.mode }}"
+
+    - name: Create directory .kube
+      ansible.builtin.file:
+        path: ~{{ ansible_user }}/.kube
+        state: directory
+        owner: "{{ ansible_user }}"
+        mode: "u=rwx,g=rx,o="
+
+    - name: Copy config file to user home directory
+      ansible.builtin.copy:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: ~{{ ansible_user }}/.kube/config
+        remote_src: true
+        owner: "{{ ansible_user }}"
+        mode: "u=rw,g=,o="
+
+    - name: Change server to API endpoint instead of localhost
+      ansible.builtin.command: >-
+        k3s kubectl config set-cluster default
+          --server=https://{{ api_endpoint }}:{{ api_port }}
+          --kubeconfig ~{{ ansible_user }}/.kube/config
+      changed_when: true
+
+    - name: Copy kubectl config to local machine
+      ansible.builtin.fetch:
+        src: ~{{ ansible_user }}/.kube/config
+        dest: ~/.kube/config
+        flat: true
+  when: ansible_hostname == groups['server'][0]
+
+- name: Init additonal server nodes
+  ansible.builtin.command:
+    cmd: >
+      systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server --token "{{ hostvars[groups['server'][0]]['token'] }}"
+      --server https://{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}:{{ api_port }}
+          {{ extra_server_args | default('') }}
+    creates: "{{ systemd_dir }}/k3s-init.service"
+  when: ansible_hostname != groups['server'][0]
+
+- name: Verification and cleanup
+  block:
+    - name: Verify that all server nodes joined
       ansible.builtin.command:
         cmd: k3s kubectl get nodes -l "node-role.kubernetes.io/control-plane=true" -o=jsonpath="{.items[*].metadata.name}"
       register: nodes
@@ -23,69 +107,19 @@
 
 - name: Copy K3s service file
   register: k3s_service
-  ansible.builtin.template:
-    src: "k3s.service.j2"
-    dest: "{{ systemd_dir }}/k3s.service"
+  template:
+    src: "k3s-server.service.j2"
+    dest: "{{ systemd_dir }}/k3s-server.service"
     owner: root
     group: root
     mode: 0644
 
 - name: Enable and check K3s service
   ansible.builtin.systemd:
-    name: k3s
-    daemon_reload: yes
+    name: k3s-server
+    daemon_reload: true
     state: restarted
-    enabled: yes
-
-- name: Wait for node-token
-  ansible.builtin.wait_for:
-    path: "{{ k3s_server_location }}/server/node-token"
-
-- name: Register node-token file access mode
-  ansible.builtin.stat:
-    path: "{{ k3s_server_location }}/server/node-token"
-  register: p
-
-- name: Change file access node-token
-  ansible.builtin.file:
-    path: "{{ k3s_server_location }}/server/node-token"
-    mode: "g+rx,o+rx"
-
-- name: Read node-token from server
-  ansible.builtin.slurp:
-    path: "{{ k3s_server_location }}/server/node-token"
-  register: node_token
-
-- name: Store server node-token
-  ansible.builtin.set_fact:
-    token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
-
-- name: Restore node-token file access
-  ansible.builtin.file:
-    path: "{{ k3s_server_location }}/server/node-token"
-    mode: "{{ p.stat.mode }}"
-
-- name: Create directory .kube
-  ansible.builtin.file:
-    path: ~{{ ansible_user }}/.kube
-    state: directory
-    owner: "{{ ansible_user }}"
-    mode: "u=rwx,g=rx,o="
-
-- name: Copy config file to user home directory
-  ansible.builtin.copy:
-    src: /etc/rancher/k3s/k3s.yaml
-    dest: ~{{ ansible_user }}/.kube/config
-    remote_src: yes
-    owner: "{{ ansible_user }}"
-    mode: "u=rw,g=,o="
-
-- name: Change server to API endpoint instead of localhost
-  ansible.builtin.command: >-
-    /usr/local/bin/k3s kubectl config set-cluster default
-      --server=https://{{ api_endpoint }}:{{ api_port }}
-      --kubeconfig ~{{ ansible_user }}/.kube/config
-  changed_when: true
+    enabled: true
 
 - name: Create kubectl symlink
   ansible.builtin.file:

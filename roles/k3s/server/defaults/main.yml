@@ -1,12 +1,2 @@
 ---
 k3s_server_location: /var/lib/rancher/k3s
-server_init_args: >-
-  {% if groups['server'] | length > 1 %}
-    --token {{ k3s_token }}
-    {% if ansible_host == hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) %}
-      --cluster-init
-    {% else %}
-      --server https://{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}:{{ api_port }}
-    {% endif %}
-  {% endif %}
-  {{ extra_server_args | default('') }}
