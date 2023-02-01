@@ -1,25 +1,20 @@
 ---
-- name: Clean previous runs of k3s-init
-  ansible.builtin.command: systemctl reset-failed k3s-init
-  failed_when: false
-  changed_when: false
-
 - name: Init first server node
   block:
-    - name: Start temporary service with cluster-init
+    - name: Start temporary service for HA cluster
       ansible.builtin.command:
         cmd: >
           systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
           --cluster-init --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }}
-          {{ extra_server_args | default('') }}
+          {{ extra_server_args}}
         creates: "{{ systemd_dir }}/k3s-init.service"
       when: groups['server'] | length > 1
 
-    - name: Start temporary service
+    - name: Start temporary service for single server cluster
       ansible.builtin.command:
         cmd: >
           systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
-           --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }} { extra_server_args | default('') }}
+           --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }} {{ extra_server_args }}
         creates: "{{ systemd_dir }}/k3s-init.service"
       when: groups['server'] | length == 1
 
@@ -80,12 +75,12 @@
         flat: true
   when: ansible_hostname == groups['server'][0]
 
-- name: Init additonal server nodes
+- name: Init additonal server nodes if any
   ansible.builtin.command:
     cmd: >
-      systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server --token "{{ hostvars[groups['server'][0]]['token'] }}"
-      --server https://{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}:{{ api_port }}
-      --data-dir {{ k3s_server_location }} {{ extra_server_args | default('') }}
+      systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
+      --token "{{ hostvars[groups['server'][0]]['token'] }}" --server https://{{ api_endpoint }}:{{ api_port }}
+      --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }} {{ extra_server_args }}
     creates: "{{ systemd_dir }}/k3s-init.service"
   when: ansible_hostname != groups['server'][0]
 
@@ -107,13 +102,13 @@
       failed_when: false
 
 - name: Copy K3s service file
-  register: k3s_service
-  template:
+  ansible.builtin.template:
     src: "k3s-server.service.j2"
     dest: "{{ systemd_dir }}/k3s-server.service"
     owner: root
     group: root
     mode: 0644
+  register: k3s_service
 
 - name: Enable and check K3s service
   ansible.builtin.systemd:
@@ -122,14 +117,11 @@
     state: restarted
     enabled: true
 
-- name: Create kubectl symlink
+- name: Create symlinks
   ansible.builtin.file:
     src: /usr/local/bin/k3s
-    dest: /usr/local/bin/kubectl
+    dest: /usr/local/bin/{{ item }}
     state: link
-
-- name: Create crictl symlink
-  ansible.builtin.file:
-    src: /usr/local/bin/k3s
-    dest: /usr/local/bin/crictl
-    state: link
+  with_items:
+    - kubectl
+    - crictl
