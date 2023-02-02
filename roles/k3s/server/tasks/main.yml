@@ -7,7 +7,7 @@
           systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
           --cluster-init --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }}
           {{ extra_server_args}}
-        creates: "{{ systemd_dir }}/k3s-init.service"
+        creates: "{{ k3s_server_location }}/server/node-token"
       when: groups['server'] | length > 1
 
     - name: Start temporary service for single server cluster
@@ -15,7 +15,7 @@
         cmd: >
           systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
            --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }} {{ extra_server_args }}
-        creates: "{{ systemd_dir }}/k3s-init.service"
+        creates: "{{ k3s_server_location }}/server/node-token"
       when: groups['server'] | length == 1
 
     - name: Wait for node-token
@@ -75,17 +75,17 @@
         flat: true
   when: ansible_hostname == groups['server'][0]
 
-- name: Init additonal server nodes if any
-  ansible.builtin.command:
-    cmd: >
-      systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
-      --token "{{ hostvars[groups['server'][0]]['token'] }}" --server https://{{ api_endpoint }}:{{ api_port }}
-      --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }} {{ extra_server_args }}
-    creates: "{{ systemd_dir }}/k3s-init.service"
-  when: ansible_hostname != groups['server'][0]
-
-- name: Verification and cleanup
+- name: Start other server if any and verify status
   block:
+    - name: Init additonal server nodes
+      ansible.builtin.command:
+        cmd: >
+          systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
+          --token "{{ hostvars[groups['server'][0]]['token'] }}" --server https://{{ api_endpoint }}:{{ api_port }}
+          --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }} {{ extra_server_args }}
+        creates: "{{ k3s_server_location }}/server/node-token"
+      when: ansible_hostname != groups['server'][0]
+
     - name: Verify that all server nodes joined
       ansible.builtin.command:
         cmd: k3s kubectl get nodes -l "node-role.kubernetes.io/control-plane=true" -o=jsonpath="{.items[*].metadata.name}"

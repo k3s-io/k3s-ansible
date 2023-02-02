@@ -58,8 +58,8 @@ ansible-playbook playbook/site.yml -i inventory.yml
 
 ## Kubeconfig
 
-To get access to your **Kubernetes** cluster just
+To confirm access to your **Kubernetes** cluster use the following:
 
 ```bash
-scp debian@server_ip:~/.kube/config ~/.kube/config
+kubectl get nodes
 ```
