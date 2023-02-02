@@ -28,7 +28,7 @@
     - /run/k3s
     - /var/lib/kubelet
     - /run/netns
-    - /var/lib/rancher/k3s
+    - "{{ k3s_server_location }}"
   loop_control:
     loop_var: mounted_fs
 
@@ -42,6 +42,7 @@
     - "{{ systemd_dir }}/k3s-agent.service"
     - /etc/rancher/k3s
     - /var/lib/kubelet
+    - /var/lib/rancher/k3s
     - "{{ k3s_server_location }}"
 
 - name: Systemd daemon reload
