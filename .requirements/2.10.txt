@@ -1,0 +1,5 @@
+# Frozen requirements for ansible 2.10
+ansible>=2.10,<2.11
+ansible-lint<6.10
+yamllint
+pytest

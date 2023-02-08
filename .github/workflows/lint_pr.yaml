@@ -1,16 +1,22 @@
 ---
-name: Lint
+
+name: Lint PR
+
 'on':
   pull_request:
-  push:
     branches:
       - master
 
 jobs:
 
   test:
-    name: Lint
+    name: lint
     runs-on: ubuntu-latest
+
+    strategy:
+      max-parallel: 2
+      matrix:
+        ansible: ["2.10", "latest"]
 
     steps:
       - name: Check out the codebase
@@ -20,9 +26,14 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
+          cache: 'pip'
+          cache-dependency-path: .requirements/${{ matrix.ansible }}.txt
+
+      - name: Install/upgrade pip, wheel
+        run: pip install --upgrade pip wheel
 
       - name: Install test dependencies
-        run: pip3 install yamllint ansible-lint ansible
+        run: pip3 install -r .requirements/${{ matrix.ansible }}.txt
 
       - name: Run yamllint
         run: yamllint .

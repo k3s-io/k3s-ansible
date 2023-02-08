@@ -1,0 +1,41 @@
+---
+
+name: Lint Scheduled
+
+'on':
+  schedule:
+    # Run on the 10th of each month at noon.
+    - cron: '00 12 10 * *'
+
+jobs:
+
+  test:
+    name: lint
+    runs-on: ubuntu-latest
+
+    strategy:
+      max-parallel: 2
+      matrix:
+        ansible: ["2.10", "latest"]
+
+    steps:
+      - name: Check out the codebase
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+
+      - name: Install/upgrade pip, wheel
+        run: pip install --upgrade pip wheel
+
+      - name: Install test dependencies
+        run: pip3 install -r .requirements/${{ matrix.ansible }}.txt
+
+      - name: Run yamllint
+        run: yamllint .
+
+      - name: Run ansible-lint
+        run: ansible-lint
