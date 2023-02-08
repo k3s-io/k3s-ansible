@@ -1,5 +1,14 @@
 ---
 
+- name: Copy K3S environment file
+  ansible.legacy.template:
+    src: "k3s.service.env.j2"
+    dest: "{{ k3s_systemd_dir }}/k3s.service.env"
+    owner: root
+    group: root
+    mode: 0644
+  notify: Restart K3S service
+
 - name: Clean previous runs of k3s-init
   ansible.legacy.systemd:
     name: k3s-init
@@ -17,6 +26,7 @@
   ansible.legacy.command:
     cmd: "systemd-run -p RestartSec=2 \
             -p Restart=on-failure \
+            -p EnvironmentFile={{ k3s_systemd_dir }}/k3s.service.env
             --unit=k3s-init \
             k3s server {{ k3s_server_args_init }}"
     creates: "{{ k3s_systemd_dir }}/k3s.service"
@@ -39,15 +49,6 @@
         name: k3s-init
         state: stopped
       failed_when: false
-
-- name: Copy K3S environment file
-  ansible.legacy.template:
-    src: "k3s.service.env.j2"
-    dest: "{{ k3s_systemd_dir }}/k3s.service.env"
-    owner: root
-    group: root
-    mode: 0644
-  notify: Restart K3S service
 
 - name: Copy K3S service file
   ansible.legacy.template:
