@@ -33,6 +33,7 @@
     - /usr/local/bin/k3s
     - "{{ k3s_systemd_dir }}/k3s.service"
     - "{{ k3s_systemd_dir }}/k3s.service.env"
+    - "{{ k3s_systemd_dir }}/k3s.service.env.agent"
     - /etc/rancher/k3s
     - /var/lib/kubelet
     - "{{ k3s_data_dir }}"
