@@ -71,7 +71,7 @@
 - name: Change file access agent-token
   ansible.legacy.file:
     path: "{{ k3s_data_dir }}/server/agent-token"
-    mode: "g+rx,o+rx"
+    mode: "g+r,o+r"
 
 - name: Read agent-token from master
   ansible.legacy.slurp:
