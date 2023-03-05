@@ -4,6 +4,7 @@
   get_url:
     url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s
     checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-amd64.txt
+    timeout: 120
     dest: /usr/local/bin/k3s
     owner: root
     group: root
@@ -14,6 +15,7 @@
   get_url:
     url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-arm64
     checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-arm64.txt
+    timeout: 120
     dest: /usr/local/bin/k3s
     owner: root
     group: root
@@ -27,6 +29,7 @@
   get_url:
     url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-armhf
     checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-arm.txt
+    timeout: 120
     dest: /usr/local/bin/k3s
     owner: root
     group: root
