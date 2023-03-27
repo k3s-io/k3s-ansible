@@ -6,7 +6,7 @@
   roles:
     - role: prereq
     - role: download
-    - role: raspberrypi
+
 
 - hosts: master
   become: yes

@@ -23,13 +23,7 @@ Master and nodes must have passwordless SSH access
 
 ## Usage
 
-First create a new directory based on the `sample` directory within the `inventory` directory:
-
-```bash
-cp -R inventory/sample inventory/my-cluster
-```
-
-Second, edit `inventory/my-cluster/hosts.ini` to match the system information gathered above. For example:
+edit `inventory/sample/hosts.ini` to match the system information gathered above. For example:
 
 ```bash
 [master]
@@ -43,12 +37,12 @@ master
 node
 ```
 
-If needed, you can also edit `inventory/my-cluster/group_vars/all.yml` to match your environment.
+If needed, you can also edit `inventory/sample/group_vars/all.yml` to match your environment.
 
 Start provisioning of the cluster using the following command:
 
 ```bash
-ansible-playbook site.yml -i inventory/my-cluster/hosts.ini
+ansible-playbook site.yml -i inventory/my-cluster/hosts.ini 
 ```
 
 ## Kubeconfig
@@ -56,5 +50,5 @@ ansible-playbook site.yml -i inventory/my-cluster/hosts.ini
 To get access to your **Kubernetes** cluster just
 
 ```bash
-scp debian@master_ip:~/.kube/config ~/.kube/config
+scp root@master_ip:~/.kube/config ~/.kube/config
 ```
