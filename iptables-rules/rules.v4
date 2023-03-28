@@ -1,0 +1,39 @@
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [950:196484]
+
+# Allow localhost to pass through firewall
+-A INPUT -i lo -j ACCEPT
+
+# Allow SSH
+-A INPUT -p tcp  --dport 22 -j ACCEPT
+
+# Allow kube API
+-A INPUT -i eth0 -p tcp  --dport 6443 -j ACCEPT
+
+#allow DNS port
+-A INPUT -i eth0 -p udp  --dport 53 -j ACCEPT
+
+#allow NTP port
+-A INPUT -i eth0 -p udp  --dport 123 -j ACCEPT
+
+#allow vsphere port
+-A INPUT -i eth0 -p udp  --dport 8472 -j ACCEPT
+
+# Allow kube metrics
+-A INPUT -i eth0 -p tcp  --dport 10250 -j ACCEPT
+
+# Allow ping
+-A INPUT -i eth0 -p icmp --icmp-type 8 -j ACCEPT
+
+Allow internet port
+-A INPUT -p tcp  --dport 80 -j ACCEPT
+-A INPUT -p tcp  --dport 443 -j ACCEPT
+-I INPUT -p tcp --dport 80 --syn -j ACCEPT
+
+# INPUT default DROP
+-A INPUT -j DROP
+-A INPUT -i lo -j ACCEPT
+
+COMMIT
