@@ -22,17 +22,17 @@ on processor architecture:
 - Master and nodes must have passwordless SSH access
 - For an airgap installation (no outbound internet access on nodes), all asset files for your CPU architecture from `https://github.com/k3s-io/k3s/releases/tag/{k3s_version}` should reside on an HTTP share within your private environment, accessible by all target nodes. For some super quick ways to to share a folder via HTTP, check out [this post](https://unix.stackexchange.com/questions/32182/simple-command-line-http-server). Any ordinary HTTP server will work as well.
 
-    Example content for the HTTP folder when choosing the `amd64` architecture and k3s version `v1.20.2+k3s1` (notice the subfolder set to the version name):
-    - `v1.20.2+k3s1` (the subfolder containing the assets below)
-    - `v1.20.2+k3s1/k3s`
-    - `v1.20.2+k3s1/k3s-airgap-images-amd64.tar`
-    - `v1.20.2+k3s1/sha256sum-amd64.txt`
+    Example content for the HTTP folder when choosing the `amd64` architecture and k3s version `v1.27.2+k3s1` (notice the subfolder set to the version name):
+    - `v1.27.2+k3s1` (the subfolder containing the assets below)
+    - `v1.27.2+k3s1/k3s`
+    - `v1.27.2+k3s1/k3s-airgap-images-amd64.tar`
+    - `v1.27.2+k3s1/sha256sum-amd64.txt`
 
     For `arm64` respectively:
-    - `v1.20.2+k3s1` (the subfolder containing the assets below)
-    - `v1.20.2+k3s1/k3s-arm64`
-    - `v1.20.2+k3s1/k3s-airgap-images-arm64.tar`
-    - `v1.20.2+k3s1/sha256sum-arm64.txt`
+    - `v1.27.2+k3s1` (the subfolder containing the assets below)
+    - `v1.27.2+k3s1/k3s-arm64`
+    - `v1.27.2+k3s1/k3s-airgap-images-arm64.tar`
+    - `v1.27.2+k3s1/sha256sum-arm64.txt`
 
 ## Usage
 
