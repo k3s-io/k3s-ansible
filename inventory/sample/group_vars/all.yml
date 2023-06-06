@@ -1,8 +1,8 @@
 ---
-remote_repo_url: https://github.com/k3s-io/k3s/releases/download
-k3s_version: v1.20.2+k3s1
+k3s_version: v1.22.3+k3s1
 ansible_user: debian
 systemd_dir: /etc/systemd/system
 master_ip: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}"
 extra_server_args: ""
 extra_agent_args: ""
+remote_repo_url: https://github.com/k3s-io/k3s/releases/download
