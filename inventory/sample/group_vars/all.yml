@@ -6,3 +6,4 @@ master_ip: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['m
 extra_server_args: ""
 extra_agent_args: ""
 remote_repo_url: https://github.com/k3s-io/k3s/releases/download
+airgapped: false

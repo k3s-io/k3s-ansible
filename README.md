@@ -56,7 +56,7 @@ master
 node
 ```
 
-If needed, you can also edit `inventory/my-cluster/group_vars/all.yml` to match your environment. For an airgap installation (see requirements above), please edit `remote_repo_url` to point to your webserver root *containing* the k3s version *subfolder*, e.g. `http://internalurlorip/k3s-binaries-and-images`. Don't point this directly to the version subfolder itself (-> point it to the *parent* folder), and don't include a trailing `/`.
+If needed, you can also edit `inventory/my-cluster/group_vars/all.yml` to match your environment. For an airgap installation (see requirements above), please set `airgapped` to `true` and change `remote_repo_url` to point to your webserver root *containing* the k3s version *subfolder*, e.g. `http://internalurlorip/k3s-binaries-and-images`. Don't point this directly to the version subfolder itself (-> point it to the *parent* folder), and don't include a trailing `/`.
 
 Start provisioning of the cluster using the following command:
 
