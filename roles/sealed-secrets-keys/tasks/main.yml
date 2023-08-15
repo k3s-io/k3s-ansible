@@ -1,0 +1,7 @@
+---
+
+- name: Sealed Secrets | Add TLS keys
+  k8s:
+    resource_definition: "{{ vault_encrypted_tls_keys }}"
+    state: "{{ argocd_action }}"
+    kubeconfig: "{{ kubeconfig }}"

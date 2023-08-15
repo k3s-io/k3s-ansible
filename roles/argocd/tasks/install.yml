@@ -1,0 +1,13 @@
+---
+
+- name: ARGOCD | Prereq
+  import_tasks: prereq.yml
+
+- name: ARGOCD INSTALL | Deploy namespace
+  import_tasks: namespace.yml
+
+- name: ARGOCD INSTALL | Deploy Kubernetes objects
+  import_tasks: argocd.yml
+
+- name: ARGOCD INSTALL | Manage registries
+  import_tasks: application.yml

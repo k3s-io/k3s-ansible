@@ -1,0 +1,10 @@
+---
+
+- name: ARGOCD UNINSTALL | Delete Application objects
+  import_tasks: application.yml
+
+- name: ARGOCD UNINSTALL | Delete Kubernetes objects
+  import_tasks: argocd.yml
+
+- name: ARGOCD UNINSTALL | Delete namespace
+  import_tasks: namespace.yml

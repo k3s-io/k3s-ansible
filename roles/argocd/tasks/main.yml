@@ -1,0 +1,15 @@
+---
+
+- name: ARGOCD INSTALL | Ensure ArgoCD is installed
+  shell: kubectl get po -n {{ argocd_namespace }} | wc -l
+  changed_when: false
+  register: argocd_status
+  run_once: yes
+
+- name: ARGOCD | Install ArgoCD
+  import_tasks: install.yml
+  when: argocd_action == "present"
+
+- name: ARGOCD | Uninstall ArgoCD
+  import_tasks: uninstall.yml
+  when: argocd_action == "absent"
