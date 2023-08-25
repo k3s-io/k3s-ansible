@@ -12,6 +12,8 @@
   become: yes
   roles:
     - role: k3s/master
+    - role: argocd
+    - role: sealed-secrets-keys
 
 - hosts: node
   become: yes

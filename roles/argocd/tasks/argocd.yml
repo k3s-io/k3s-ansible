@@ -1,0 +1,23 @@
+---
+
+- run_once: yes
+  block:
+    - name: ARGOCD KUBERNETES | Download Kubernetes yaml file definition
+      get_url:
+        url: "{{ argocd_url }}"
+        dest: /tmp/argocd_install.yaml
+        owner: root
+        group: root
+        mode: 0440
+
+    - name: ARGOCD KUBERNETES | Manage Kubernetes objects
+      k8s:
+        namespace: "{{ argocd_namespace }}"
+        src: /tmp/argocd_install.yaml
+        state: "{{ argocd_action }}"
+        kubeconfig: "{{ kubeconfig }}"
+  always:
+    - name: ARGOCD KUBERNETES | Clean installation
+      file:
+        path: /tmp/argocd_install.yaml
+        state: absent

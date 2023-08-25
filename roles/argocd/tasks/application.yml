@@ -1,0 +1,31 @@
+---
+
+- run_once: yes
+  block:
+
+    - name: ARGOCD Application | Ensure ArgoCD Project default is installed
+      shell: kubectl get appproj -n {{ argocd_namespace }} | wc -l
+      changed_when: false
+      register: argocd_status
+      run_once: yes
+
+    - name: ARGOCD Application | Copy application objects
+      template:
+        src: "application.yml.j2"
+        dest: "/tmp/application.yml"
+        owner: root
+        group: root
+        mode: 0440
+
+    - name: ARGOCD Application | Add application objects
+      k8s:
+        namespace: "{{ argocd_namespace }}"
+        src: /tmp/application.yml
+        state: "{{ argocd_action }}"
+        kubeconfig: "{{ kubeconfig }}"
+
+  always:
+    - name: ARGOCD Application | Clean installation
+      file:
+        path: /tmp/application.yaml
+        state: absent

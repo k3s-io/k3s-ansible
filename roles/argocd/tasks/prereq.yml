@@ -1,0 +1,11 @@
+---
+- name: "Install dependencies required for python packages"
+  become: yes
+  apt:
+    name: ["python3-pip"]
+
+- name: install pre-requisites
+  pip:
+    name:
+      - pyyaml
+      - kubernetes 
