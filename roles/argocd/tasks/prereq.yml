@@ -8,4 +8,13 @@
   pip:
     name:
       - pyyaml
-      - kubernetes 
+      - kubernetes
+
+- name: Get ansible homedir
+  shell: echo ~
+  register: ansible_home
+  ignore_errors: true
+  become: false
+
+- name: Set kubeconfig path
+  ansible.builtin.set_fact: kubeconfig="{{ ansible_home.stdout_lines[0] }}/.kube/config"

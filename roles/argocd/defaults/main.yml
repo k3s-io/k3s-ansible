@@ -5,8 +5,6 @@ argocd_namespace: argocd
 argocd_version: 2.8.0
 argocd_url: https://raw.githubusercontent.com/argoproj/argo-cd/v{{ argocd_version }}/manifests/install.yaml
 
-kubeconfig: "~/.kube/config"
-
 repo_home_apps_url: https://github.com/emlagowski/home-apps.git
 repo_home_apps_name: home-apps
 repo_home_apps_path: apps

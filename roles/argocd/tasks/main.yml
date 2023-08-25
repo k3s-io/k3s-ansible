@@ -5,11 +5,17 @@
   changed_when: false
   register: argocd_status
   run_once: yes
+  tags: 
+  - argocd
 
 - name: ARGOCD | Install ArgoCD
   import_tasks: install.yml
   when: argocd_action == "present"
+  tags: 
+  - argocd
 
 - name: ARGOCD | Uninstall ArgoCD
   import_tasks: uninstall.yml
   when: argocd_action == "absent"
+  tags: 
+  - argocd
