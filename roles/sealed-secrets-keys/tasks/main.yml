@@ -1,7 +1,21 @@
 ---
+- name: Get ansible homedir
+  shell: echo ~
+  register: ansible_home
+  ignore_errors: true
+  become: false
+  tags:
+  - sealedsecrets
+
+- name: Set kubeconfig path
+  ansible.builtin.set_fact: kubeconfig="{{ ansible_home.stdout_lines[0] }}/.kube/config"
+  tags:
+  - sealedsecrets
 
 - name: Sealed Secrets | Add TLS keys
   k8s:
     resource_definition: "{{ vault_encrypted_tls_keys }}"
     state: "{{ argocd_action }}"
     kubeconfig: "{{ kubeconfig }}"
+  tags:
+  - sealedsecrets
