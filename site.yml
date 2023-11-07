@@ -1,6 +1,7 @@
 ---
 
-- hosts: k3s_cluster
+- name: "Setup K3s Cluster"
+  hosts: k3s_cluster
   gather_facts: yes
   become: yes
   roles:
@@ -8,12 +9,14 @@
     - role: download
     - role: raspberrypi
 
-- hosts: master
+- name: "Server Setup"
+  hosts: master
   become: yes
   roles:
-    - role: k3s/master
+    - role: k3s/master  # noqa: role-name[path]
 
-- hosts: node
+- name: "Agent Setup"
+  hosts: node
   become: yes
   roles:
-    - role: k3s/node
+    - role: k3s/node  # noqa: role-name[path]
