@@ -12,10 +12,10 @@
   hosts: server
   become: true
   roles:
-    - role: k3s/server
+    - role: k3s/server  # noqa: role-name[path]
 
 - name: Setup K3S agent
   hosts: agent
   become: true
   roles:
-    - role: k3s/agent
+    - role: k3s/agent  # noqa: role-name[path]

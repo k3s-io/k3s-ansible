@@ -1,12 +1,13 @@
 ---
 - name: Init first server node
+  when: ansible_hostname == groups['server'][0]
   block:
     - name: Start temporary service for HA cluster
       ansible.builtin.command:
         cmd: >
           systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
-          --cluster-init --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }}
-          {{ extra_server_args}}
+          --cluster-init --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }} {{ extra_server_args}}
+        # noqa: jinja[spacing]
         creates: "{{ k3s_server_location }}/server/node-token"
       when: groups['server'] | length > 1
 
@@ -73,7 +74,6 @@
         src: ~{{ ansible_user }}/.kube/config
         dest: ~/.kube/config
         flat: true
-  when: ansible_hostname == groups['server'][0]
 
 - name: Start other server if any and verify status
   block:
@@ -88,7 +88,8 @@
 
     - name: Verify that all server nodes joined
       ansible.builtin.command:
-        cmd: k3s kubectl get nodes -l "node-role.kubernetes.io/control-plane=true" -o=jsonpath="{.items[*].metadata.name}"
+        cmd: >
+          k3s kubectl get nodes -l "node-role.kubernetes.io/control-plane=true" -o=jsonpath="{.items[*].metadata.name}"
       register: nodes
       until: nodes.rc == 0 and (nodes.stdout.split() | length) == (groups['server'] | length)
       retries: 20

@@ -1,7 +1,7 @@
 ---
 - name: Clean previous failed runs of k3s-init
   # systemd builtin does not support reset-failed
-  ansible.builtin.command: systemctl reset-failed k3s-init
+  ansible.builtin.command: systemctl reset-failed k3s-init  # noqa: command-instead-of-module
   failed_when: false
   changed_when: false
 
