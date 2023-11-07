@@ -6,7 +6,7 @@
   failed_when: false
 
 - name: Clean previous runs of k3s-init
-  ansible.builtin.command: systemctl reset-failed k3s-init
+  ansible.builtin.command: systemctl reset-failed k3s-init  # noqa: command-instead-of-module
   failed_when: false
   changed_when: false
 
@@ -15,7 +15,7 @@
     cmd: "systemd-run -p RestartSec=2 \
                       -p Restart=on-failure \
                       --unit=k3s-init \
-                      k3s server {{ server_init_args }}"
+                      k3s server {{ k3s_server_init_args }}"
     creates: "{{ systemd_dir }}/k3s.service"
 
 - name: Verification
@@ -94,7 +94,7 @@
     owner: "{{ ansible_user }}"
     mode: "u=rw,g=,o="
 
-- name: Configure kubectl cluster to https://{{ apiserver_endpoint }}:{{ apiserver_port | default(6443) }}
+- name: Configure kubectl cluster to server endpoint
   ansible.builtin.command: >-
     /usr/local/bin/k3s kubectl config set-cluster default
       --server=https://{{ apiserver_endpoint }}:{{ apiserver_port | default(6443) }}
