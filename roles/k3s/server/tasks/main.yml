@@ -2,50 +2,30 @@
 - name: Init first server node
   when: ansible_hostname == groups['server'][0]
   block:
-    - name: Start temporary service for HA cluster
-      ansible.builtin.command:
-        cmd: >
-          systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
-          --cluster-init --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }} {{ extra_server_args}}
-        # noqa: jinja[spacing]
-        creates: "{{ k3s_server_location }}/server/node-token"
-      when: groups['server'] | length > 1
-
-    - name: Start temporary service for single server cluster
-      ansible.builtin.command:
-        cmd: >
-          systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
-           --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }} {{ extra_server_args }}
-        creates: "{{ k3s_server_location }}/server/node-token"
+    - name: Copy K3s service file [Single]
       when: groups['server'] | length == 1
+      ansible.builtin.template:
+        src: "k3s-single.service.j2"
+        dest: "{{ systemd_dir }}/k3s.service"
+        owner: root
+        group: root
+        mode: 0644
 
-    - name: Wait for node-token
-      ansible.builtin.wait_for:
-        path: "{{ k3s_server_location }}/server/node-token"
+    - name: Copy K3s service file [HA]
+      when: groups['server'] | length > 1
+      ansible.builtin.template:
+        src: "k3s-cluster-init.service.j2"
+        dest: "{{ systemd_dir }}/k3s.service"
+        owner: root
+        group: root
+        mode: 0644
 
-    - name: Register node-token file access mode
-      ansible.builtin.stat:
-        path: "{{ k3s_server_location }}/server/node-token"
-      register: p
-
-    - name: Change file access node-token
-      ansible.builtin.file:
-        path: "{{ k3s_server_location }}/server/node-token"
-        mode: "g+rx,o+rx"
-
-    - name: Read node-token from server
-      ansible.builtin.slurp:
-        path: "{{ k3s_server_location }}/server/node-token"
-      register: node_token
-
-    - name: Store server node-token
-      ansible.builtin.set_fact:
-        token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
-
-    - name: Restore node-token file access
-      ansible.builtin.file:
-        path: "{{ k3s_server_location }}/server/node-token"
-        mode: "{{ p.stat.mode }}"
+    - name: Enable and check K3s service
+      ansible.builtin.systemd:
+        name: k3s
+        daemon_reload: true
+        state: started
+        enabled: true
 
     - name: Create directory .kube
       ansible.builtin.file:
@@ -53,6 +33,10 @@
         state: directory
         owner: "{{ ansible_user }}"
         mode: "u=rwx,g=rx,o="
+
+    - name: Pause to allow server startup
+      ansible.builtin.pause:
+        seconds: 10
 
     - name: Copy config file to user home directory
       ansible.builtin.copy:
@@ -76,17 +60,28 @@
         flat: true
 
 - name: Start other server if any and verify status
+  when:
+    - (groups['server'] | length) > 1
+    - ansible_hostname != groups['server'][0]
   block:
-    - name: Init additonal server nodes
-      ansible.builtin.command:
-        cmd: >
-          systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
-          --token "{{ hostvars[groups['server'][0]]['token'] }}" --server https://{{ api_endpoint }}:{{ api_port }}
-          --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }} {{ extra_server_args }}
-        creates: "{{ k3s_server_location }}/server/node-token"
-      when: ansible_hostname != groups['server'][0]
+    - name: Copy K3s service file [HA]
+      when: groups['server'] | length > 1
+      ansible.builtin.template:
+        src: "k3s-ha.service.j2"
+        dest: "{{ systemd_dir }}/k3s.service"
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Enable and check K3s service
+      ansible.builtin.systemd:
+        name: k3s
+        daemon_reload: true
+        state: started
+        enabled: true
 
     - name: Verify that all server nodes joined
+      when: (groups['server'] | length) > 1
       ansible.builtin.command:
         cmd: >
           k3s kubectl get nodes -l "node-role.kubernetes.io/control-plane=true" -o=jsonpath="{.items[*].metadata.name}"
@@ -95,28 +90,6 @@
       retries: 20
       delay: 10
       changed_when: false
-  always:
-    - name: Kill the temporary init service
-      ansible.builtin.systemd:
-        name: k3s-init
-        state: stopped
-      failed_when: false
-
-- name: Copy K3s service file
-  ansible.builtin.template:
-    src: "k3s-server.service.j2"
-    dest: "{{ systemd_dir }}/k3s-server.service"
-    owner: root
-    group: root
-    mode: 0644
-  register: k3s_service
-
-- name: Enable and check K3s service
-  ansible.builtin.systemd:
-    name: k3s-server
-    daemon_reload: true
-    state: restarted
-    enabled: true
 
 - name: Create symlinks
   ansible.builtin.file:

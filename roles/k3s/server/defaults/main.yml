@@ -1,0 +1,4 @@
+---
+k3s_server_location: "/var/lib/rancher/k3s"
+systemd_dir: "/etc/systemd/system"
+api_port: 6443

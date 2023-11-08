@@ -34,7 +34,7 @@
       ansible_facts.lsb.description|default("") is match("Debian") )
 
 - name: Set detected_distribution to ArchLinux (ARM64)
-  set_fact:
+  ansible.builtin.set_fact:
     detected_distribution: Archlinux
   when:
     - ansible_facts.architecture is search("aarch64")

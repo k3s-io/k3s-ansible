@@ -4,6 +4,12 @@
     state: disabled
   when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux','RedHat']
 
+- name: Install Dependent Ubuntu Packages
+  when: ansible_distribution in ['Ubuntu']
+  ansible.builtin.apt:
+    name: policycoreutils  # Used by install script to restore SELinux context
+    update_cache: yes
+
 - name: Enable IPv4 forwarding
   ansible.posix.sysctl:
     name: net.ipv4.ip_forward
@@ -53,16 +59,12 @@
     validate: 'visudo -cf %s'
   when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux','RedHat']
 
-- name: Make k3s directory
-  ansible.builtin.file:
-    path: "/var/lib/rancher"
-    mode: 0755
-    state: directory
-
 - name: Create symlink
   ansible.builtin.file:
     dest: /var/lib/rancher/k3s
     src: "{{ k3s_server_location }}"
     force: true
     state: link
-  when: k3s_server_location != "/var/lib/rancher/k3s"
+  when:
+    - k3s_server_location is defined
+    - k3s_server_location != "/var/lib/rancher/k3s"

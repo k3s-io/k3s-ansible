@@ -1,4 +1,5 @@
 ---
+
 - name: Copy K3s service file
   ansible.builtin.template:
     src: "k3s-agent.service.j2"
@@ -11,5 +12,5 @@
   ansible.builtin.systemd:
     name: k3s-agent
     daemon_reload: true
-    state: restarted
+    state: started
     enabled: true
