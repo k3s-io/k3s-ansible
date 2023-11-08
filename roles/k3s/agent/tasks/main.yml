@@ -12,5 +12,5 @@
   ansible.builtin.systemd:
     name: k3s-agent
     daemon_reload: true
-    state: restarted
+    state: started
     enabled: true
