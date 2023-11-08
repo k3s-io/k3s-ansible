@@ -4,6 +4,12 @@
     state: disabled
   when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux','RedHat']
 
+- name: Install Dependent Ubuntu Packages
+  when: ansible_distribution in ['Ubuntu']
+  ansible.builtin.apt:
+    name: policycoreutils  # Used by install script to restore SELinux context
+    update_cache: yes
+
 - name: Enable IPv4 forwarding
   ansible.posix.sysctl:
     name: net.ipv4.ip_forward
@@ -65,4 +71,6 @@
     src: "{{ k3s_server_location }}"
     force: true
     state: link
-  when: k3s_server_location != "/var/lib/rancher/k3s"
+  when:
+    - k3s_server_location is defined
+    - k3s_server_location != "/var/lib/rancher/k3s"

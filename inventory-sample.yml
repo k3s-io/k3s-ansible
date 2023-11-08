@@ -9,14 +9,17 @@ k3s_cluster:
         192.16.35.12
         192.16.35.13
 
+  # Required Vars
   vars:
     ansible_port: 22
     ansible_user: debian
     k3s_version: v1.25.5+k3s2
-    k3s_server_location: /var/lib/rancher/k3s
-    systemd_dir: /etc/systemd/system
     api_endpoint: "{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}"
     api_port: 6443
     extra_server_args: ""
     extra_server_init_args: ""
     extra_agent_args: ""
+
+  # Optional vars
+    # k3s_server_location: /var/lib/rancher/k3s
+    # systemd_dir: /etc/systemd/system
