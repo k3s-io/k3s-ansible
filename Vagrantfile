@@ -9,13 +9,16 @@ NETWORK_PREFIX = "10.10.10"
 def provision(vm, role, node_num)
   vm.box = NODE_BOXES[node_num]
   vm.hostname = role
-  # An expanded netmask is required to allow VM<-->VM communication, virtualbox defaults to /32
+  # We use a private network because the default IPs are dynamicly assigned 
+  # during provisioning. This makes it impossible to know the server-0 IP when 
+  # provisioning subsequent servers and agents. A private network allows us to
+  # assign static IPs to each node, and thus provide a known IP for the API endpoint.
   node_ip = "#{NETWORK_PREFIX}.#{100+node_num}"
+  # An expanded netmask is required to allow VM<-->VM communication, virtualbox defaults to /32
   vm.network "private_network", ip: node_ip, netmask: "255.255.255.0"
 
   vm.provision "ansible", run: 'once' do |ansible|
     ansible.compatibility_mode = "2.0"
-    ansible.verbose = "vv"
     ansible.playbook = "playbook/site.yml"
     ansible.groups = {
       "server" => NODE_ROLES.grep(/^server/),
@@ -25,13 +28,12 @@ def provision(vm, role, node_num)
     ansible.extra_vars = {
       k3s_version: "v1.26.5+k3s1",
       api_endpoint: "#{NETWORK_PREFIX}.100",
-      api_port: 6443,
-      extra_server_args: "",
-      extra_server_init_args: "",
+      token: "myyagrant",
+      # Required to use the private network configured above
+      extra_server_args: "--node-external-ip #{node_ip} --flannel-iface eth1", 
       extra_agent_args: "",
     }
   end
-
 end
 
 Vagrant.configure("2") do |config|
@@ -45,8 +47,6 @@ Vagrant.configure("2") do |config|
     v.memory = NODE_MEMORY
   end
   
-  # Must iterate on the index, vagrant does not understand iterating 
-  # over the node roles themselves
   NODE_ROLES.each_with_index do |name, i|
     config.vm.define name do |node|
       provision(node.vm, name, i)

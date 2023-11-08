@@ -6,7 +6,7 @@
       ansible.builtin.command:
         cmd: >
           systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
-          --cluster-init --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }} {{ extra_server_args}}
+          --cluster-init --token {{ token }} --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }} {{ extra_server_args}}
         # noqa: jinja[spacing]
         creates: "{{ k3s_server_location }}/server/node-token"
       when: groups['server'] | length > 1
@@ -15,37 +15,9 @@
       ansible.builtin.command:
         cmd: >
           systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server
-           --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }} {{ extra_server_args }}
+          --token {{ token }} --tls-san {{ api_endpoint }} --data-dir {{ k3s_server_location }} {{ extra_server_args }}
         creates: "{{ k3s_server_location }}/server/node-token"
       when: groups['server'] | length == 1
-
-    - name: Wait for node-token
-      ansible.builtin.wait_for:
-        path: "{{ k3s_server_location }}/server/node-token"
-
-    - name: Register node-token file access mode
-      ansible.builtin.stat:
-        path: "{{ k3s_server_location }}/server/node-token"
-      register: p
-
-    - name: Change file access node-token
-      ansible.builtin.file:
-        path: "{{ k3s_server_location }}/server/node-token"
-        mode: "g+rx,o+rx"
-
-    - name: Read node-token from server
-      ansible.builtin.slurp:
-        path: "{{ k3s_server_location }}/server/node-token"
-      register: node_token
-
-    - name: Store server node-token
-      ansible.builtin.set_fact:
-        token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
-
-    - name: Restore node-token file access
-      ansible.builtin.file:
-        path: "{{ k3s_server_location }}/server/node-token"
-        mode: "{{ p.stat.mode }}"
 
     - name: Create directory .kube
       ansible.builtin.file:
