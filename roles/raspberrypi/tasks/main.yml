@@ -33,6 +33,14 @@
     ( ansible_facts.lsb.id|default("") == "Debian" or
       ansible_facts.lsb.description|default("") is match("Debian") )
 
+- name: Set detected_distribution to ArchLinux (ARM64)
+  set_fact:
+    detected_distribution: Archlinux
+  when:
+    - ansible_facts.architecture is search("aarch64")
+    - raspberry_pi|default(false)
+    - ansible_facts.os_family is match("Archlinux")
+
 - name: Set detected_distribution_major_version
   ansible.builtin.set_fact:
     detected_distribution_major_version: "{{ ansible_facts.lsb.major_release }}"

@@ -9,6 +9,7 @@ Build a Kubernetes cluster using Ansible with k3s. The goal is easily install a 
 - [X] Debian
 - [X] Ubuntu
 - [X] CentOS
+- [X] ArchLinux
 
 on processor architecture:
 
