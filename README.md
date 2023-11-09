@@ -22,7 +22,12 @@ on processor architecture:
 ## System requirements
 
 Deployment environment must have Ansible 2.4.0+
-Server and agent nodes must have passwordless SSH access
+
+All nodes in inventory must have:
+- Passwordless SSH access
+- Root access (or a user with equivalent permissions) 
+
+It is also recommended that all nodes disable firewalls and swap. See [K3s Requirements](https://docs.k3s.io/installation/requirements) for more information.
 
 ## Usage
 
