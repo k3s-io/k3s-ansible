@@ -19,7 +19,7 @@ def provision(vm, role, node_num)
 
   vm.provision "ansible", run: 'once' do |ansible|
     ansible.compatibility_mode = "2.0"
-    ansible.playbook = "playbook/site.yml"
+    ansible.playbook = "playbook/debug.yml"
     ansible.groups = {
       "server" => NODE_ROLES.grep(/^server/),
       "agent" => NODE_ROLES.grep(/^agent/),
@@ -32,7 +32,8 @@ def provision(vm, role, node_num)
       # Required to use the private network configured above
       extra_server_args: "--node-external-ip #{node_ip} --flannel-iface eth1", 
       extra_agent_args: "--node-external-ip #{node_ip} --flannel-iface eth1",
-      k3s_server_location: "/data/k3s",
+      # Not needed, left as reference for ruby-ansible list syntax
+      # extra_service_envs: [ "NO_PROXY='localhost'" ],
     }
   end
 end
