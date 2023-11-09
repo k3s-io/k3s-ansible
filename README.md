@@ -22,7 +22,12 @@ on processor architecture:
 ## System requirements
 
 Deployment environment must have Ansible 2.4.0+
-Server and agent nodes must have passwordless SSH access
+
+All nodes in inventory must have:
+- Passwordless SSH access
+- Root access (or a user with equivalent permissions) 
+
+It is also recommended that all nodes disable firewalls and swap. See [K3s Requirements](https://docs.k3s.io/installation/requirements) for more information.
 
 ## Usage
 
@@ -58,6 +63,15 @@ Start provisioning of the cluster using the following command:
 ```bash
 ansible-playbook playbook/site.yml -i inventory.yml
 ```
+
+## Upgrading
+
+A playbook is provided to upgrade k3s on all nodes in the cluster. To use it, update `k3s_version` with the desired version in `inventory.yml` and run:
+
+```bash
+ansible-playbook playbook/upgrade.yml -i inventory.yml
+```
+
 
 ## Kubeconfig
 
