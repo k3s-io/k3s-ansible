@@ -60,19 +60,18 @@
   when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux','RedHat']
 
 - name: Setup alternative K3s directory
-  when: 
+  when:
     - k3s_server_location is defined
     - k3s_server_location != "/var/lib/rancher/k3s"
   block:
-  - name: Make rancher directory
-    ansible.builtin.file:
-      path: "/var/lib/rancher"
-      mode: 0755
-      state: directory
-  - name: Create symlink
-    ansible.builtin.file:
-      dest: /var/lib/rancher/k3s
-      src: "{{ k3s_server_location }}"
-      force: true
-      state: link
-
+    - name: Make rancher directory
+      ansible.builtin.file:
+        path: "/var/lib/rancher"
+        mode: 0755
+        state: directory
+    - name: Create symlink
+      ansible.builtin.file:
+        dest: /var/lib/rancher/k3s
+        src: "{{ k3s_server_location }}"
+        force: true
+        state: link
