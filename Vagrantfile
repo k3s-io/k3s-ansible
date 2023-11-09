@@ -19,14 +19,14 @@ def provision(vm, role, node_num)
 
   vm.provision "ansible", run: 'once' do |ansible|
     ansible.compatibility_mode = "2.0"
-    ansible.playbook = "playbook/debug.yml"
+    ansible.playbook = "playbook/site.yml"
     ansible.groups = {
       "server" => NODE_ROLES.grep(/^server/),
       "agent" => NODE_ROLES.grep(/^agent/),
       "k3s_cluster:children" => ["server", "agent"],
     }
     ansible.extra_vars = {
-      k3s_version: "v1.26.5+k3s1",
+      k3s_version: "v1.26.9+k3s1",
       api_endpoint: "#{NETWORK_PREFIX}.100",
       token: "myvagrant",
       # Required to use the private network configured above

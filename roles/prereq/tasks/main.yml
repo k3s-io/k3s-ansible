@@ -2,7 +2,7 @@
 - name: Set SELinux to disabled state
   ansible.posix.selinux:
     state: disabled
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux','RedHat']
+  when: ansible_os_family == 'RedHat'
 
 - name: Install Dependent Ubuntu Packages
   when: ansible_distribution in ['Ubuntu']
@@ -30,13 +30,13 @@
     content: "br_netfilter"
     dest: /etc/modules-load.d/br_netfilter.conf
     mode: "u=rw,g=,o="
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'RedHat', 'Archlinux']
+  when: (ansible_os_family == 'RedHat' or ansible_distribution == 'Archlinux')
 
 - name: Load br_netfilter
   community.general.modprobe:
     name: br_netfilter
     state: present
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'RedHat', 'Archlinux']
+  when: (ansible_os_family == 'RedHat' or ansible_distribution == 'Archlinux')
 
 - name: Set bridge-nf-call-iptables (just to be sure)
   ansible.posix.sysctl:
@@ -44,7 +44,7 @@
     value: "1"
     state: present
     reload: true
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'RedHat', 'Archlinux']
+  when: (ansible_os_family == 'RedHat' or ansible_distribution == 'Archlinux')
   loop:
     - net.bridge.bridge-nf-call-iptables
     - net.bridge.bridge-nf-call-ip6tables
@@ -57,7 +57,7 @@
     insertafter: EOF
     path: /etc/sudoers
     validate: 'visudo -cf %s'
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux','RedHat']
+  when: ansible_os_family == 'RedHat'
 
 - name: Setup alternative K3s directory
   when:
