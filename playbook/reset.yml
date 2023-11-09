@@ -8,3 +8,7 @@
       ansible.builtin.command:
         cmd: k3s-uninstall.sh
         removes: /var/lib/rancher/k3s/*
+    - name: Remove user kubeconfig
+      ansible.builtin.file:
+        path: /home/{{ ansible_user }}/.kube/config
+        state: absent
