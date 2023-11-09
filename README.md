@@ -64,6 +64,15 @@ Start provisioning of the cluster using the following command:
 ansible-playbook playbook/site.yml -i inventory.yml
 ```
 
+## Upgrading
+
+A playbook is provided to upgrade k3s on all nodes in the cluster. To use it, update `k3s_version` with the desired version in `inventory.yml` and run:
+
+```bash
+ansible-playbook playbook/upgrade.yml -i inventory.yml
+```
+
+
 ## Kubeconfig
 
 After successful bringup, the kubeconfig of the cluster is copied to the control-node and set as default (`~/.kube/config`).
