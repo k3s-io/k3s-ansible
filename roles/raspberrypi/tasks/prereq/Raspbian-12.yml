@@ -1,0 +1,8 @@
+---
+- name: Activating cgroup support
+  lineinfile:
+    path: /boot/cmdline.txt
+    regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1\b).*)$'
+    line: '\1 cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1'
+    backrefs: true
+  notify: reboot
