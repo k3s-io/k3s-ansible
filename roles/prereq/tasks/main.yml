@@ -1,54 +1,70 @@
 ---
 - name: Set SELinux to disabled state
-  selinux:
+  ansible.posix.selinux:
     state: disabled
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux','RedHat']
+
+- name: Install Dependent Ubuntu Packages
+  when: ansible_distribution in ['Ubuntu']
+  ansible.builtin.apt:
+    name: policycoreutils  # Used by install script to restore SELinux context
+    update_cache: yes
 
 - name: Enable IPv4 forwarding
-  sysctl:
+  ansible.posix.sysctl:
     name: net.ipv4.ip_forward
     value: "1"
     state: present
-    reload: yes
+    reload: true
 
 - name: Enable IPv6 forwarding
-  sysctl:
+  ansible.posix.sysctl:
     name: net.ipv6.conf.all.forwarding
     value: "1"
     state: present
-    reload: yes
+    reload: true
   when: ansible_all_ipv6_addresses
 
 - name: Add br_netfilter to /etc/modules-load.d/
-  copy:
+  ansible.builtin.copy:
     content: "br_netfilter"
     dest: /etc/modules-load.d/br_netfilter.conf
     mode: "u=rw,g=,o="
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'RedHat', 'Archlinux']
 
 - name: Load br_netfilter
-  modprobe:
+  community.general.modprobe:
     name: br_netfilter
     state: present
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'RedHat', 'Archlinux']
 
 - name: Set bridge-nf-call-iptables (just to be sure)
-  sysctl:
+  ansible.posix.sysctl:
     name: "{{ item }}"
     value: "1"
     state: present
-    reload: yes
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+    reload: true
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux', 'RedHat', 'Archlinux']
   loop:
     - net.bridge.bridge-nf-call-iptables
     - net.bridge.bridge-nf-call-ip6tables
 
 - name: Add /usr/local/bin to sudo secure_path
-  lineinfile:
+  ansible.builtin.lineinfile:
     line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
     regexp: "Defaults(\\s)*secure_path(\\s)*="
     state: present
     insertafter: EOF
     path: /etc/sudoers
     validate: 'visudo -cf %s'
-  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux']
+  when: ansible_distribution in ['CentOS', 'Red Hat Enterprise Linux','RedHat']
+
+- name: Create symlink
+  ansible.builtin.file:
+    dest: /var/lib/rancher/k3s
+    src: "{{ k3s_server_location }}"
+    force: true
+    state: link
+  when:
+    - k3s_server_location is defined
+    - k3s_server_location != "/var/lib/rancher/k3s"

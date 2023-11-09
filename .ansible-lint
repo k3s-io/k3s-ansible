@@ -1,0 +1,5 @@
+---
+warn_list:
+ - var-naming[no-role-prefix]
+ - yaml[comments-indentation]
+ - yaml[line-length]
