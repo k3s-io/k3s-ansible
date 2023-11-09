@@ -5,7 +5,7 @@
     regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$'
     line: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
     backrefs: true
-  notify: reboot
+  notify: Reboot Pi
 
 - name: Flush iptables before changing to iptables-legacy
   ansible.builtin.iptables:
