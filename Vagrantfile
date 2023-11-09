@@ -32,6 +32,7 @@ def provision(vm, role, node_num)
       # Required to use the private network configured above
       extra_server_args: "--node-external-ip #{node_ip} --flannel-iface eth1", 
       extra_agent_args: "--node-external-ip #{node_ip} --flannel-iface eth1",
+      k3s_server_location: "/data/k3s",
     }
   end
 end

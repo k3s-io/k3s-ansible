@@ -35,6 +35,7 @@
         mode: "u=rwx,g=rx,o="
 
     - name: Pause to allow server startup
+      when: (groups['server'] | length) > 1
       ansible.builtin.pause:
         seconds: 10
 
@@ -48,7 +49,7 @@
 
     - name: Change server to API endpoint instead of localhost
       ansible.builtin.command: >-
-        k3s kubectl config set-cluster default
+         /usr/local/bin/k3s kubectl config set-cluster default
           --server=https://{{ api_endpoint }}:{{ api_port }}
           --kubeconfig ~{{ ansible_user }}/.kube/config
       changed_when: true
