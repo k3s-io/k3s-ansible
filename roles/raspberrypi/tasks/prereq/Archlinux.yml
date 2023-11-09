@@ -10,6 +10,6 @@
   ansible.builtin.command: ./mkscr
   args:
     chdir: /boot
-  notify: reboot
+  notify: Reboot Pi
   changed_when: false
   when: kernel_cmdline_cgroup.changed  # noqa: no-handler
