@@ -28,7 +28,7 @@
 - name: Populate service facts
   ansible.builtin.service_facts:
 
-- name: Handle UFW access
+- name: Allow UFW Exceptions
   when:
     - ansible_facts.services['ufw'] is defined
     - ansible_facts.services['ufw'].state == 'running'
@@ -39,12 +39,21 @@
       changed_when: false
       register: ufw_status
 
-    - name: If ufw enabled, open neccesary ports
+    - name: If ufw enabled, open api port
       when:
         - ufw_status['stdout'] == "Status':' active"
       community.general.ufw:
         rule: allow
         port: "{{ api_port }}"
+        proto: tcp
+
+    - name: If ufw enabled, open etcd ports
+      when:
+        - ufw_status['stdout'] == "Status':' active"
+        - groups['server'] | length > 1
+      community.general.ufw:
+        rule: allow
+        port: "2379:2381"
         proto: tcp
 
     - name: If ufw enabled, allow default CIDRs
@@ -57,6 +66,38 @@
         - 10.42.0.0/16  # Pods
         - 10.43.0.0/16  # Services
 
+- name: Allow Firewalld Exceptions
+  when:
+    - ansible_facts.services['firewalld.service'] is defined
+    - ansible_facts.services['firewalld.service'].state == 'running'
+  block:
+    - name: If firewalld enabled, open api port
+      ansible.posix.firewalld:
+        port: "{{ api_port }}/tcp"
+        zone: trusted
+        state: enabled
+        permanent: true
+        immediate: true
+
+    - name: If firewalld enabled, open etcd ports
+      when: groups['server'] | length > 1
+      ansible.posix.firewalld:
+        port: "2379-2381/tcp"
+        zone: trusted
+        state: enabled
+        permanent: true
+        immediate: true
+
+    - name: If firewalld enabled, allow default CIDRs
+      ansible.posix.firewalld:
+        source: "{{ item }}"
+        zone: trusted
+        state: enabled
+        permanent: true
+        immediate: true
+      loop:
+        - 10.42.0.0/16  # Pods
+        - 10.43.0.0/16  # Services
 
 - name: Add br_netfilter to /etc/modules-load.d/
   ansible.builtin.copy:
