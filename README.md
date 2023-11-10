@@ -91,3 +91,11 @@ vagrant up
 ```
 
 By default, each node is given 2 cores and 2GB of RAM and runs Ubuntu 20.04. You can customize these settings by editing the `Vagrantfile`.
+
+## Need More Features?
+
+See these other projects:
+- https://github.com/PyratLabs/ansible-role-k3s
+- https://github.com/techno-tim/k3s-ansible
+- https://github.com/jon-stumpf/k3s-ansible
+- https://github.com/alexellis/k3sup
