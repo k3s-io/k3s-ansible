@@ -7,19 +7,36 @@
     backrefs: true
   notify: Reboot Pi
 
-- name: Flush iptables before changing to iptables-legacy
-  ansible.builtin.iptables:
-    flush: true
-  changed_when: false   # iptables flush always returns changed
+- name: Gather the package facts
+  ansible.builtin.package_facts:
+    manager: auto
 
-- name: Changing to iptables-legacy
-  community.general.alternatives:
-    path: /usr/sbin/iptables-legacy
-    name: iptables
-  register: ip4_legacy
+# If no iptables is found, K3s will use the iptables it ships with.
+# However, if a iptables is found, K3s will use that instead. Iptables
+# versions 1.8.7 and older have problems with K3s, so we force the use of
+# iptables-legacy in that case.
+- name: If old iptables found, change to iptables-legacy
+  when:
+    - ansible_facts.packages['iptables'] is defined
+    - ansible_facts.packages['iptables'][0]['version'] is version('1.8.8', '<')
+  block:
+    - name: Iptables version on node
+      ansible.builtin.debug:
+        msg: "iptables version {{ ansible_facts.packages['iptables'][0]['version'] }} found"
 
-- name: Changing to ip6tables-legacy
-  community.general.alternatives:
-    path: /usr/sbin/ip6tables-legacy
-    name: ip6tables
-  register: ip6_legacy
+    - name: Flush iptables before changing to iptables-legacy
+      ansible.builtin.iptables:
+        flush: true
+      changed_when: false   # iptables flush always returns changed
+
+    - name: Changing to iptables-legacy
+      community.general.alternatives:
+        path: /usr/sbin/iptables-legacy
+        name: iptables
+      register: ip4_legacy
+
+    - name: Changing to ip6tables-legacy
+      community.general.alternatives:
+        path: /usr/sbin/ip6tables-legacy
+        name: ip6tables
+      register: ip6_legacy
