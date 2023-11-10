@@ -1,9 +1,4 @@
 ---
-- name: Set SELinux to disabled state
-  ansible.posix.selinux:
-    state: disabled
-  when: ansible_os_family == 'RedHat'
-
 - name: Install Dependent Ubuntu Packages
   when: ansible_distribution in ['Ubuntu']
   ansible.builtin.apt:
