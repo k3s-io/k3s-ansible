@@ -41,7 +41,7 @@
         owner: "{{ ansible_user }}"
         mode: "u=rwx,g=rx,o="
 
-    - name: Pause to allow server startup
+    - name: Pause to allow first server startup
       when: (groups['server'] | length) > 1
       ansible.builtin.pause:
         seconds: 10
@@ -53,6 +53,14 @@
         remote_src: true
         owner: "{{ ansible_user }}"
         mode: "u=rw,g=,o="
+
+    - name: Add K3s autocomplete to user bashrc
+      become: true
+      become_user: "{{ ansible_user }}"
+      ansible.builtin.command:
+        cmd: "k3s completion bash -i"
+      register: out
+      changed_when: out.rc != 0
 
     - name: Change server to API endpoint instead of localhost
       ansible.builtin.command: >-
