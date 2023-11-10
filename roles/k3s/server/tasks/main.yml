@@ -1,6 +1,7 @@
 ---
 - name: Init first server node
-  when: ansible_hostname == groups['server'][0]
+  # Handle both hostname OR ip address being supplied in inventory
+  when: ansible_hostname == groups['server'][0] or groups['server'][0] in ansible_facts['all_ipv4_addresses']
   block:
     - name: Copy K3s service file [Single]
       when: groups['server'] | length == 1
