@@ -25,6 +25,39 @@
     reload: true
   when: ansible_all_ipv6_addresses
 
+- name: Populate service facts
+  ansible.builtin.service_facts:
+
+- name: Handle UFW access
+  when:
+    - ansible_facts.services['ufw'] is defined
+    - ansible_facts.services['ufw'].state == 'running'
+  block:
+    - name: Get ufw status
+      ansible.builtin.command:
+        cmd: ufw status
+      changed_when: false
+      register: ufw_status
+
+    - name: If ufw enabled, open neccesary ports
+      when:
+        - ufw_status['stdout'] == "Status':' active"
+      community.general.ufw:
+        rule: allow
+        port: "{{ api_port }}"
+        proto: tcp
+
+    - name: If ufw enabled, allow default CIDRs
+      when:
+        - ufw_status['stdout'] == "Status':' active"
+      community.general.ufw:
+        rule: allow
+        src: '{{ item }}'
+      loop:
+        - 10.42.0.0/16  # Pods
+        - 10.43.0.0/16  # Services
+
+
 - name: Add br_netfilter to /etc/modules-load.d/
   ansible.builtin.copy:
     content: "br_netfilter"
