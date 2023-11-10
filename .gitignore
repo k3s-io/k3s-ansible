@@ -1,3 +1,4 @@
 .vscode
 .vagrant
 inventory.yml
+playbook/debug.yml
