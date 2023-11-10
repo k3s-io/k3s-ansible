@@ -3,14 +3,15 @@
 # Build a Kubernetes cluster using k3s via Ansible
 
 Author: <https://github.com/itwars>
-
-## K3s Ansible Playbook
+Current Maintainer: <https://github.com/dereknola>
 
 Build a Kubernetes cluster using Ansible with k3s. The goal is easily install a Kubernetes cluster on machines running:
 
 - [X] Debian
 - [X] Ubuntu
-- [X] CentOS
+- [X] Raspberry Pi OS
+- [X] RHEL Family (CentOS, Redhat, Rocky Linux...)
+- [X] SUSE Family (SLES, OpenSUSE Leap, Tumbleweed...)
 - [X] ArchLinux
 
 on processor architecture:
@@ -93,6 +94,13 @@ vagrant up
 By default, each node is given 2 cores and 2GB of RAM and runs Ubuntu 20.04. You can customize these settings by editing the `Vagrantfile`.
 
 ## Need More Features?
+
+This project is intended to provide a "vanilla" K3s install. If you need more features, such as:
+- Private Registry
+- Advanced Storage (Longhorn, Ceph, etc)
+- External Database
+- External Load Balancer or VIP
+- Alternative CNIs
 
 See these other projects:
 - https://github.com/PyratLabs/ansible-role-k3s
