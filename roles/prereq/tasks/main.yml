@@ -129,12 +129,21 @@
   register: apparmor_status
   changed_when: false
 
-- name: Install Apparmor Parser
+- name: Install Apparmor Parser [Suse]
   when:
     - apparmor_status.stdout == "Y"
     - ansible_os_family == 'Suse'
   ansible.builtin.package:
     name: apparmor-parser
+    state: present
+
+- name: Install Apparmor Parser [Debian]
+  when:
+    - apparmor_status.stdout == "Y"
+    - ansible_distribution == 'Debian'
+    - ansible_facts['distribution_major_version'] == "11"
+  ansible.builtin.package:
+    name: apparmor
     state: present
 
 - name: Add /usr/local/bin to sudo secure_path
