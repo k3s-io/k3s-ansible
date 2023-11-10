@@ -1,6 +1,6 @@
 # Build a Kubernetes cluster using K3s via Ansible
 
-Author: <https://github.com/itwars>
+Author: <https://github.com/itwars>  
 Current Maintainer: <https://github.com/dereknola>
 
 Easily bring up a cluster on machines running:
