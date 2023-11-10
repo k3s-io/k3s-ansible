@@ -172,3 +172,18 @@
         src: "{{ k3s_server_location }}"
         force: true
         state: link
+
+- name: Setup extra manifests
+  when: extra_manifests is defined
+  block:
+    - name: Make manifests directory
+      ansible.builtin.file:
+        path: "/var/lib/rancher/k3s/server/manifests"
+        mode: 0700
+        state: directory
+    - name: Copy manifests
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "/var/lib/rancher/k3s/server/manifests"
+        mode: 0600
+      loop: "{{ extra_manifests }}"
