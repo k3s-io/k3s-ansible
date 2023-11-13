@@ -27,3 +27,7 @@ k3s_cluster:
     # List of locally available manifests to apply to the cluster, useful for PVCs or Traefik modifications.
     # Manifests should be either full paths or relative to the playbook directory.
     # extra_manifests: [ '/path/to/manifest1.yaml', '/path/to/manifest2.yaml' ]
+    # config_yaml:  |
+      # This is now an inner yaml file. Mantain the indentation.
+      # YAML here will be placed as the content of /etc/rancher/k3s/config.yaml
+      # See https://docs.k3s.io/installation/configuration#configuration-file
