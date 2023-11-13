@@ -42,11 +42,11 @@ k3s_cluster:
   children:
     server:
       hosts:
-        192.16.35.11
+        192.16.35.11:
     agent:
       hosts:
-        192.16.35.12
-        192.16.35.13
+        192.16.35.12:
+        192.16.35.13:
 ```
 
 If needed, you can also edit `vars` section at the bottom to match your environment.
