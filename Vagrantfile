@@ -32,6 +32,7 @@ def provision(vm, role, node_num)
       # Required to use the private network configured above
       extra_server_args: "--node-external-ip #{node_ip} --flannel-iface eth1", 
       extra_agent_args: "--node-external-ip #{node_ip} --flannel-iface eth1",
+      airgapped_dir: "./my-airgap",
       # Optional, left as reference for ruby-ansible syntax
       # extra_service_envs: [ "NO_PROXY='localhost'" ],
       # config_yaml: <<~YAML
