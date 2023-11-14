@@ -23,6 +23,11 @@
 - name: Populate service facts
   ansible.builtin.service_facts:
 
+- name: Assign api_port if not defined
+  when: api_port is undefined
+  ansible.builtin.set_fact:
+    api_port: 6443
+
 - name: Allow UFW Exceptions
   when:
     - ansible_facts.services['ufw'] is defined
@@ -131,17 +136,19 @@
 
 - name: Install Apparmor Parser [Suse]
   when:
-    - apparmor_status.stdout == "Y"
     - ansible_os_family == 'Suse'
+    - apparmor_status is defined
+    - apparmor_status.stdout == "Y"
   ansible.builtin.package:
     name: apparmor-parser
     state: present
 
 - name: Install Apparmor Parser [Debian]
   when:
-    - apparmor_status.stdout == "Y"
     - ansible_distribution == 'Debian'
     - ansible_facts['distribution_major_version'] == "11"
+    - apparmor_status is defined
+    - apparmor_status.stdout == "Y"
   ansible.builtin.package:
     name: apparmor
     state: present
