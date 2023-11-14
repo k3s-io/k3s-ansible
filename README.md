@@ -52,7 +52,7 @@ k3s_cluster:
 If needed, you can also edit `vars` section at the bottom to match your environment.
 
 If multiple hosts are in the server group the playbook will automatically setup k3s in HA mode with embedded etcd.
-An odd number of server nodes is required (3,5,7). Read the offical documentation below for more information and options.
+An odd number of server nodes is required (3,5,7). Read the official documentation below for more information and options.
 https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/
 
 Setting up a loadbalancer or VIP beforehand to use as the API endpoint is possible but not covered here.
@@ -72,6 +72,23 @@ A playbook is provided to upgrade K3s on all nodes in the cluster. To use it, up
 ansible-playbook playbook/upgrade.yml -i inventory.yml
 ```
 
+## Airgap Install
+
+Airgap installation is supported via the `airgap_dir` variable. This variable should be set to the path of a directory containing the K3s binary and images. The release artifacts can be downloaded from the [K3s Releases](https://github.com/k3s-io/k3s/releases). You must download the appropriate images for you architecture (any of the compression formats will work).
+
+An example folder for an x86_64 cluster:
+```bash
+$ ls ./playbook/my-airgap/
+total 248M
+-rwxr-xr-x 1 $USER $USER  58M Nov 14 11:28 k3s
+-rw-r--r-- 1 $USER $USER 190M Nov 14 11:30 k3s-airgap-images-amd64.tar.gz
+
+$ cat inventory.yml
+...
+airgap_dir: ./my-airgap # Paths are relative to the playbook directory
+```
+
+It is assumed that the control node has access to the internet. The playbook will automatically download the k3s install script on the control node, and then distribute all three artifacts to the managed nodes. 
 
 ## Kubeconfig
 
