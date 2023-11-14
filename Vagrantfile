@@ -9,7 +9,7 @@ NETWORK_PREFIX = "10.10.10"
 def provision(vm, role, node_num)
   vm.box = NODE_BOXES[node_num]
   vm.hostname = role
-  # We use a private network because the default IPs are dynamicly assigned 
+  # We use a private network because the default IPs are dynamically assigned 
   # during provisioning. This makes it impossible to know the server-0 IP when 
   # provisioning subsequent servers and agents. A private network allows us to
   # assign static IPs to each node, and thus provide a known IP for the API endpoint.
@@ -32,7 +32,6 @@ def provision(vm, role, node_num)
       # Required to use the private network configured above
       extra_server_args: "--node-external-ip #{node_ip} --flannel-iface eth1", 
       extra_agent_args: "--node-external-ip #{node_ip} --flannel-iface eth1",
-      airgapped_dir: "./my-airgap",
       # Optional, left as reference for ruby-ansible syntax
       # extra_service_envs: [ "NO_PROXY='localhost'" ],
       # config_yaml: <<~YAML

@@ -1,18 +1,18 @@
 ---
 - name: Check for Airgap
-  when: airgapped_dir is defined
+  when: airgap_dir is defined
   block:
     - name: Download k3s install script [Airgap]
       delegate_to: localhost
       ansible.builtin.get_url:
         url: https://get.k3s.io/
         timeout: 120
-        dest: "{{ airgapped_dir }}/k3s-install.sh"
+        dest: "{{ airgap_dir }}/k3s-install.sh"
         mode: 0755
 
     - name: Distribute K3s install script [Airgap]
       ansible.builtin.copy:
-        src: "{{ airgapped_dir }}/k3s-install.sh"
+        src: "{{ airgap_dir }}/k3s-install.sh"
         dest: /usr/local/bin/k3s-install.sh
         owner: root
         group: root
@@ -20,7 +20,7 @@
 
     - name: Distribute K3s binary [Airgap]
       ansible.builtin.copy:
-        src: "{{ airgapped_dir }}/k3s"
+        src: "{{ airgap_dir }}/k3s"
         dest: /usr/local/bin/k3s
         owner: root
         group: root
@@ -39,20 +39,44 @@
     - name: Distribute K3s amd64 images [Airgap]
       when: ansible_architecture == 'x86_64'
       ansible.builtin.copy:
-        src: "{{ airgapped_dir }}/k3s-airgap-images-amd64.tar"
+        src: "{{ item }}"
         dest: /var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar
         owner: root
         group: root
         mode: 0755
+      with_first_found:
+        - files:
+            - "{{ airgap_dir }}/k3s-airgap-images-amd64.tar.zst"
+            - "{{ airgap_dir }}/k3s-airgap-images-amd64.tar.gz"
+            - "{{ airgap_dir }}/k3s-airgap-images-amd64.tar"
 
-    - name: Distribute K3s arm images [Airgap]
-      when: ansible_architecture != 'x86_64'
+    - name: Distribute K3s arm64 images [Airgap]
+      when: ansible_architecture == 'aarch64'
       ansible.builtin.copy:
-        src: "{{ airgapped_dir }}/k3s-airgap-images-{{ ansible_architecture }}.tar"
-        dest: "/var/lib/rancher/k3s/agent/images/k3s-airgap-images-{{ ansible_architecture }}.tar"
+        src: "{{ item }}"
+        dest: /var/lib/rancher/k3s/agent/images/k3s-airgap-images-arm64.tar
         owner: root
         group: root
         mode: 0755
+      with_first_found:
+        - files:
+            - "{{ airgap_dir }}/k3s-airgap-images-arm64.tar.zst"
+            - "{{ airgap_dir }}/k3s-airgap-images-arm64.tar.gz"
+            - "{{ airgap_dir }}/k3s-airgap-images-arm64.tar"
+
+    - name: Distribute K3s arm images [Airgap]
+      when: ansible_architecture == 'armv7l'
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: /var/lib/rancher/k3s/agent/images/k3s-airgap-images-arm.tar
+        owner: root
+        group: root
+        mode: 0755
+      with_first_found:
+        - files:
+            - "{{ airgap_dir }}/k3s-airgap-images-arm.tar.zst"
+            - "{{ airgap_dir }}/k3s-airgap-images-arm.tar.gz"
+            - "{{ airgap_dir }}/k3s-airgap-images-arm.tar"
 
     - name: Run K3s Install [server][Airgap]
       ansible.builtin.command:
@@ -72,7 +96,7 @@
       changed_when: true
 
 - name: Download k3s install script
-  when: airgapped_dir is undefined
+  when: airgap_dir is undefined
   ansible.builtin.get_url:
     url: https://get.k3s.io/
     timeout: 120
@@ -84,7 +108,7 @@
 - name: Download k3s binary [server]
   when:
     - "'server' in group_names"
-    - airgapped_dir is undefined
+    - airgap_dir is undefined
   ansible.builtin.command:
     cmd: /usr/local/bin/k3s-install.sh
   environment:
@@ -95,7 +119,7 @@
 - name: Download k3s binary [agent]
   when:
     - "'agent' in group_names"
-    - airgapped_dir is undefined
+    - airgap_dir is undefined
   ansible.builtin.command:
     cmd: /usr/local/bin/k3s-install.sh
   environment:
