@@ -23,11 +23,6 @@
 - name: Populate service facts
   ansible.builtin.service_facts:
 
-- name: Assign api_port if not defined
-  when: api_port is undefined
-  ansible.builtin.set_fact:
-    api_port: 6443
-
 - name: Allow UFW Exceptions
   when:
     - ansible_facts.services['ufw'] is defined
