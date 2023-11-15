@@ -1,0 +1,36 @@
+---
+# If airgapped, all K3s artifacts are already on the node.
+- name: Download K3s install script
+  when: airgap_dir is undefined
+  ansible.builtin.get_url:
+    url: https://get.k3s.io/
+    timeout: 120
+    dest: /usr/local/bin/k3s-install.sh
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Download K3s binary
+  when: airgap_dir is undefined
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s-install.sh
+  environment:
+    INSTALL_K3S_SKIP_START: "true"
+    INSTALL_K3S_VERSION: "{{ k3s_version }}"
+    INSTALL_K3S_EXEC: "agent"
+  changed_when: true
+
+- name: Copy K3s service file
+  ansible.builtin.template:
+    src: "k3s-agent.service.j2"
+    dest: "{{ systemd_dir }}/k3s-agent.service"
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Enable and check K3s service
+  ansible.builtin.systemd:
+    name: k3s-agent
+    daemon_reload: true
+    state: started
+    enabled: true

@@ -8,11 +8,11 @@
   become: true
   serial: 1
   roles:
-    - role: upgrade
+    - role: k3s-upgrade
 
 - name: Upgrade K3s Agents
   hosts: agent
   gather_facts: true
   become: true
   roles:
-    - role: upgrade
+    - role: k3s-upgrade
