@@ -148,6 +148,22 @@
     name: apparmor
     state: present
 
+- name: Gather the package facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+# Iptables v1.8.0-1.8.4 have a specific bug with K3s. https://github.com/k3s-io/k3s/issues/3117
+- name: If iptables v1.8.0-1.8.4, warn user  # noqa ignore-errors
+  when:
+    - ansible_facts.packages['iptables'] is defined
+    - ansible_facts.packages['iptables'][0]['version'] is version('1.8.5', '<')
+    - ansible_facts.packages['iptables'][0]['version'] is version('1.7.9', '>')
+  ansible.builtin.fail:
+    msg:
+      - "Warning: Iptables {{ ansible_facts.packages['iptables'][0]['version'] }} found."
+      - "Add '--prefer-bundled-bin' to extra_server_args variable to use the bundled iptables binary."
+  ignore_errors: true
+
 - name: Add /usr/local/bin to sudo secure_path
   ansible.builtin.lineinfile:
     line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
