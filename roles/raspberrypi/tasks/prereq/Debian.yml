@@ -16,14 +16,12 @@
   ansible.builtin.package_facts:
     manager: auto
 
-# If no iptables is found, K3s will use the iptables it ships with.
-# However, if a iptables is found, K3s will use that instead. Iptables
-# versions 1.8.7 and older have problems with K3s, so we force the use of
+# IPtables versions 1.6.1 and older have problems with K3s, so we force the use of
 # iptables-legacy in that case.
 - name: If old iptables found, change to iptables-legacy
   when:
     - ansible_facts.packages['iptables'] is defined
-    - ansible_facts.packages['iptables'][0]['version'] is version('1.8.8', '<')
+    - ansible_facts.packages['iptables'][0]['version'] is version('1.6.2', '<')
   block:
     - name: Iptables version on node
       ansible.builtin.debug:
