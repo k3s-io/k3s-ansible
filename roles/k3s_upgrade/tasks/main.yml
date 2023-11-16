@@ -1,9 +1,4 @@
 ---
-- name: Set var defaults
-  when: systemd_dir is undefined
-  ansible.builtin.set_fact:
-    systemd_dir: /etc/systemd/system
-
 # with_fileglob doesn't work with remote_src, it tries to find the file on the
 # local control-plane instead of the remote host. Shell supports wildcards.
 - name: Save current K3s service

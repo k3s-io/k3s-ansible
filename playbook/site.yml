@@ -5,17 +5,17 @@
   become: true
   roles:
     - role: prereq
-    - role: download
+    - role: airgap
     - role: raspberrypi
 
 - name: Setup K3S server
   hosts: server
   become: true
   roles:
-    - role: k3s/server  # noqa: role-name[path]
+    - role: k3s_server
 
 - name: Setup K3S agent
   hosts: agent
   become: true
   roles:
-    - role: k3s/agent  # noqa: role-name[path]
+    - role: k3s_agent
