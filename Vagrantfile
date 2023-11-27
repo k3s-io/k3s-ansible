@@ -50,6 +50,7 @@ Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |v|
     v.cpus = NODE_CPUS
     v.memory = NODE_MEMORY
+    v.linked_clone = true
   end
   
   NODE_ROLES.each_with_index do |name, i|
