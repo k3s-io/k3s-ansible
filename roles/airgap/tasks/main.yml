@@ -78,7 +78,7 @@
             - "{{ airgap_dir }}/k3s-airgap-images-amd64.tar"
           skip: true
 
-    - name: Distribute K3s arm64 images 
+    - name: Distribute K3s arm64 images
       when: ansible_architecture == 'aarch64'
       ansible.builtin.copy:
         src: "{{ item }}"
@@ -93,7 +93,7 @@
             - "{{ airgap_dir }}/k3s-airgap-images-arm64.tar"
           skip: true
 
-    - name: Distribute K3s arm images 
+    - name: Distribute K3s arm images
       when: ansible_architecture == 'armv7l'
       ansible.builtin.copy:
         src: "{{ item }}"
