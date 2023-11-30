@@ -113,6 +113,12 @@
       when: result.stat.exists
       become: false
 
+    - name: Save a new kube config
+      ansible.builtin.command: mv ~/.kube/config.new ~/.kube/config
+      delegate_to: 127.0.0.1
+      when: not result.stat.exists
+      become: false
+
 - name: Start other server if any and verify status
   when:
     - (groups['server'] | length) > 1
