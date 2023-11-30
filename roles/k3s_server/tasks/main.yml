@@ -112,12 +112,18 @@
       delegate_to: 127.0.0.1
       when: result.stat.exists
       become: false
+      register: mv_result
+      changed_when:
+        - mv_result.rc == 0
 
     - name: Save a new kube config
       ansible.builtin.command: mv ~/.kube/config.new ~/.kube/config
       delegate_to: 127.0.0.1
       when: not result.stat.exists
       become: false
+      register: cp_result
+      changed_when:
+        - cp_result.rc == 0
 
 - name: Start other server if any and verify status
   when:
