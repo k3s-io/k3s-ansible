@@ -2,7 +2,13 @@
 - name: Check for Airgap
   when: airgap_dir is defined
   block:
-    - name: Download k3s install script [Airgap]
+
+    - name: Verify Ansible meets airgap version requirements.
+      ansible.builtin.assert:
+        that: "ansible_version.full is version_compare('2.12', '>=')"
+        msg: "The Airgap role requires at least ansible-core 2.12"
+
+    - name: Download k3s install script
       delegate_to: localhost
       ansible.builtin.get_url:
         url: https://get.k3s.io/
@@ -10,7 +16,7 @@
         dest: "{{ airgap_dir }}/k3s-install.sh"
         mode: 0755
 
-    - name: Distribute K3s install script [Airgap]
+    - name: Distribute K3s install script
       ansible.builtin.copy:
         src: "{{ airgap_dir }}/k3s-install.sh"
         dest: /usr/local/bin/k3s-install.sh
@@ -18,7 +24,7 @@
         group: root
         mode: 0755
 
-    - name: Distribute K3s binary [Airgap]
+    - name: Distribute K3s binary
       ansible.builtin.copy:
         src: "{{ airgap_dir }}/k3s"
         dest: /usr/local/bin/k3s
@@ -26,7 +32,7 @@
         group: root
         mode: 0755
 
-    - name: Distribute K3s SELinux RPM [Airgap]
+    - name: Distribute K3s SELinux RPM
       ansible.builtin.copy:
         src: "{{ item }}"
         dest: /tmp/
@@ -38,7 +44,7 @@
       register: selinux_copy
       ignore_errors: true
 
-    - name: Install K3s SELinux RPM [Airgap]
+    - name: Install K3s SELinux RPM
       when:
         - ansible_os_family == 'RedHat'
         - selinux_copy.skipped is false
@@ -47,17 +53,17 @@
         state: present
         disable_gpg_check: true
 
-    - name: Make images directory [Airgap]
+    - name: Make images directory
       ansible.builtin.file:
         path: "/var/lib/rancher/k3s/agent/images/"
         mode: 0755
         state: directory
 
-    - name: Determine Architecture [Airgap]
+    - name: Determine Architecture
       ansible.builtin.set_fact:
         k3s_arch: "{{ ansible_architecture }}"
 
-    - name: Distribute K3s amd64 images [Airgap]
+    - name: Distribute K3s amd64 images
       when: ansible_architecture == 'x86_64'
       ansible.builtin.copy:
         src: "{{ item }}"
@@ -72,7 +78,7 @@
             - "{{ airgap_dir }}/k3s-airgap-images-amd64.tar"
           skip: true
 
-    - name: Distribute K3s arm64 images [Airgap]
+    - name: Distribute K3s arm64 images
       when: ansible_architecture == 'aarch64'
       ansible.builtin.copy:
         src: "{{ item }}"
@@ -87,7 +93,7 @@
             - "{{ airgap_dir }}/k3s-airgap-images-arm64.tar"
           skip: true
 
-    - name: Distribute K3s arm images [Airgap]
+    - name: Distribute K3s arm images
       when: ansible_architecture == 'armv7l'
       ansible.builtin.copy:
         src: "{{ item }}"
@@ -102,7 +108,7 @@
             - "{{ airgap_dir }}/k3s-airgap-images-arm.tar"
           skip: true
 
-    - name: Run K3s Install [server][Airgap]
+    - name: Run K3s Install [server]
       ansible.builtin.command:
         cmd: /usr/local/bin/k3s-install.sh
       environment:
@@ -110,7 +116,7 @@
         INSTALL_K3S_SKIP_DOWNLOAD: "true"
       changed_when: true
 
-    - name: Run K3s Install [agent][Airgap]
+    - name: Run K3s Install [agent]
       ansible.builtin.command:
         cmd: /usr/local/bin/k3s-install.sh
       environment:

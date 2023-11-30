@@ -17,3 +17,7 @@
       ansible.builtin.file:
         path: /home/{{ ansible_user }}/.kube/config
         state: absent
+    - name: Remove k3s install script
+      ansible.builtin.file:
+        path: /usr/local/bin/k3s-install.sh
+        state: absent
