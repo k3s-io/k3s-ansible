@@ -109,6 +109,7 @@
         TFILE=$(mktemp)
         kubectl config view --flatten > ${TFILE}
         mv ${TFILE} ~/.kube/config
+        rm ~/.kube/config.new
       delegate_to: 127.0.0.1
       when: result.stat.exists
       become: false
