@@ -97,15 +97,11 @@
         flat: true
 
     - name: Check existing kube config
-      stat:
+      ansible.builtin.stat:
         path: ~/.kube/config
       register: result
       delegate_to: 127.0.0.1
       become: false
-
-    - name: Show results
-      debug:
-        msg: "{{ result.stat.exists }}"
 
     - name: Merge with existing kube config
       ansible.builtin.shell: |
