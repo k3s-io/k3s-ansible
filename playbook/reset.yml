@@ -15,9 +15,13 @@
         removes: /var/lib/rancher/k3s/*
     - name: Remove user kubeconfig
       ansible.builtin.file:
-        path: /home/{{ ansible_user }}/.kube/config
+        path: ~{{ ansible_user }}/.kube/config
         state: absent
     - name: Remove k3s install script
       ansible.builtin.file:
         path: /usr/local/bin/k3s-install.sh
         state: absent
+    - name: Remove contents of K3s server location
+      when: k3s_server_location is defined
+      ansible.builtin.shell:
+        cmd: "rm -rf {{ k3s_server_location }}/*"
