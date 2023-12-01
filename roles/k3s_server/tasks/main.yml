@@ -108,23 +108,6 @@
       changed_when:
         - mv_result.rc == 0
 
-    - name: Save a new kube config
-      ansible.builtin.command: mv ~/.kube/config.new ~/.kube/config
-      delegate_to: 127.0.0.1
-      when: not result.stat.exists
-      become: false
-      register: cp_result
-      changed_when:
-        - cp_result.rc == 0
-
-    - name: Clear access mode bits for kube config
-      ansible.builtin.file:
-        path: ~/.kube/config
-        state: file
-        mode: go=
-      delegate_to: 127.0.0.1
-      become: false
-
 - name: Start other server if any and verify status
   when:
     - (groups['server'] | length) > 1
