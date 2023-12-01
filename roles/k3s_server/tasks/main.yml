@@ -91,8 +91,20 @@
     - name: Copy kubectl config to local machine
       ansible.builtin.fetch:
         src: ~{{ ansible_user }}/.kube/config
-        dest: ~/.kube/config
+        dest: ~/.kube/config.new
         flat: true
+
+    - name: Merge with any existing kube config
+      ansible.builtin.shell: |
+        TFILE=$(mktemp)
+        KUBECONFIG=~/.kube/config:~/.kube/config.new kubectl config view --flatten > ${TFILE}
+        mv ${TFILE} ~/.kube/config
+        rm ~/.kube/config.new
+      delegate_to: 127.0.0.1
+      become: false
+      register: mv_result
+      changed_when:
+        - mv_result.rc == 0
 
 - name: Start other server if any and verify status
   when:
