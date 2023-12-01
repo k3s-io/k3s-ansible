@@ -25,3 +25,4 @@
       when: k3s_server_location is defined
       ansible.builtin.shell:
         cmd: "rm -rf {{ k3s_server_location }}/*"
+      changed_when: true
