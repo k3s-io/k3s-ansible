@@ -96,22 +96,13 @@
         dest: ~/.kube/config.new
         flat: true
 
-    - name: Check existing kube config
-      ansible.builtin.stat:
-        path: ~/.kube/config
-      register: result
-      delegate_to: 127.0.0.1
-      become: false
-
-    - name: Merge with existing kube config
+    - name: Merge with any existing kube config
       ansible.builtin.shell: |
-        export KUBECONFIG=~/.kube/config:~/.kube/config.new
         TFILE=$(mktemp)
-        kubectl config view --flatten > ${TFILE}
+        KUBECONFIG=~/.kube/config:~/.kube/config.new kubectl config view --flatten > ${TFILE}
         mv ${TFILE} ~/.kube/config
         rm ~/.kube/config.new
       delegate_to: 127.0.0.1
-      when: result.stat.exists
       become: false
       register: mv_result
       changed_when:
