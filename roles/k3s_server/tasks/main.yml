@@ -91,13 +91,33 @@
     - name: Copy kubectl config to local machine
       ansible.builtin.fetch:
         src: ~{{ ansible_user }}/.kube/config
-        dest: ~/.kube/config.new
+        dest: "{{ kubeconfig }}"
         flat: true
 
+    - name: Check whether kubectl is installed on control node
+      ansible.builtin.command: 'kubectl'
+      register: kubectl_installed
+      ignore_errors: yes
+      delegate_to: 127.0.0.1
+      become: false
+      changed_when: false
+
+    - name: Setup kubeconfig k3s-ansible context
+      when: kubeconfig == "~/.kube/config.new" && kubectl_installed.rc == 0
+      ansible.builtin.replace:
+        path: "{{ kubeconfig }}"
+        regexp: 'name: default'
+        replace: 'name: k3s-ansible'
+      delegate_to: 127.0.0.1
+      become: false
+
     - name: Merge with any existing kube config
+      when: kubeconfig == "~/.kube/config.new" && kubectl_installed.rc == 0
       ansible.builtin.shell: |
         TFILE=$(mktemp)
-        KUBECONFIG=~/.kube/config:~/.kube/config.new kubectl config view --flatten > ${TFILE}
+        KUBECONFIG=~/.kube/config.new kubectl rename-context default k3s-ansible
+        KUBECONFIG=~/.kube/config.new kubectl config set-context k3s-ansible --user=k3s-ansible --cluster=k3s-ansible
+        KUBECONFIG=~/.kube/config.new:~/.kube/config kubectl config view --flatten > ${TFILE}
         mv ${TFILE} ~/.kube/config
         rm ~/.kube/config.new
       delegate_to: 127.0.0.1
