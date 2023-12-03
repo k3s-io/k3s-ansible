@@ -4,7 +4,7 @@
     path: /boot/firmware/cmdline.txt
   register: boot_firmware_cmdline_txt
 
-- name: Activating cgroup support
+- name: Enable cgroup via boot commandline if not already enabled
   ansible.builtin.lineinfile:
     path: "{{ (boot_firmware_cmdline_txt.stat.exists) | ternary('/boot/firmware/cmdline.txt', '/boot/cmdline.txt') }}"
     regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$'

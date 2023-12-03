@@ -1,5 +1,5 @@
 ---
-- name: Activating cgroup support
+- name: Enable cgroup via boot commandline if not already enabled
   ansible.builtin.lineinfile:
     path: /boot/cmdline.txt
     regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$'
