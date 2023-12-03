@@ -4,12 +4,4 @@
     path: /boot/boot.txt
     search_string: setenv bootargs console=ttyS1,115200 console=tty0 root=PARTUUID=${uuid} rw rootwait smsc95xx.macaddr="${usbethaddr}"
     line: setenv bootargs console=ttyS1,115200 console=tty0 root=PARTUUID=${uuid} rw rootwait smsc95xx.macaddr="${usbethaddr}" cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory
-  register: kernel_cmdline_cgroup
-
-- name: Create
-  ansible.builtin.command: ./mkscr
-  args:
-    chdir: /boot
-  notify: Reboot Pi
-  changed_when: false
-  when: kernel_cmdline_cgroup.changed  # noqa: no-handler
+  notify: Regenerate bootloader image
