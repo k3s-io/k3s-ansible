@@ -9,3 +9,4 @@
   args:
     chdir: /boot
   notify: Reboot Pi
+  changed_when: true
