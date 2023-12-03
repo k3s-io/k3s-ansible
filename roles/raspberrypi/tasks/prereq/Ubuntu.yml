@@ -2,7 +2,7 @@
 - name: Enable cgroup via boot commandline if not already enabled for Ubuntu on a Raspberry Pi
   ansible.builtin.lineinfile:
     path: /boot/firmware/cmdline.txt
-    backrefs: yes
+    backrefs: true
     regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$'
     line: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
   notify: Reboot Pi
@@ -11,6 +11,6 @@
     # Fixes issues in newer Ubuntu where VXLan isn't setup right.
     # See: https://github.com/k3s-io/k3s/issues/4234
     name: linux-modules-extra-raspi
-    update_cache: yes
+    update_cache: true
     state: present
   when: "ansible_distribution_version is version('20.10', '>=')"
