@@ -34,8 +34,10 @@ def provision(vm, role, node_num)
       extra_agent_args: "--node-external-ip #{node_ip} --flannel-iface eth1",
       # Optional, left as reference for ruby-ansible syntax
       # extra_service_envs: [ "NO_PROXY='localhost'" ],
-      # config_yaml: <<~YAML
+      # server_config_yaml: <<~YAML
       #   write-kubeconfig-mode: 644
+      #   kube-apiserver-arg:
+      #     - advertise-port=1234
       # YAML
     }
   end
