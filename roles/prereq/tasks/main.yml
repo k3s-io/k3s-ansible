@@ -205,17 +205,3 @@
         dest: "/var/lib/rancher/k3s/server/manifests"
         mode: 0600
       loop: "{{ extra_manifests }}"
-
-- name: Setup optional config file
-  when: config_yaml is defined
-  block:
-    - name: Make config directory
-      ansible.builtin.file:
-        path: "/etc/rancher/k3s"
-        mode: 0755
-        state: directory
-    - name: Copy config values
-      ansible.builtin.copy:
-        content: "{{ config_yaml }}"
-        dest: "/etc/rancher/k3s/config.yaml"
-        mode: 0644

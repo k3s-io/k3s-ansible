@@ -26,3 +26,8 @@
       ansible.builtin.shell:
         cmd: "rm -rf {{ k3s_server_location }}/*"
         removes: "{{ k3s_server_location }}/*"
+    - name: Remove K3s config
+      when: server_config_yaml is defined
+      ansible.builtin.file:
+        path: /etc/rancher/k3s/config.yaml
+        state: absent

@@ -19,6 +19,20 @@
     INSTALL_K3S_VERSION: "{{ k3s_version }}"
   changed_when: true
 
+- name: Setup optional config file
+  when: server_config_yaml is defined
+  block:
+    - name: Make config directory
+      ansible.builtin.file:
+        path: "/etc/rancher/k3s"
+        mode: 0755
+        state: directory
+    - name: Copy config values
+      ansible.builtin.copy:
+        content: "{{ server_config_yaml }}"
+        dest: "/etc/rancher/k3s/config.yaml"
+        mode: 0644
+
 - name: Init first server node
   # Handle both hostname OR ip address being supplied in inventory
   when: ansible_hostname == groups['server'][0] or groups['server'][0] in ansible_facts['all_ipv4_addresses']
@@ -97,7 +111,7 @@
     - name: Check whether kubectl is installed on control node
       ansible.builtin.command: 'kubectl'
       register: kubectl_installed
-      ignore_errors: yes
+      ignore_errors: true
       delegate_to: 127.0.0.1
       become: false
       changed_when: false

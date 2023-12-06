@@ -28,7 +28,7 @@ k3s_cluster:
     # List of locally available manifests to apply to the cluster, useful for PVCs or Traefik modifications.
     # extra_manifests: [ '/path/to/manifest1.yaml', '/path/to/manifest2.yaml' ]
     # airgap_dir: /tmp/k3s-airgap-images
-    # config_yaml:  |
+    # server_config_yaml:  |
       # This is now an inner yaml file. Maintain the indentation.
       # YAML here will be placed as the content of /etc/rancher/k3s/config.yaml
       # See https://docs.k3s.io/installation/configuration#configuration-file
