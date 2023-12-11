@@ -117,7 +117,7 @@
       changed_when: false
 
     - name: Setup kubeconfig k3s-ansible context
-      when: kubeconfig == "~/.kube/config.new" && kubectl_installed.rc == 0
+      when: kubeconfig == "~/.kube/config.new" and kubectl_installed.rc == 0
       ansible.builtin.replace:
         path: "{{ kubeconfig }}"
         regexp: 'name: default'
@@ -126,7 +126,7 @@
       become: false
 
     - name: Merge with any existing kube config
-      when: kubeconfig == "~/.kube/config.new" && kubectl_installed.rc == 0
+      when: kubeconfig == "~/.kube/config.new" and kubectl_installed.rc == 0
       ansible.builtin.shell: |
         TFILE=$(mktemp)
         KUBECONFIG=~/.kube/config.new kubectl rename-context default k3s-ansible
