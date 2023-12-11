@@ -34,8 +34,7 @@
         mode: 0644
 
 - name: Init first server node
-  # Handle both hostname OR ip address being supplied in inventory
-  when: ansible_hostname == groups['server'][0] or groups['server'][0] in ansible_facts['all_ipv4_addresses']
+  when: inventory_hostname == groups['server'][0]
   block:
     - name: Copy K3s service file [Single]
       when: groups['server'] | length == 1
@@ -143,7 +142,7 @@
 - name: Start other server if any and verify status
   when:
     - (groups['server'] | length) > 1
-    - ansible_hostname != groups['server'][0]
+    - inventory_hostname != groups['server'][0]
   block:
     - name: Copy K3s service file [HA]
       when: groups['server'] | length > 1
