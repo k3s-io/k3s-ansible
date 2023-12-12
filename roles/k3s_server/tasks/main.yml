@@ -72,7 +72,7 @@
       ansible.builtin.file:
         path: ~{{ ansible_user }}/.kube
         state: directory
-        owner: "{{ ansible_user }}"
+        owner: "{{ ansible_user | default(omit, true) }}"
         mode: "u=rwx,g=rx,o="
 
     - name: Pause to allow first server startup
@@ -85,7 +85,7 @@
         src: /etc/rancher/k3s/k3s.yaml
         dest: ~{{ ansible_user }}/.kube/config
         remote_src: true
-        owner: "{{ ansible_user }}"
+        owner: "{{ ansible_user | default(omit, true) }}"
         mode: "u=rw,g=,o="
 
     - name: Add K3s autocomplete to user bashrc
