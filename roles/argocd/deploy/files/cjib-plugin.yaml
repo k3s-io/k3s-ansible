@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cjib-plugin
+data:
+  helm-avp.yaml: |
+    apiVersion: argoproj.io#v1alpha1
+    kind: ConfigManagementPlugin
+    metadata:
+      name: cjib-helm-avp-plugin
+    spec:
+      allowConcurrency: true
+      discover:
+        find:
+          command: [sh, -c, "find . -name 'helm-application.yaml' && find . -name 'values.yaml'" ]
+      generate:
+        command: [ sh, -c ]
+        args:
+         - |
+           helm template $ARGOCD_APP_NAME --version $ARGOCD_ENV_HELM_CHART_VERSION --repo $ARGOCD_ENV_HELM_REPO_URL $ARGOCD_ENV_HELM_CHART_NAME --include-crds -n $ARGOCD_APP_NAMESPACE -f $ARGOCD_ENV_HELM_VALUES_FILE |
+           sed "s#{{APPS_OTA_DOMAIN}}#$ARGOCD_ENV_APPS_OTA_DOMAIN#
+           s#{{APPS_PRO_DOMAIN}}#$ARGOCD_ENV_APPS_PRO_DOMAIN#
+           s#{{APPS_SHS_DOMAIN}}#$ARGOCD_ENV_APPS_SHS_DOMAIN#" |
+           argocd-vault-plugin generate - -s vault-configuration
+      lockRepo: false
+
+  kustomize-sed.yaml: |
+    apiVersion: argoproj.io#v1alpha1
+    kind: ConfigManagementPlugin
+    metadata:
+      name: cjib-kustomize-plugin
+    spec:
+      allowConcurrency: true
+      discover:
+        find:
+          command: [sh, -c, find . -name kustomization.yml]
+      generate:
+        command: [ sh, -c ]
+        args:
+          - |
+            kubectl kustomize . | sed "s#{{NAMESPACE}}#$ARGOCD_APP_NAMESPACE#
+            s#{{DOCKER_IMAGE}}#$ARGOCD_ENV_DOCKER_IMAGE#
+            s#{{TAG}}#$ARGOCD_ENV_TAG#
+            s#{{DEPLOYER}}#argocd#
+            s#{{APPS_OTA_DOMAIN}}#$ARGOCD_ENV_APPS_OTA_DOMAIN#
+            s#{{APPS_PRO_DOMAIN}}#$ARGOCD_ENV_APPS_PRO_DOMAIN#
+            s#{{APPS_SHS_DOMAIN}}#$ARGOCD_ENV_APPS_SHS_DOMAIN#
+            s#{{BUILD_ID}}#$ARGOCD_APP_REVISION#
+            s#{{COMMIT_HASH}}#$ARGOCD_APP_REVISION#
+            s#{{RND}}#$ARGOCD_ENV_RND#
+            s#,{{ALT_PROFILE}},#,#
+            s#,{{ALT_PROFILE}}# #
+            s#{{ALT_PROFILE}},# #
+            s#{{ALT_PROFILE}}# #" -
+      lockRepo: false
+
+

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vault-configuration
+  namespace: {{ argocd_namespace }}
+  labels:
+{{ platform_office_hour_support_devops_labels | to_nice_yaml(width=1337) | indent(4,true) }}
+type: Opaque
+data:
+  AVP_TYPE: {{ "vault" | b64encode }}
+  VAULT_ADDR: {{ argocd_vault_server | default(config.vault_server) | b64encode }}
+  AVP_AUTH_TYPE: {{ "approle" | b64encode }}
+  AVP_ROLE_ID: {{ argocd_avp_role_id | b64encode }}
+  AVP_SECRET_ID: {{ argocd_avp_secret_id | b64encode }}
+  AVP_KV_VERSION: {{ "1" | b64encode }}

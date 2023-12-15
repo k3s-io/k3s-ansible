@@ -1,0 +1,21 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: {{ argocd_app_project.name }}
+  labels:
+{{ platform_office_hour_support_devops_labels | to_nice_yaml(width=1337) | indent(4,true) }}
+  namespace: {{ argocd_namespace }}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  sourceNamespaces:
+    - "{{ argocd_namespace }}"
+  sourceRepos:
+    - '*'
+  destinations:
+    - namespace: "{{ argocd_app_project.namespace }}"
+      name: "{{ argocd_app_project.cluster }}"
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'

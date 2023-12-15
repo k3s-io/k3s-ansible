@@ -1,0 +1,108 @@
+# code: language=ansible
+
+################################################################################
+#                                                                              #
+# This collection of tasks retrieves all Bitbucket projects. Finds if the      #
+# projects to which it has permissions and then retrieves all the repositories #
+# inside those project. The resulting list is used to remove the ArgoCD        #
+# webhooks for the targeted environment.                                       #
+#                                                                              #
+################################################################################
+
+- name: Find all projects defined in Bitbucket and store the result.
+  esp.bitbucket.bitbucket_project_info:
+    url: '{{ cjib_bitbucket_url }}'
+    token: '{{ argocd_bitbucket_token }}'
+    project_key: "*"
+  register: argocd_delete_webhook_bitbucket_project_info_result
+
+- name: Get all project permissions for the found projects
+  esp.bitbucket.bitbucket_project_permissions_info:
+    url: '{{ cjib_bitbucket_url }}'
+    token: '{{ argocd_bitbucket_token }}'
+    project_key: "{{ project.key }}"
+  loop: "{{ argocd_delete_webhook_bitbucket_project_info_result.projects }}"
+  loop_control:
+    loop_var: project
+  register: argocd_delete_webhook_bitbucket_project_permissions_info_result
+  ignore_errors: true
+  no_log: true
+
+- name: Build a list of projects from the output of the previous task
+  ansible.builtin.set_fact:
+    argocd_delete_webhook_bitbucket_projects: |-
+      [
+        {% for result in argocd_delete_webhook_bitbucket_project_permissions_info_result.results %}
+          {% if not result.failed %}
+            "{{ result.project.key }}",
+          {% endif %}
+        {% endfor %}
+      ]
+
+- name: Find all repositories in all found projects of Bitbucket and store the result
+  esp.bitbucket.bitbucket_repo_info:
+    url: '{{ cjib_bitbucket_url }}'
+    token: '{{ argocd_bitbucket_token }}'
+    project_key: "{{ key }}"
+  loop: "{{ argocd_delete_webhook_bitbucket_projects }}"
+  loop_control:
+    loop_var: key
+  register: argocd_delete_webhook_bitbucket_project_repo_info_result
+
+- name: Build a list of repositories from the output of the previous task
+  ansible.builtin.set_fact:
+    argocd_delete_webhook_repo_list: |-
+      [
+        {% for result in argocd_delete_webhook_bitbucket_project_repo_info_result.results %}
+          {% for repository in result.repositories %}
+            { "project": "{{ repository.project.key }}", "repository": "{{ repository.name }}" },
+          {% endfor %}
+        {% endfor %}
+      ]
+
+- name: Find all webhooks for the given repositories
+  esp.bitbucket.bitbucket_webhook_info:
+    url: '{{ cjib_bitbucket_url }}'
+    token: '{{ argocd_bitbucket_token }}'
+    repository: "{{ repo.repository }}"
+    project_key: "{{ repo.project }}"
+  loop: "{{ argocd_delete_webhook_repo_list }}"
+  loop_control:
+    loop_var: repo
+  register: argocd_delete_webhook_bitbucket_webhook_info
+  ignore_errors: true
+
+- name: Filter out the ArgoCD webhooks
+  ansible.builtin.set_fact:
+    argocd_delete_webhook_found_webhooks: |-
+      [
+        {% for result in argocd_delete_webhook_bitbucket_webhook_info.results %}
+          {% if not result.failed %}
+            {% for json in result.json %}
+              {% if json.name == argocd_webhook.name %}
+                {% for event in json.events %}
+                  { "project": "{{ result.repo.project }}",
+                    "repository": "{{ result.repo.repository }}",
+                    "name": "{{ json.name }}",
+                    "url": "{{ json.url }}",
+                    "event": "{{ event }}"},
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endfor %}
+      ]
+
+- name: Delete the webhooks
+  esp.bitbucket.bitbucket_webhook:
+    url: '{{ cjib_bitbucket_url }}'
+    token: '{{ argocd_bitbucket_token }}'
+    repository: "{{ webhook.repository }}"
+    project_key: "{{ webhook.project }}"
+    webhook_name: "{{ webhook.name }}"
+    webhook_url: "{{ webhook.url }}"
+    event: "{{ webhook.event }}"
+    state: absent
+  loop: "{{ argocd_delete_webhook_found_webhooks }}"
+  loop_control:
+    loop_var: webhook

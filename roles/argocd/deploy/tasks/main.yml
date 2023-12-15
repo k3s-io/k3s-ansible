@@ -1,0 +1,80 @@
+# code: language=ansible
+
+- name: Add ArgoCD helm repo
+  kubernetes.core.helm_repository:
+    binary_path: /usr/local/bin/helm3
+    name: "{{ argocd_helm_repo_name }}"
+    repo_url: "{{ argocd_helm_repo_chart }}"
+
+- name: Add ArgoCD namespace
+  kubernetes.core.k8s:
+    state: present
+    name: "{{ argocd_namespace }}"
+    kind: Namespace
+
+- name: Add ArgoCD vault configuration
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ argocd_namespace }}"
+    template:
+      - path: vault-configuration.j2
+
+- name: Add plugins
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ argocd_namespace }}"
+    src: "{{ role_path }}/files/{{ plugin }}.yaml"
+  loop:
+    - cjib-plugin
+  loop_control:
+    loop_var: plugin
+
+- name: Setup repository credential templates
+  ansible.builtin.include_tasks:
+    file: setup_repository_credential_templates.yml
+
+- name: Add extra rbac rules for argocd
+  kubernetes.core.k8s:
+    state: present
+    template:
+      - path: argocd_extra_rbac.j2
+
+- name: Install ArgoCD helm chart
+  kubernetes.core.helm:
+    binary_path: /usr/local/bin/helm3
+    name: argocd
+    release_namespace: "{{ argocd_namespace }}"
+    create_namespace: true
+    chart_ref: "{{ argocd_helm_chart }}"
+    chart_version: "{{ argocd_helm_chart_version }}"
+    values: "{{ lookup('template', 'argocd_values.yaml') | from_yaml }}"
+
+- name: Wait for ArgoCD to become ready
+  kubernetes.core.k8s_info:
+    name: "{{ argocd_alias }}-server"
+    api_version: apps/v1
+    kind: Deployment
+    namespace: "{{ argocd_namespace }}"
+    wait: true
+    wait_sleep: 5
+    wait_timeout: 300
+
+- name: Add ArgoCD AppProject for different environments
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ argocd_namespace }}"
+    template:
+      - path: argocd_app_project.j2
+  loop: "{{ argocd_app_projects }}"
+  loop_control:
+    loop_var: argocd_app_project
+
+- name: Add ArgoCD ApplicationSet for different environments
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ argocd_namespace }}"
+    template:
+      - path: argocd_application_set.j2
+  loop: "{{ argocd_application_sets }}"
+  loop_control:
+    loop_var: application_set

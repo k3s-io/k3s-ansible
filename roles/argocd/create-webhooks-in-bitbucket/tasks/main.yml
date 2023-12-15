@@ -1,0 +1,41 @@
+# code: language=ansible
+
+- name: Find all repositories for all BitBucket projects that ArgoCD should watch
+  esp.bitbucket.bitbucket_repo_info:
+    url: '{{ cjib_bitbucket_url }}'
+    token: '{{ argocd_bitbucket_token }}'
+    repository: ['*']
+    project_key: "{{ (project_url.path | split('/'))[1] }}"
+  loop: "{{ argocd_bitbucket_projects | map(attribute='url') | map('urlsplit') }}"
+  loop_control:
+    loop_var: project_url
+  register: argocd_create_webhook_bitbucket_project_repositories
+
+- name: "Create a list with repo's and projects"
+  ansible.builtin.set_fact:
+    argocd_create_webhook_repo_list: |-
+      [
+        {% for result in argocd_create_webhook_bitbucket_project_repositories.results %}
+          {% for repository in result.repositories %}
+            { "project": "{{ repository.project.key }}", "repository": "{{ repository.name }}" },
+          {% endfor %}
+          {% for url in (argocd_application_sets | map(attribute='repo_url') | map('urlsplit')) %}
+            { "project": "{{ (url.path | split('/'))[1] }}", "repository": "{{ ((url.path | split('/'))[2] | split('.'))[0] }}" },
+          {% endfor %}
+        {% endfor %}
+      ]
+
+- name: Create webhooks
+  esp.bitbucket.bitbucket_webhook:
+    url: '{{ cjib_bitbucket_url }}'
+    token: '{{ argocd_bitbucket_token }}'
+    repository: "{{ repo.repository }}"
+    project_key: "{{ repo.project }}"
+    webhook_name: "{{ argocd_webhook.name }}"
+    webhook_url: "{{ argocd_webhook.url }}"
+    event: "{{ argocd_webhook.event }}"
+  loop: "{{ argocd_create_webhook_repo_list }}"
+  loop_control:
+    loop_var: repo
+  ignore_errors: true
+  no_log: true

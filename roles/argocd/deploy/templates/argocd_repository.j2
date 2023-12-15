@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ repository.name }}-argocd-repo-creds
+  namespace: {{ argocd_namespace }}
+  labels:
+    argocd.argoproj.io/secret-type: repo-creds
+{{ platform_office_hour_support_devops_labels | to_nice_yaml(width=1337) | indent(4,true) }}
+type: Opaque
+data:
+  name: {{ repository.name | b64encode }}
+  sshPrivateKey: {{ argocd_bitbucket_svc_key | b64encode }}
+  type: Z2l0
+  url: >-
+    {{ repository.url | b64encode }}
