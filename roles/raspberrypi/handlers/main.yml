@@ -1,3 +1,12 @@
 ---
-- name: reboot
-  reboot:
+- name: Reboot Pi
+  ansible.builtin.reboot:
+    post_reboot_delay: 10
+    reboot_timeout: 60
+
+- name: Regenerate bootloader image
+  ansible.builtin.command: ./mkscr
+  args:
+    chdir: /boot
+  notify: Reboot Pi
+  changed_when: true

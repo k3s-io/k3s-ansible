@@ -1,0 +1,28 @@
+---
+- name: Undo cluster setup
+  hosts: k3s_cluster
+  become: true
+  tasks:
+    - name: Run K3s Uninstall script [server]
+      when: "'server' in group_names"
+      ansible.builtin.command:
+        cmd: k3s-uninstall.sh
+        removes: /var/lib/rancher/k3s/*
+    - name: Run K3s Uninstall script [agent]
+      when: "'agent' in group_names"
+      ansible.builtin.command:
+        cmd: k3s-agent-uninstall.sh
+        removes: /var/lib/rancher/k3s/*
+    - name: Remove user kubeconfig
+      ansible.builtin.file:
+        path: ~{{ ansible_user }}/.kube/config
+        state: absent
+    - name: Remove k3s install script
+      ansible.builtin.file:
+        path: /usr/local/bin/k3s-install.sh
+        state: absent
+    - name: Remove contents of K3s server location
+      when: k3s_server_location is defined
+      ansible.builtin.shell:
+        cmd: "rm -rf {{ k3s_server_location }}/*"
+        removes: "{{ k3s_server_location }}/*"

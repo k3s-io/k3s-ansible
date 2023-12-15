@@ -1,7 +1,12 @@
 ---
+- name: Check if /boot/firmware/cmdline.txt exists
+  ansible.builtin.stat:
+    path: /boot/firmware/cmdline.txt
+  register: boot_firmware_cmdline_txt
+
 - name: Enable cgroup via boot commandline if not already enabled
   ansible.builtin.lineinfile:
-    path: /boot/cmdline.txt
+    path: "{{ (boot_firmware_cmdline_txt.stat.exists) | ternary('/boot/firmware/cmdline.txt', '/boot/cmdline.txt') }}"
     backrefs: true
     regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$'
     line: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
