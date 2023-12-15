@@ -94,12 +94,15 @@ It is assumed that the control node has access to the internet. The playbook wil
 
 ## Kubeconfig
 
-After successful bringup, the kubeconfig of the cluster is copied to the control node  and set as default (`~/.kube/config`).
-Assuming you have [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) installed, you to confirm access to your **Kubernetes** cluster use the following:
+After successful bringup, the kubeconfig of the cluster is copied to the control node  and merged with `~/.kube/config` under the `k3s-ansible` context.
+Assuming you have [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) installed, you can confirm access to your **Kubernetes** cluster with the following:
 
 ```bash
+kubectl config use-context k3s-ansible
 kubectl get nodes
 ```
+
+If you wish for your kubeconfig to be copied elsewhere and not merged, you can set the `kubeconfig` variable in `inventory.yml` to the desired path.
 
 ## Local Testing
 
