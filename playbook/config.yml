@@ -1,0 +1,8 @@
+---
+- name: Cluster prep
+  hosts: k3s_cluster
+  gather_facts: true
+  become: true
+  roles:
+    - role: prereq
+    - role: raspberrypi

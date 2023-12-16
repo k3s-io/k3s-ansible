@@ -71,6 +71,14 @@ A playbook is provided to upgrade K3s on all nodes in the cluster. To use it, up
 ansible-playbook playbook/upgrade.yml -i inventory.yml
 ```
 
+## Re-applying system configuration
+
+A playbook is provided to re-apply system configuration settings of the nodes in your cluster:
+
+```bash
+ansible-playbook playbook/config.yml -i inventory.yml
+```
+
 ## Airgap Install
 
 Airgap installation is supported via the `airgap_dir` variable. This variable should be set to the path of a directory containing the K3s binary and images. The release artifacts can be downloaded from the [K3s Releases](https://github.com/k3s-io/k3s/releases). You must download the appropriate images for you architecture (any of the compression formats will work).
