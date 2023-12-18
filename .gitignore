@@ -1,5 +1,2 @@
 .vscode
 .vagrant
-inventory.yml
-playboo/charts/argocd/charts/
-/charts/argocd/charts

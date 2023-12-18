@@ -343,7 +343,7 @@ configs:
       vs-ssh.visualstudio.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7Hr1oTWqNqOlzGJOfGJ4NakVyIzf1rXYd4d7wo6jBlkLvCA4odBlL0mDUyZ0/QUfTTqeu+tm22gOsv+VrVTMk6vwRU75gY/y9ut5Mb3bR5BV58dKXyq9A9UeB5Cakehn5Zgm6x1mKoVyf+FFn26iYqXJRgzIZZcZ5V6hrE0Qg39kZm4az48o0AUbf6Sp4SLdvnuMa2sVNwHBboS7EJkm57XQPVU3/QpyNLHbWDdzwtrlS+ez30S3AdYhLKEOxAG8weOnyrtLJAUen9mTkol8oII1edf7mWWbWVf0nBmly21+nZcmCTISQBtdcyPaEno7fFQMDD26/s0lfKob4Kw8H
 
     # -- Additional known hosts for private repositories
-    extraHosts: "{{ argocd_bitbucket_known_hosts }}"
+    extraHosts: "{{ argocd.github.known_hosts }}"
 
   # Repository TLS certificates
   # Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#repositories-using-self-signed-tls-certificates-or-are-signed-by-custom-ca
@@ -2104,7 +2104,7 @@ repoServer:
   ## Ref: https://argo-cd.readthedocs.io/en/stable/user-guide/config-management-plugins/
   ## Note: Supports use of custom Helm templates
   extraContainers:
-    - name: cjib-helm-avp
+    - name: frambozen-helm-avp
       command: [/var/run/argocd/argocd-cmp-server]
       image: {{ argocd_extra_container_images.cjib_helm_avp }}
       securityContext:
@@ -2117,9 +2117,9 @@ repoServer:
           name: plugins
         - mountPath: /home/argocd/cmp-server/config/plugin.yaml # Plugin config file can either be volume mapped or baked into image
           subPath: helm-avp.yaml
-          name: cjib-plugin
+          name: frambozen-plugin
         - mountPath: /tmp
-          name: cjib-helm-avp-tmp
+          name: frambozen-helm-avp-tmp
         - mountPath: /usr/local/bin/argocd-vault-plugin
           subPath: argocd-vault-plugin
           name: custom-tools
@@ -2128,7 +2128,7 @@ repoServer:
           name: custom-tools
         - mountPath: /.cache
           name: cache
-    - name: cjib-kustomize
+    - name: frambozen-kustomize
       command: [/var/run/argocd/argocd-cmp-server]
       image: {{ argocd_extra_container_images.cjib_kustomize }}
       securityContext:
@@ -2141,9 +2141,9 @@ repoServer:
           name: plugins
         - mountPath: /home/argocd/cmp-server/config/plugin.yaml # Plugin config file can either be volume mapped or baked into image
           subPath: kustomize-sed.yaml
-          name: cjib-plugin
+          name: frambozen-plugin
         - mountPath: /tmp
-          name: cjib-kustomize-tmp
+          name: frambozen-kustomize-tmp
 
   # -- Init containers to add to the repo server pods
   initContainers:
@@ -2176,12 +2176,12 @@ repoServer:
   # -- Additional volumes to the repo server pod
   volumes:
     - configMap:
-        name: cjib-plugin
-      name: cjib-plugin
+        name: frambozen-plugin
+      name: frambozen-plugin
     - emptyDir: {}
-      name: cjib-kustomize-tmp
+      name: frambozen-kustomize-tmp
     - emptyDir: {}
-      name: cjib-helm-avp-tmp
+      name: frambozen-helm-avp-tmp
     - emptyDir: {}
       name: custom-tools
     - emptyDir: {}

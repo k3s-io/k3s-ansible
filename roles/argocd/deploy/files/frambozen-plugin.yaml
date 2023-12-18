@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: cjib-plugin
+  name: frambozen-plugin
 data:
   helm-avp.yaml: |
     apiVersion: argoproj.io#v1alpha1
     kind: ConfigManagementPlugin
     metadata:
-      name: cjib-helm-avp-plugin
+      name: frambozen-helm-avp-plugin
     spec:
       allowConcurrency: true
       discover:
@@ -28,7 +28,7 @@ data:
     apiVersion: argoproj.io#v1alpha1
     kind: ConfigManagementPlugin
     metadata:
-      name: cjib-kustomize-plugin
+      name: frambozen-kustomize-plugin
     spec:
       allowConcurrency: true
       discover:

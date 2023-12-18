@@ -9,7 +9,7 @@ metadata:
 type: Opaque
 data:
   name: {{ repository.name | b64encode }}
-  sshPrivateKey: {{ argocd_bitbucket_svc_key | b64encode }}
+  sshPrivateKey: {{ argocd.github.ssh_key | b64encode }}
   type: Z2l0
   url: >-
     {{ repository.url | b64encode }}

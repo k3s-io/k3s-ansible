@@ -1,0 +1,145 @@
+---
+argocd:
+  github:
+    ssh_key: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:bitbucket_svc_key') }}"
+    known_hosts: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:bitbucket_known_hosts') }}"
+argocd_bitbucket_webhook_secret: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:bitbucket_webhook_secret') }}"
+argocd_bitbucket_token: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:bitbucket_token') }}"
+
+argocd_vault_token: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/all/vault_token:value') }}"
+argocd_avp_role_id: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:avp_role_id') }}"
+argocd_avp_secret_id: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:avp_secret_id') }}"
+
+argocd_default_admin_password: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:default_admin_password') }}"
+argocd_pki2_ca_cert: "{{ lookup('ansible.builtin.url', '{{ pki_ca_url }}/PKI2-CJIB-ROOT.pem', split_lines=true, wantlist=true ) }}"
+
+argocd_adfs:
+  client:
+    id: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ oidc_environment }}/group_vars/adfs/clients/argocd-dev:id') }}"
+    secret: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ oidc_environment }}/group_vars/adfs/clients/argocd-dev:secret') }}"
+
+# Argo CD needs to be able to connect to our private repositories. This is done using a repository template. This
+# template needs a name and the base of the url of the repository.
+argocd_bitbucket_projects:
+  - name: k8s-deployements
+    url: "{{ cjib_git_clone_ssh_url }}/kd"
+
+# Configure each of the clusters (shs, ota and pro).
+argocd_clusterCredentials:
+  - name: shs-cluster
+    server: https://kubernetes.default.svc
+    domain: apps.dev4.cloud.cjib.nl
+    config:
+      tlsClientConfig:
+        insecure: false
+  - name: ota-cluster
+    server: https://k8s-api-100.dev2.cloud.cjib.nl:6443
+    domain: apps.dev2.cloud.cjib.nl
+    config:
+      bearerToken: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/dev2:bearerToken') }}"
+      tlsClientConfig:
+        insecure: false
+        caData: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/dev2:caData') }}"
+  - name: pro-cluster
+    server: https://k8s-api-100.dev1.cloud.cjib.nl:6443
+    domain: apps.dev1.cloud.cjib.nl
+    config:
+      bearerToken: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/dev1:bearerToken') }}"
+      tlsClientConfig:
+        insecure: false
+        caData: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/dev1:caData') }}"
+
+# Define the AppProjects. These correspond with the different overlays in
+# customize:
+argocd_app_projects:
+  - name: ont
+    namespace: "dev-*" # This is a namespace prefix
+    cluster: ota-cluster
+  - name: itest
+    namespace: "dev-*" # This is a namespace prefix
+    cluster: ota-cluster
+  - name: sto
+    namespace: "sto"
+    cluster: ota-cluster
+  - name: ato
+    namespace: "ato"
+    cluster: ota-cluster
+  - name: tst1
+    namespace: "tst1"
+    cluster: ota-cluster
+  - name: tst2
+    namespace: "tst2"
+    cluster: ota-cluster
+  - name: acc1
+    namespace: "acc1"
+    cluster: ota-cluster
+  - name: acc2
+    namespace: "acc2"
+    cluster: ota-cluster
+  - name: ota-extra
+    namespace: "cjib-s3-bucket-provisioner" # TODO Single namespace = MVP
+    cluster: ota-cluster
+  - name: pro
+    namespace: "pro"
+    cluster: pro-cluster
+  - name: shs
+    namespace: "*" # TODO
+    cluster: shs-cluster
+
+# Setup the different applications sets:
+# - name: the name of the set
+# - type: can be either helm or kustomize
+# - project: one of the defined argocd-projects, this is also the name of the overlay that will be chosen
+# - repo_url: The repository containing the definitions of the separate applications.
+# - namespace: the namespace to deploy the applications to
+# - cluster: The cluster to deploy to
+argocd_application_sets:
+  - name: ont-kustomize
+    type: kustomize
+    project: ont
+    namespace: "dev-*" # Namespace equal to environment name
+    repo_url: "{{ cjib_git_clone_ssh_url }}/cdtool/cdtools-argocd-environments.git"
+    git_files: "ont/**/kustomize-application.yaml"
+    cluster: ota-cluster
+  - name: ota-extra-kustomize
+    type: kustomize
+    project: ota-extra
+    namespace: "-*" # Namespace equal to environment name
+    repo_url: "{{ cjib_git_clone_ssh_url }}/cdtool/cdtools-argocd-environments.git"
+    git_files: "ota-extra/**/kustomize-application.yaml"
+    cluster: ota-cluster
+  - name: ato-kustomize
+    type: kustomize
+    project: ato
+    namespace: "ato"
+    repo_url: "{{ cjib_git_clone_ssh_url }}/cdtool/cdtools-argocd-environments.git"
+    git_files: "ato/**/kustomize-application.yaml"
+    cluster: ota-cluster
+  - name: pro-kustomize
+    type: kustomize
+    project: pro
+    namespace: "pro"
+    repo_url: "{{ cjib_git_clone_ssh_url }}/cdtool/cdtools-argocd-environments.git"
+    git_files: "pro/**/kustomize-application.yaml"
+    cluster: pro-cluster
+  - name: ont-helm
+    type: helm
+    project: ont
+    namespace: "dev-*" # Namespace equal to environment name
+    repo_url: "{{ cjib_git_clone_ssh_url }}/cdtool/cdtools-argocd-environments.git"
+    git_files: "ont/**/helm-application.yaml"
+    cluster: ota-cluster
+  - name: shs-kustomize
+    type: kustomize
+    project: shs
+    namespace: "-*" # Namespace equal to environment name
+    repo_url: "{{ cjib_git_clone_ssh_url }}/cdtool/cdtools-argocd-environments.git"
+    git_files: "shs/**/kustomize-application.yaml"
+    cluster: shs-cluster
+  - name: shs-helm
+    type: helm
+    project: shs
+    namespace: "-*" # Namespace equal to environment name
+    repo_url: "{{ cjib_git_clone_ssh_url }}/cdtool/cdtools-argocd-environments.git"
+    git_files: "shs/**/helm-application.yaml"
+    cluster: shs-cluster

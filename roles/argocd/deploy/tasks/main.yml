@@ -1,8 +1,7 @@
 # code: language=ansible
-
+---
 - name: Add ArgoCD helm repo
   kubernetes.core.helm_repository:
-    binary_path: /usr/local/bin/helm3
     name: "{{ argocd_helm_repo_name }}"
     repo_url: "{{ argocd_helm_repo_chart }}"
 
@@ -25,7 +24,7 @@
     namespace: "{{ argocd_namespace }}"
     src: "{{ role_path }}/files/{{ plugin }}.yaml"
   loop:
-    - cjib-plugin
+    - frambozen-plugin
   loop_control:
     loop_var: plugin
 
@@ -41,7 +40,6 @@
 
 - name: Install ArgoCD helm chart
   kubernetes.core.helm:
-    binary_path: /usr/local/bin/helm3
     name: argocd
     release_namespace: "{{ argocd_namespace }}"
     create_namespace: true
