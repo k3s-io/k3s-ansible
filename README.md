@@ -20,7 +20,7 @@ on processor architectures:
 
 ## System requirements
 
-The control node **must** have Ansible 5.0+ (ansible-core 2.12.0+)
+The control node **must** have Ansible 8.0+ (ansible-core 2.15+)
 
 All managed nodes in inventory must have:
 - Passwordless SSH access
