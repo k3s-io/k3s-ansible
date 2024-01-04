@@ -11,7 +11,7 @@ WantedBy=multi-user.target
 Type=notify
 EnvironmentFile=-/etc/default/%N
 EnvironmentFile=-/etc/sysconfig/%N
-EnvironmentFile=-/etc/systemd/system/k3s.service.env
+EnvironmentFile=-/etc/systemd/system/k3s-agent.service.env
 KillMode=process
 Delegate=yes
 # Having non-zero Limit*s causes performance problems due to accounting overhead
