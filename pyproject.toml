@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "datahub-local-bootstrap"
+version = "0.1.0"
+description = "Bootstrap a Kubernetes cluster via Ansible for deploying DataHub.local"
+authors = ["Alvaro Santos Andres <alvsanand@gmail.com>"]
+license = "Apache"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+ansible = "^9.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

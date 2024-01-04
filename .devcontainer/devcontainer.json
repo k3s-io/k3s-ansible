@@ -1,0 +1,17 @@
+{
+	"name": "Python 3",
+	"image": "mcr.microsoft.com/devcontainers/python:1-3.12-bullseye",
+	"features": {
+		"ghcr.io/devcontainers-contrib/features/poetry:2": {}
+	},
+	"postCreateCommand": "poetry install",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"donjayamanne.python-extension-pack",
+				"redhat.vscode-yaml",
+				"github.vscode-github-actions"
+			]
+		}
+	}
+}

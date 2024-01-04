@@ -1,9 +1,6 @@
-# Build a Kubernetes cluster using K3s via Ansible
+# DataHub.local - Bootstrap
 
-Author: <https://github.com/itwars>  
-Current Maintainer: <https://github.com/dereknola>
-
-Easily bring up a cluster on machines running:
+Bootstrap a Kubernetes cluster via Ansible for deploying **DataHub.local**. With this Ansible project you can easily bring up a Kubernetes cluster on machines running:
 
 - [X] Debian
 - [X] Ubuntu
@@ -71,27 +68,6 @@ A playbook is provided to upgrade K3s on all nodes in the cluster. To use it, up
 ansible-playbook playbook/upgrade.yml -i inventory.yml
 ```
 
-## Airgap Install
-
-Airgap installation is supported via the `airgap_dir` variable. This variable should be set to the path of a directory containing the K3s binary and images. The release artifacts can be downloaded from the [K3s Releases](https://github.com/k3s-io/k3s/releases). You must download the appropriate images for you architecture (any of the compression formats will work).
-
-An example folder for an x86_64 cluster:
-```bash
-$ ls ./playbook/my-airgap/
-total 248M
--rwxr-xr-x 1 $USER $USER  58M Nov 14 11:28 k3s
--rw-r--r-- 1 $USER $USER 190M Nov 14 11:30 k3s-airgap-images-amd64.tar.gz
-
-$ cat inventory.yml
-...
-airgap_dir: ./my-airgap # Paths are relative to the playbook directory
-```
-
-Additionally, if deploying on a OS with SELinux, you will also need to download the latest [k3s-selinux RPM](https://github.com/k3s-io/k3s-selinux/releases/latest) and place it in the airgap folder.
-
-
-It is assumed that the control node has access to the internet. The playbook will automatically download the k3s install script on the control node, and then distribute all three artifacts to the managed nodes. 
-
 ## Kubeconfig
 
 After successful bringup, the kubeconfig of the cluster is copied to the control node  and merged with `~/.kube/config` under the `k3s-ansible` context.
@@ -103,28 +79,3 @@ kubectl get nodes
 ```
 
 If you wish for your kubeconfig to be copied elsewhere and not merged, you can set the `kubeconfig` variable in `inventory.yml` to the desired path.
-
-## Local Testing
-
-A Vagrantfile is provided that provision a 5 nodes cluster using Vagrant (LibVirt or Virtualbox as provider). To use it:
-
-```bash
-vagrant up
-```
-
-By default, each node is given 2 cores and 2GB of RAM and runs Ubuntu 20.04. You can customize these settings by editing the `Vagrantfile`.
-
-## Need More Features?
-
-This project is intended to provide a "vanilla" K3s install. If you need more features, such as:
-- Private Registry
-- Advanced Storage (Longhorn, Ceph, etc)
-- External Database
-- External Load Balancer or VIP
-- Alternative CNIs
-
-See these other projects:
-- https://github.com/PyratLabs/ansible-role-k3s
-- https://github.com/techno-tim/k3s-ansible
-- https://github.com/jon-stumpf/k3s-ansible
-- https://github.com/alexellis/k3sup
