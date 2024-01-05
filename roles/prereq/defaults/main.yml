@@ -1,2 +1,2 @@
 ---
-api_port: 6443
+cert_manager_version: 1.13.3

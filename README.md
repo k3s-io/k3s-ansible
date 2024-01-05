@@ -39,11 +39,14 @@ k3s_cluster:
   children:
     server:
       hosts:
-        192.16.35.11:
+        k3s-server-0:
+          ansible_host: 192.0.2.50
     agent:
       hosts:
-        192.16.35.12:
-        192.16.35.13:
+        k3s-agent-1:
+          ansible_host: 192.0.2.51
+        k3s-agent-2:
+          ansible_host: 192.0.2.52
 ```
 
 If needed, you can also edit `vars` section at the bottom to match your environment.
@@ -67,6 +70,37 @@ A playbook is provided to upgrade K3s on all nodes in the cluster. To use it, up
 ```bash
 ansible-playbook playbook/upgrade.yml -i inventory.yml
 ```
+
+## Airgap Install
+
+Airgap installation is supported via the `airgap_dir` variable. This variable should be set to the path of a directory containing the K3s binary and images. The release artifacts can be downloaded from the [K3s Releases](https://github.com/k3s-io/k3s/releases). You must download the appropriate images for you architecture (any of the compression formats will work).
+
+An example folder for an x86_64 cluster:
+```bash
+$ ls ./playbook/my-airgap/
+total 248M
+-rwxr-xr-x 1 $USER $USER  58M Nov 14 11:28 k3s
+-rw-r--r-- 1 $USER $USER 190M Nov 14 11:30 k3s-airgap-images-amd64.tar.gz
+
+$ cat inventory.yml
+...
+airgap_dir: ./my-airgap # Paths are relative to the playbook directory
+```
+
+Additionally, if deploying on a OS with SELinux, you will also need to download the latest [k3s-selinux RPM](https://github.com/k3s-io/k3s-selinux/releases/latest) and place it in the airgap folder.
+
+
+It is assumed that the control node has access to the internet. The playbook will automatically download the k3s install script on the control node, and then distribute all three artifacts to the managed nodes.
+
+## Local Testing
+
+A Vagrantfile is provided that provision a 5 nodes cluster using Vagrant (LibVirt or Virtualbox as provider). To use it:
+
+```bash
+vagrant up
+```
+
+By default, each node is given 2 cores and 2GB of RAM and runs Ubuntu 20.04. You can customize these settings by editing the `Vagrantfile`.
 
 ## Kubeconfig
 
