@@ -1,8 +1,8 @@
 # ENV['VAGRANT_NO_PARALLEL'] = 'no'
 NODE_ROLES = ["server-0", "agent-0", "agent-1"]
 NODE_BOXES = ['generic/ubuntu2004', 'generic/ubuntu2004', 'generic/ubuntu2004']
-NODE_CPUS = 2
-NODE_MEMORY = 2048
+NODE_CPUS = 1.5
+NODE_MEMORY = 1500
 # Virtualbox >= 6.1.28 requires expand private networks: "cat '* 0.0.0.0/0 ::/0' >> /etc/vbox/network.conf".
 NETWORK_PREFIX = "10.10.10"
 
@@ -23,7 +23,7 @@ def provision(vm, role, node_num)
     NODE_ROLES.each_with_index do |name, i|
       host_vars[name] = {
         extra_server_args: "--node-external-ip #{NETWORK_PREFIX}.#{100+i} --flannel-iface eth1", 
-        extra_agent_args: "--node-external-ip #{NETWORK_PREFIX}.#{100+i} --flannel-iface eth1"
+        extra_agent_args: "--node-external-ip #{NETWORK_PREFIX}.#{100+i} --flannel-iface eth1 --node-label 'node.longhorn.io/create-default-disk=true'"
       }
     end
 

@@ -1,0 +1,108 @@
+# K8s apps bootstrap
+
+- name: k8s - Set context
+  ansible.builtin.shell: |
+    kubectl config use-context k3s-ansible
+
+- name: CertManager - Add chart repo
+  kubernetes.core.helm_repository:
+    name: jetstack
+    repo_url: "https://charts.jetstack.io"
+    force_update: true
+- name: CertManager - Install chart
+  kubernetes.core.helm:
+    name: cert-manager
+    chart_ref: jetstack/cert-manager
+    chart_version: "{{ cert_manager_version }}"
+    create_namespace: true
+    release_namespace: cert-manager
+    values:
+      ingressShim:
+        defaultIssuerName: "self-signed-issuer"
+        defaultIssuerKind: "ClusterIssuer"
+
+      installCRDs: true
+    context: k3s-ansible
+- name: CertManager - Create cluster_issuer
+  ansible.builtin.shell: |
+    kubectl -n sealed-secrets apply -f - <<EOF
+    {{ lookup('ansible.builtin.template', 'cert_manager_cluster_issuer.yaml.j2', template_vars = {}) }}
+    EOF
+  args:
+    executable: /bin/bash
+
+- name: Longhorn - Add chart repo
+  kubernetes.core.helm_repository:
+    name: longhorn
+    repo_url: "https://charts.longhorn.io"
+    force_update: true
+- name: Longhorn - Install chart
+  kubernetes.core.helm:
+    name: longhorn
+    chart_ref: longhorn/longhorn
+    chart_version: "{{ cert_manager_version }}"
+    create_namespace: true
+    release_namespace: longhorn-system
+    values:
+      persistence:
+        defaultClassReplicaCount: "{{ longhorn_default_class_replica_count }}"
+      defaultSettings:
+        createDefaultDiskLabeledNodes: "true"
+      ingress:
+        enabled: true
+        secureBackends: true
+
+        annotations:
+          cert-manager.io/cluster-issuer: self-signed-issuer
+          kubernetes.io/ingress.class: "traefik"
+          traefik.ingress.kubernetes.io/router.tls: "true"
+          traefik.ingress.kubernetes.io/router.middlewares: longhorn-system-longhorn-strip-prefix@kubernetescrd
+        host:
+        path: /longhorn
+    context: k3s-ansible
+- name: Longhorn - Create middleware
+  ansible.builtin.shell: |
+    kubectl -n longhorn-system apply -f - <<EOF
+    {{ lookup('ansible.builtin.template', 'longhorn_middleware.yaml.j2', template_vars = {}) }}
+    EOF
+  args:
+    executable: /bin/bash
+
+# - ansible.builtin.fail:
+
+- name: Sealed Secrets - Add chart repo
+  kubernetes.core.helm_repository:
+    name: hashicorp
+    repo_url: "https://bitnami-labs.github.io/sealed-secrets"
+    force_update: true
+- name: Sealed Secrets - Install chart
+  kubernetes.core.helm:
+    name: sealed-secrets
+    chart_ref: hashicorp/sealed-secrets
+    chart_version: "{{ sealed_secrets_version }}"
+    create_namespace: true
+    release_namespace: sealed-secrets
+    context: k3s-ansible
+- name: Sealed Secrets - Save sealed-secrets-key
+  ansible.builtin.shell: |
+    mkdir -p $(dirname {{ sealed_secrets_sealed_secrets_key }})
+    
+    kubectl -n sealed-secrets get secret \
+      -l "sealedsecrets.bitnami.com/sealed-secrets-key" -o yaml \
+      > {{ sealed_secrets_sealed_secrets_key }}
+# - name: ArgoCD - Add chart repo
+#   kubernetes.core.helm_repository:
+#     name: argo
+#     repo_url: "https://argoproj.github.io/argo-helm"
+#     force_update : true
+# - name: ArgoCD - Install chart
+#   kubernetes.core.helm:
+#     name: argo-cd
+#     chart_ref: argo/argo-cd
+#     chart_version: "{{ argo_cd_version }}"
+#     create_namespace: true
+#     release_namespace: argo-cd
+#     set_values:
+#       - value: externalRedis.existingSecret=redis
+#         value_type: string
+#     context: k3s-ansible

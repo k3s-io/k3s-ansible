@@ -1,0 +1,4 @@
+---
+- ansible.builtin.import_tasks: os.yaml
+
+- ansible.builtin.import_tasks: k8s.yml

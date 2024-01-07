@@ -1,0 +1,13 @@
+---
+cert_manager_version: 1.5.3
+cert_manager_email: alvsanand@gmail.com
+
+longhorn_version: v1.13.3
+longhorn_default_class_replica_count: 2
+
+sealed_secrets_version: v2.14.1
+sealed_secrets_sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json
+
+external_secrets_version: v0.9.11
+
+argo_cd_version: v2.4.9

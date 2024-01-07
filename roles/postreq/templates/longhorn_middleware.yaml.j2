@@ -1,0 +1,9 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: longhorn-strip-prefix
+  namespace: longhorn-system
+spec:
+  stripPrefix:
+    prefixes:
+      - /longhorn
