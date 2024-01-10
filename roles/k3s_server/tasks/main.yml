@@ -122,6 +122,15 @@
       changed_when:
         - mv_result.rc == 0
 
+    - name: Configure kubectl autocomplete on control node
+      when: kubectl_installed.rc == 0
+      ansible.builtin.lineinfile:
+        path: ~/.bashrc
+        regexp: '\.\s+<\(kubectl completion bash\)'
+        line: ". <(kubectl completion bash)  # Added by k3s-ansible"
+      delegate_to: 127.0.0.1
+      become: false
+
 - name: Start other server if any and verify status
   when:
     - (groups['server'] | length) > 1
