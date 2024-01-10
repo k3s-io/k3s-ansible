@@ -73,25 +73,11 @@
       ansible.builtin.pause:
         seconds: 10
 
-    - name: Add K3s autocomplete to user bashrc
-      ansible.builtin.lineinfile:
-        path: "~{{ ansible_user }}/.bashrc"
-        regexp: '\.\s+<\(k3s completion bash\)'
-        line: ". <(k3s completion bash)  # Added by k3s-ansible"
-
-    - name: Change server to API endpoint instead of localhost
-      ansible.builtin.command: >-
-         /usr/local/bin/k3s kubectl config set-cluster default
-          --server=https://{{ api_endpoint }}:{{ api_port }}
-          --kubeconfig ~{{ ansible_user }}/.kube/config
-      changed_when: true
-
-    - name: Copy kubectl config to local machine
-      ansible.builtin.fetch:
-        src: /etc/rancher/k3s/k3s.yaml
-        dest: "{{ kubeconfig }}"
-        flat: true
-
+- name: Copy kubeconfig on control node
+  when: 
+    - inventory_hostname == groups['server'][0]
+    - control_kubectl
+  block:
     - name: Check whether kubectl is installed on control node
       ansible.builtin.command: 'kubectl'
       register: kubectl_installed
@@ -100,8 +86,21 @@
       become: false
       changed_when: false
 
-    - name: Setup kubeconfig k3s-ansible context
-      when: kubeconfig == "~/.kube/config.new" and kubectl_installed.rc == 0
+    - name: Copy kubeconfig to control node
+      when: kubectl_installed.rc == 0
+      ansible.builtin.fetch:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: "{{ kubeconfig }}"
+        flat: true
+
+    - name: Change server address in kubeconfig on control node
+      when: kubectl_installed.rc == 0
+      ansible.builtin.shell: KUBECONFIG={{ kubeconfig }} kubectl config set-cluster default --server=https://{{ api_endpoint | default(inventory_hostname) }}:{{ api_port }}
+      delegate_to: 127.0.0.1
+      become: false
+
+    - name: Setup kubeconfig k3s-ansible context on control node
+      when: kubeconfig != "~/.kube/config" and kubectl_installed.rc == 0
       ansible.builtin.replace:
         path: "{{ kubeconfig }}"
         regexp: 'name: default'
@@ -109,15 +108,15 @@
       delegate_to: 127.0.0.1
       become: false
 
-    - name: Merge with any existing kube config
-      when: kubeconfig == "~/.kube/config.new" and kubectl_installed.rc == 0
+    - name: Merge with any existing kubeconfig on control node
+      when: kubeconfig != "~/.kube/config" and kubectl_installed.rc == 0
       ansible.builtin.shell: |
         TFILE=$(mktemp)
-        KUBECONFIG=~/.kube/config.new kubectl rename-context default k3s-ansible
-        KUBECONFIG=~/.kube/config.new kubectl config set-context k3s-ansible --user=k3s-ansible --cluster=k3s-ansible
-        KUBECONFIG=~/.kube/config.new:~/.kube/config kubectl config view --flatten > ${TFILE}
+        KUBECONFIG={{ kubeconfig }} kubectl config set-context k3s-ansible --user=k3s-ansible --cluster=k3s-ansible
+        KUBECONFIG={{ kubeconfig }} kubectl config use-context k3s-ansible
+        KUBECONFIG={{ kubeconfig }}:~/.kube/config kubectl config view --flatten > ${TFILE}
         mv ${TFILE} ~/.kube/config
-        rm ~/.kube/config.new
+        rm {{ kubeconfig }}
       delegate_to: 127.0.0.1
       become: false
       register: mv_result
