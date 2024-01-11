@@ -10,3 +10,76 @@ sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json
 sealed_secrets_restore: "false"
 
 argo_cd_version: 5.52.1
+argo_cd_extra_config:
+  configs:
+    params:
+      server.insecure: true
+      application.namespaces: "{{ argo_cd_namespaces | join(', ') }}"
+    cmp:
+      create: true
+      plugins:
+        helmfile:
+          allowConcurrency: true
+          discover:
+            fileName: helmfile.yaml
+          generate:
+            command:
+              - bash
+              - "-c"
+              - |
+                if [[ -v ENV_NAME ]]; then
+                  helmfile -n "$ARGOCD_APP_NAMESPACE" -e $ENV_NAME template --include-crds -q
+                elif [[ -v ARGOCD_ENV_ENV_NAME ]]; then
+                  helmfile -n "$ARGOCD_APP_NAMESPACE" -e "$ARGOCD_ENV_ENV_NAME" template --include-crds -q
+                else
+                  helmfile -n "$ARGOCD_APP_NAMESPACE" template --include-crds -q
+                fi
+          lockRepo: false
+  repoServer:
+    extraContainers:
+      - name: helmfile
+        image: ghcr.io/helmfile/helmfile:v0.157.0
+        command: ["/var/run/argocd/argocd-cmp-server"]
+        env:
+          - name: HELM_CACHE_HOME
+            value: /tmp/helm/cache
+          - name: HELM_CONFIG_HOME
+            value: /tmp/helm/config
+          - name: HELMFILE_CACHE_HOME
+            value: /tmp/helmfile/cache
+          - name: HELMFILE_TEMPDIR
+            value: /tmp/helmfile/tmp
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+        volumeMounts:
+          - mountPath: /var/run/argocd
+            name: var-files
+          - mountPath: /home/argocd/cmp-server/plugins
+            name: plugins
+          - mountPath: /home/argocd/cmp-server/config/plugin.yaml
+            subPath: helmfile.yaml
+            name: argocd-cmp-cm
+          - mountPath: /tmp
+            name: helmfile-tmp
+    volumes:
+      - name: argocd-cmp-cm
+        configMap:
+          name: argocd-cmp-cm
+      - name: helmfile-tmp
+        emptyDir: {}
+  server:
+    extraArgs:
+      - --basehref
+      - /argo-cd
+      - --rootpath
+      - /argo-cd
+    ingress:
+      enabled: "true"
+
+      annotations:
+        cert-manager.io/cluster-issuer: self-signed-issuer
+        kubernetes.io/ingress.class: "traefik"
+      host:
+      paths:
+        - /argo-cd

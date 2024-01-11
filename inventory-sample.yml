@@ -21,6 +21,8 @@ k3s_cluster:
     api_endpoint: "{{ groups['server'][0]] }}"
     extra_server_args: ""
     extra_agent_args: "--node-label 'node.longhorn.io/create-default-disk=true'" # run longhorn only in agent nodes
+    argo_cd_namespaces: # namespaces where argo-cd will look for apps
+      - default
 
 
     # Optional vars
