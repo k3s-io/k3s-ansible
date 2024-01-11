@@ -40,13 +40,13 @@ k3s_cluster:
     server:
       hosts:
         k3s-server-0:
-          ansible_host: 192.0.2.50
+          host: 192.0.2.50
     agent:
       hosts:
         k3s-agent-1:
-          ansible_host: 192.0.2.51
+          host: 192.0.2.51
         k3s-agent-2:
-          ansible_host: 192.0.2.52
+          host: 192.0.2.52
 ```
 
 If needed, you can also edit `vars` section at the bottom to match your environment.

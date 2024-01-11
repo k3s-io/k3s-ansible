@@ -2,7 +2,7 @@
 - name: Install Dependent Ubuntu Packages
   when: ansible_distribution in ['Ubuntu']
   ansible.builtin.apt:
-    name: policycoreutils  # Used by install script to restore SELinux context
+    name: policycoreutils # Used by install script to restore SELinux context
     update_cache: true
 
 - name: Enable IPv4 forwarding
@@ -56,10 +56,10 @@
         - ufw_status['stdout'] == "Status':' active"
       community.general.ufw:
         rule: allow
-        src: '{{ item }}'
+        src: "{{ item }}"
       loop:
-        - 10.42.0.0/16  # Pods
-        - 10.43.0.0/16  # Services
+        - 10.42.0.0/16 # Pods
+        - 10.43.0.0/16 # Services
 
 - name: Allow Firewalld Exceptions
   when:
@@ -91,8 +91,8 @@
         permanent: true
         immediate: true
       loop:
-        - 10.42.0.0/16  # Pods
-        - 10.43.0.0/16  # Services
+        - 10.42.0.0/16 # Pods
+        - 10.43.0.0/16 # Services
 
 - name: Add br_netfilter to /etc/modules-load.d/
   ansible.builtin.copy:
@@ -153,7 +153,7 @@
     manager: auto
 
 # Iptables v1.8.0-1.8.4 have a specific bug with K3s. https://github.com/k3s-io/k3s/issues/3117
-- name: If iptables v1.8.0-1.8.4, warn user  # noqa ignore-errors
+- name: If iptables v1.8.0-1.8.4, warn user # noqa ignore-errors
   when:
     - ansible_facts.packages['iptables'] is defined
     - ansible_facts.packages['iptables'][0]['version'] is version('1.8.5', '<')
@@ -166,12 +166,12 @@
 
 - name: Add /usr/local/bin to sudo secure_path
   ansible.builtin.lineinfile:
-    line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
+    line: "Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin"
     regexp: "Defaults(\\s)*secure_path(\\s)*="
     state: present
     insertafter: EOF
     path: /etc/sudoers
-    validate: 'visudo -cf %s'
+    validate: "visudo -cf %s"
   when: ansible_os_family == 'RedHat'
 
 - name: Setup alternative K3s directory
@@ -206,37 +206,4 @@
         mode: 0600
       loop: "{{ extra_manifests }}"
 
-- name: "update hostnames"
-  hostname:
-    name: "{{ inventory_hostname }}"
-
-# Update packages
-- name: Update apt repo and cache on all Debian/Ubuntu boxes
-  when: ansible_os_family == 'Debian'
-  apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
-
-- name: Upgrade all packages on debian servers
-  when: ansible_os_family == 'Debian'
-  apt: upgrade=yes force_apt_get=yes
-
-- name: Upgrade all packages on arch servers
-  when: ansible_os_family == 'Archlinux'
-  pacman: update_cache=yes upgrade=yes
-
-- name: Upgrade all packages on redhat servers
-  when: ansible_os_family == 'RedHat'
-  yum: name=* state=latest
-
-- name: Check if a reboot is needed on all servers
-  register: reboot_required_file
-  stat: path=/var/run/reboot-required get_md5=no
-
-- name: Reboot the box if kernel updated
-  reboot:
-    msg: "Reboot initiated by Ansible for kernel updates"
-    connect_timeout: 5
-    reboot_timeout: 90
-    pre_reboot_delay: 0
-    post_reboot_delay: 30
-    test_command: uptime
-  when: reboot_required_file.stat.exists
+- ansible.builtin.import_tasks: extras.yml

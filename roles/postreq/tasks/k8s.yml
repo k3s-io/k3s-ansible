@@ -1,8 +1,10 @@
+---
 # K8s apps bootstrap
 
-- name: k8s - Set context
+- name: K8s - Set context
   ansible.builtin.shell: |
-    kubectl config use-context k3s-ansible
+    kubectl config use-context {{ k3s_context_name }}
+  changed_when: true
 
 - name: CertManager - Add chart repo
   kubernetes.core.helm_repository:
@@ -22,7 +24,7 @@
         defaultIssuerKind: "ClusterIssuer"
 
       installCRDs: true
-    context: k3s-ansible
+    context: "{{ k3s_context_name }}"
 - name: CertManager - Create cluster_issuer
   ansible.builtin.shell: |
     kubectl -n sealed-secrets apply -f - <<EOF
@@ -45,31 +47,41 @@
     release_namespace: longhorn-system
     values:
       persistence:
-        defaultClassReplicaCount: "{{ longhorn_default_class_replica_count }}"
+        defaultClassReplicaCount: "{{ longhorn_replica_count }}"
       defaultSettings:
         createDefaultDiskLabeledNodes: "true"
       ingress:
-        enabled: true
+        enabled: "true"
         secureBackends: true
 
         annotations:
           cert-manager.io/cluster-issuer: self-signed-issuer
           kubernetes.io/ingress.class: "traefik"
           traefik.ingress.kubernetes.io/router.tls: "true"
-          traefik.ingress.kubernetes.io/router.middlewares: longhorn-system-longhorn-strip-prefix@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: longhorn-system-path-strip-prefix@kubernetescrd
         host:
         path: /longhorn
-    context: k3s-ansible
+    context: "{{ k3s_context_name }}"
 - name: Longhorn - Create middleware
   ansible.builtin.shell: |
     kubectl -n longhorn-system apply -f - <<EOF
-    {{ lookup('ansible.builtin.template', 'longhorn_middleware.yaml.j2', template_vars = {}) }}
+    {{ lookup('ansible.builtin.template', 'traefik_middleware.yaml.j2', template_vars = {"path": "longhorn"}) }}
     EOF
   args:
     executable: /bin/bash
 
-# - ansible.builtin.fail:
+- name: Sealed Secrets - Check if exists sealed-secrets-key
+  stat:
+    path: { { sealed_secrets_key } }
+  register: sealed_secrets_key_stat
+- name: Sealed Secrets - Save sealed-secrets-key
+  ansible.builtin.shell: |
+    mkdir -p $(dirname {{ sealed_secrets_key }})
 
+    kubectl -n sealed-secrets get secret \
+      -l "sealedsecrets.bitnami.com/sealed-secrets-key" -o yaml \
+      > {{ sealed_secrets_key }}
+  when: "sealed_secrets_restore == 'true' and sealed_secrets_key_stat.stat.exists"
 - name: Sealed Secrets - Add chart repo
   kubernetes.core.helm_repository:
     name: hashicorp
@@ -82,27 +94,44 @@
     chart_version: "{{ sealed_secrets_version }}"
     create_namespace: true
     release_namespace: sealed-secrets
-    context: k3s-ansible
+    context: "{{ k3s_context_name }}"
 - name: Sealed Secrets - Save sealed-secrets-key
   ansible.builtin.shell: |
-    mkdir -p $(dirname {{ sealed_secrets_sealed_secrets_key }})
-    
+    mkdir -p $(dirname {{ sealed_secrets_key }})
+
     kubectl -n sealed-secrets get secret \
       -l "sealedsecrets.bitnami.com/sealed-secrets-key" -o yaml \
-      > {{ sealed_secrets_sealed_secrets_key }}
-# - name: ArgoCD - Add chart repo
-#   kubernetes.core.helm_repository:
-#     name: argo
-#     repo_url: "https://argoproj.github.io/argo-helm"
-#     force_update : true
-# - name: ArgoCD - Install chart
-#   kubernetes.core.helm:
-#     name: argo-cd
-#     chart_ref: argo/argo-cd
-#     chart_version: "{{ argo_cd_version }}"
-#     create_namespace: true
-#     release_namespace: argo-cd
-#     set_values:
-#       - value: externalRedis.existingSecret=redis
-#         value_type: string
-#     context: k3s-ansible
+      > {{ sealed_secrets_key }}
+
+- name: ArgoCD - Add chart repo
+  kubernetes.core.helm_repository:
+    name: argo
+    repo_url: "https://argoproj.github.io/argo-helm"
+    force_update: true
+- name: ArgoCD - Install chart
+  kubernetes.core.helm:
+    name: argo-cd
+    chart_ref: argo/argo-cd
+    chart_version: "{{ argo_cd_version }}"
+    create_namespace: true
+    release_namespace: argo-cd
+    values:
+      configs:
+        params:
+          server.insecure: true
+      server:
+        extraArgs:
+          - --basehref
+          - /argo-cd
+          - --rootpath
+          - /argo-cd
+        ingress:
+          enabled: "true"
+
+          annotations:
+            cert-manager.io/cluster-issuer: self-signed-issuer
+            kubernetes.io/ingress.class: "traefik"
+          host:
+          paths:
+            - /argo-cd
+    context: "{{ k3s_context_name }}"

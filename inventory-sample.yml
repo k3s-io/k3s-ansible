@@ -4,13 +4,13 @@ k3s_cluster:
     server:
       hosts:
         k3s-server-0:
-          ansible_host: 192.0.2.50
+          host: 192.0.2.50
     agent:
       hosts:
         k3s-agent-1:
-          ansible_host: 192.0.2.51
+          host: 192.0.2.51
         k3s-agent-2:
-          ansible_host: 192.0.2.52
+          host: 192.0.2.52
 
   # Required Vars
   vars:
@@ -18,11 +18,13 @@ k3s_cluster:
     ansible_user: debian
     k3s_version: v1.28.5+k3s1
     token: "mytoken" # Use ansible vault if you want to keep it secret
-    api_endpoint: "{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}"
+    api_endpoint: "{{ groups['server'][0]] }}"
     extra_server_args: ""
     extra_agent_args: "--node-label 'node.longhorn.io/create-default-disk=true'" # run longhorn only in agent nodes
 
-  # Optional vars
+
+    # Optional vars
+    # k3s_context_name: k3s-ansible
     # api_port: 6443
     # k3s_server_location: /var/lib/rancher/k3s
     # systemd_dir: /etc/systemd/system
@@ -33,6 +35,7 @@ k3s_cluster:
     # airgap_dir: /tmp/k3s-airgap-images
     # user_kubectl: true, by default kubectl is symlinked and configured for use by ansible_user. Set to false to only kubectl via root user.
     # server_config_yaml:  |
-      # This is now an inner yaml file. Maintain the indentation.
-      # YAML here will be placed as the content of /etc/rancher/k3s/config.yaml
-      # See https://docs.k3s.io/installation/configuration#configuration-file
+    #   This is now an inner yaml file. Maintain the indentation.
+    #   YAML here will be placed as the content of /etc/rancher/k3s/config.yaml
+    #   See https://docs.k3s.io/installation/configuration#configuration-file
+    # sealed_secrets_restore: false, by default create a new sealed_secrets_key.

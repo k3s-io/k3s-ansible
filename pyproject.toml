@@ -10,6 +10,10 @@ readme = "README.md"
 python = "^3.10"
 ansible = "^9.1.0"
 
+[tool.poetry.group.dev.dependencies]
+yamllint = "^1.33.0"
+ansible-lint = { version = "^6.22.1", markers = "platform_system != 'Windows'" }
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

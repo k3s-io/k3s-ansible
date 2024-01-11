@@ -89,7 +89,7 @@
     - name: Copy kubectl config to local machine
       ansible.builtin.fetch:
         src: /etc/rancher/k3s/k3s.yaml
-        dest: "{{ kubeconfig }}"
+        dest: "{{ kubeconfig_new }}"
         flat: true
 
     - name: Check whether kubectl is installed on control node
@@ -101,23 +101,23 @@
       changed_when: false
 
     - name: Setup kubeconfig k3s-ansible context
-      when: kubeconfig == "{{ kubeconfig }}" and kubectl_installed.rc == 0
+      when: kubeconfig == "{{ kubeconfig_new }}" and kubectl_installed.rc == 0
       ansible.builtin.replace:
-        path: "{{ kubeconfig }}"
+        path: "{{ kubeconfig_new }}"
         regexp: "name: default"
-        replace: "name: k3s-ansible"
+        replace: "name: {{ k3s_context_name }}"
       delegate_to: 127.0.0.1
       become: false
 
     - name: Merge with any existing kube config
-      when: kubeconfig == "{{ kubeconfig }}" and kubectl_installed.rc == 0
+      when: kubeconfig == "{{ kubeconfig_new }}" and kubectl_installed.rc == 0
       ansible.builtin.shell: |
         TFILE=$(mktemp)
-        KUBECONFIG={{ kubeconfig }} kubectl rename-context default k3s-ansible
-        KUBECONFIG={{ kubeconfig }} kubectl config set-context k3s-ansible --user=k3s-ansible --cluster=k3s-ansible
-        KUBECONFIG={{ kubeconfig }}:~/.kube/config kubectl config view --flatten > ${TFILE}
-        mv ${TFILE} ~/.kube/config
-        rm {{ kubeconfig }}
+        KUBECONFIG={{ kubeconfig_new }} kubectl rename-context default {{ k3s_context_name }}
+        KUBECONFIG={{ kubeconfig_new }} kubectl config set-context {{ k3s_context_name }} --user=k3s-ansible --cluster=k3s-ansible
+        KUBECONFIG={{ kubeconfig_new }}:{{ kubeconfig }} kubectl config view --flatten > ${TFILE}
+        mv ${TFILE} {{ kubeconfig }}
+        rm {{ kubeconfig_new }}
       delegate_to: 127.0.0.1
       become: false
       register: mv_result
@@ -184,8 +184,8 @@
     - name: Configure default KUBECONFIG for user
       ansible.builtin.lineinfile:
         path: ~{{ ansible_user }}/.bashrc
-        regexp: "export KUBECONFIG=~/.kube/config"
-        line: "export KUBECONFIG=~/.kube/config # Added by k3s-ansible"
+        regexp: "export KUBECONFIG={{ kubeconfig }}"
+        line: "export KUBECONFIG={{ kubeconfig }} # Added by k3s-ansible"
         state: present
 
     - name: Configure kubectl autocomplete

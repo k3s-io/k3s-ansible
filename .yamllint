@@ -1,9 +1,17 @@
 ---
 extends: default
 
+yaml-files:
+  - '*.yaml'
+  - '*.yml'
+
 rules:
+  comments: disable
   line-length:
     max: 120
     level: warning
   truthy:
     allowed-values: ['true', 'false']
+
+ignore: |
+  .*/
