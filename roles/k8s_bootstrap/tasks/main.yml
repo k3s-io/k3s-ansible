@@ -70,47 +70,47 @@
 #   args:
 #     executable: /bin/bash
 
-- name: Sealed Secrets - Check if exists sealed-secrets-key
-  stat:
-    path: "{{ sealed_secrets_key }}"
-  register: sealed_secrets_key_stat
-- name: Sealed Secrets - Load sealed-secrets-key
-  ansible.builtin.shell: |
-    kubectl -n sealed-secrets apply -f {{ sealed_secrets_key }}
-  when: "sealed_secrets_restore == 'true' and sealed_secrets_key_stat.stat.exists"
-- name: Sealed Secrets - Add chart repo
-  kubernetes.core.helm_repository:
-    name: hashicorp
-    repo_url: "https://bitnami-labs.github.io/sealed-secrets"
-    force_update: true
-- name: Sealed Secrets - Install chart
-  kubernetes.core.helm:
-    name: sealed-secrets
-    chart_ref: hashicorp/sealed-secrets
-    chart_version: "{{ sealed_secrets_version }}"
-    create_namespace: true
-    release_namespace: sealed-secrets
-    context: "{{ k3s_context_name }}"
-- name: Sealed Secrets - Save sealed-secrets-key
-  ansible.builtin.shell: |
-    mkdir -p $(dirname {{ sealed_secrets_key }})
+# - name: Sealed Secrets - Check if exists sealed-secrets-key
+#   stat:
+#     path: "{{ sealed_secrets_key }}"
+#   register: sealed_secrets_key_stat
+# - name: Sealed Secrets - Load sealed-secrets-key
+#   ansible.builtin.shell: |
+#     kubectl -n sealed-secrets apply -f {{ sealed_secrets_key }}
+#   when: "sealed_secrets_restore == 'true' and sealed_secrets_key_stat.stat.exists"
+# - name: Sealed Secrets - Add chart repo
+#   kubernetes.core.helm_repository:
+#     name: hashicorp
+#     repo_url: "https://bitnami-labs.github.io/sealed-secrets"
+#     force_update: true
+# - name: Sealed Secrets - Install chart
+#   kubernetes.core.helm:
+#     name: sealed-secrets
+#     chart_ref: hashicorp/sealed-secrets
+#     chart_version: "{{ sealed_secrets_version }}"
+#     create_namespace: true
+#     release_namespace: sealed-secrets
+#     context: "{{ k3s_context_name }}"
+# - name: Sealed Secrets - Save sealed-secrets-key
+#   ansible.builtin.shell: |
+#     mkdir -p $(dirname {{ sealed_secrets_key }})
 
-    while true; do
-        count=$(kubectl -n sealed-secrets get secret -l "sealedsecrets.bitnami.com/sealed-secrets-key" | tail -n +2 | wc -l)
+#     while true; do
+#         count=$(kubectl -n sealed-secrets get secret -l "sealedsecrets.bitnami.com/sealed-secrets-key" | tail -n +2 | wc -l)
 
-        if [ "$count" -eq 1 ]; then
-            pod_names=$(kubectl get pods --namespace=$namespace -o custom-columns=:metadata.name | grep "^$prefix")
+#         if [ "$count" -eq 1 ]; then
+#             pod_names=$(kubectl get pods --namespace=$namespace -o custom-columns=:metadata.name | grep "^$prefix")
             
-            kubectl -n sealed-secrets get secret \
-              -l "sealedsecrets.bitnami.com/sealed-secrets-key" -o yaml \
-              > {{ sealed_secrets_key }}
+#             kubectl -n sealed-secrets get secret \
+#               -l "sealedsecrets.bitnami.com/sealed-secrets-key" -o yaml \
+#               > {{ sealed_secrets_key }}
             
-            exit 0
-        else
-            echo "Waiting for resource"
-            sleep 1
-        fi
-    done
+#             exit 0
+#         else
+#             echo "Waiting for resource"
+#             sleep 1
+#         fi
+#     done
 
 - name: ArgoCD - Add chart repo
   kubernetes.core.helm_repository:

@@ -25,4 +25,4 @@
   connection: local
   gather_facts: false
   roles:
-    - role: postreq
+    - role: bootstrap
