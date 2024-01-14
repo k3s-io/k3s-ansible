@@ -40,7 +40,7 @@
   lineinfile:
     dest: /etc/hosts
     regexp: ".*{{ item }}$"
-    line: "{{ hostvars[item].host }} {{item}}"
+    line: "{{ hostvars[item].external_host | default(hostvars[item].host) }} {{item}}"
     state: present
   when: hostvars[item].inventory_hostname is defined
   with_items: "{{ groups.all }}"

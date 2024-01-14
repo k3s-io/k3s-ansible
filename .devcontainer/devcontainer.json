@@ -10,7 +10,8 @@
 			"extensions": [
 				"donjayamanne.python-extension-pack",
 				"redhat.vscode-yaml",
-				"github.vscode-github-actions"
+				"github.vscode-github-actions",
+				"eamodio.gitlens"
 			]
 		}
 	}

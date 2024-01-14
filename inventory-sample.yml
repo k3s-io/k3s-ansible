@@ -20,9 +20,10 @@ k3s_cluster:
     token: "mytoken" # Use ansible vault if you want to keep it secret
     api_endpoint: "{{ groups['server'][0]] }}"
     extra_server_args: ""
-    extra_agent_args: "--node-label 'node.longhorn.io/create-default-disk=true'" # run longhorn only in agent nodes
+    extra_agent_args: "--node-label 'role=storage-node'" # run rook only in agent nodes
     argo_cd_namespaces: # namespaces where argo-cd will look for apps
       - default
+      - some_other
 
 
     # Optional vars

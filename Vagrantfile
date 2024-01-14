@@ -1,10 +1,19 @@
+# encoding: utf-8
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'yaml'
+
 # ENV['VAGRANT_NO_PARALLEL'] = 'no'
-NODE_ROLES = ["server-0", "agent-0"]
-NODE_BOXES = ['generic/ubuntu2004', 'generic/ubuntu2004']
+NODE_ROLES = ["server-0", "agent-0", "agent-1"]
+NODE_BOXES = ['generic/ubuntu2004', 'generic/ubuntu2004', 'generic/ubuntu2004']
 NODE_CPUS = 2
 NODE_MEMORY = 3000
 # Virtualbox >= 6.1.28 requires expand private networks: "cat '* 0.0.0.0/0 ::/0' >> /etc/vbox/network.conf".
 NETWORK_PREFIX = "10.10.10"
+
+CURRENT_DIR = File.dirname(File.expand_path(__FILE__))
+DEFAULT_EXTRA_VARS = YAML.load_file("#{CURRENT_DIR}/group_vars/all/vars.yml")
 
 def provision(vm, role, node_num)
   vm.box = NODE_BOXES[node_num]
@@ -22,9 +31,9 @@ def provision(vm, role, node_num)
 
     NODE_ROLES.each_with_index do |name, i|
       host_vars[name] = {
-        host: "#{NETWORK_PREFIX}.#{100+i}",
+        external_host: "#{NETWORK_PREFIX}.#{100+i}",
         extra_server_args: "--node-external-ip #{NETWORK_PREFIX}.#{100+i} --flannel-iface eth1", 
-        extra_agent_args: "--node-external-ip #{NETWORK_PREFIX}.#{100+i} --flannel-iface eth1 --node-label 'node.longhorn.io/create-default-disk=true'"
+        extra_agent_args: "--node-external-ip #{NETWORK_PREFIX}.#{100+i} --flannel-iface eth1 --node-label 'role=storage-node'"
       }
     end
 
@@ -38,7 +47,7 @@ def provision(vm, role, node_num)
         "k3s_cluster:children" => ["server", "agent"],
       }
       ansible.host_vars = host_vars
-      ansible.extra_vars = {
+      ansible.extra_vars = DEFAULT_EXTRA_VARS.merge({
         k3s_version: "v1.28.5+k3s1",
         api_endpoint: NODE_ROLES.grep(/^server/)[0],
         token: "myvagrant",
@@ -51,7 +60,7 @@ def provision(vm, role, node_num)
         #   kube-apiserver-arg:
         #     - advertise-port=1234
         # YAML
-      }
+      })
     end
   end
 end

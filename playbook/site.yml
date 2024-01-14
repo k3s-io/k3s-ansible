@@ -20,9 +20,9 @@
   roles:
     - role: k3s_agent
 
-- name: Cluster post
+- name: Bootstrap Kubernetes
   hosts: 127.0.0.1
   connection: local
   gather_facts: false
   roles:
-    - role: bootstrap
+    - role: k8s_bootstrap
