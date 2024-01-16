@@ -19,6 +19,12 @@
     INSTALL_K3S_VERSION: "{{ k3s_version }}"
   changed_when: true
 
+- name: Add K3s autocomplete to user bashrc
+  ansible.builtin.lineinfile:
+    path: "~{{ ansible_user }}/.bashrc"
+    regexp: '\.\s+<\(k3s completion bash\)'
+    line: ". <(k3s completion bash)  # Added by k3s-ansible"
+
 - name: Setup optional config file
   when: server_config_yaml is defined
   block:
@@ -72,12 +78,6 @@
       when: (groups['server'] | length) > 1
       ansible.builtin.pause:
         seconds: 10
-
-    - name: Add K3s autocomplete to user bashrc
-      ansible.builtin.lineinfile:
-        path: "~{{ ansible_user }}/.bashrc"
-        regexp: '\.\s+<\(k3s completion bash\)'
-        line: ". <(k3s completion bash)  # Added by k3s-ansible"
 
     - name: Change server to API endpoint instead of localhost
       ansible.builtin.command: >-
