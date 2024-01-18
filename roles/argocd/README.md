@@ -84,8 +84,8 @@ cluser on which Argo CD is going to be installed.
 |-------------------------|---------------------------------------------------------------------------------------|
 | `avp_role_id`           | The role id Argo CD should use to connect to the vault                                |
 | `avp_secret_id`         | The secret id Argo CD should use to connect to the vault                              |
-| `bitbucket_known_hosts` | The known host entry that Argo CD can use to connect to the CJIB bitbucket server     |
-| `bitbucket_svc_key`     | The certificate that Argo cd can use to connect repositories on the CJIB Bitbucket |
+| `github_known_hosts` | The known host entry that Argo CD can use to connect to the CJIB github server     |
+| `github_svc_key`     | The certificate that Argo cd can use to connect repositories on the CJIB github |
 | `default_admin_password` | Default administrator password                                                        |
 
 If Argo CD is setup in order to deploy to other clusters the following secrets are also needed:
@@ -108,13 +108,13 @@ section.
 
 ### Repository credentials
 
-Argo CD needs to know how it can connect to the different repositories in Bitbucket. Luckily, it's not needed
+Argo CD needs to know how it can connect to the different repositories in github. Luckily, it's not needed
 to add every single repository to Argo CD. It is possible to use a template that contains part of the connection
-url. Within the CJIB this (can) corresponds to the different projects in Bitbucket.
-These value's can be set in the `argocd.yml` as a list of elements under the variable `argocd_bitbucket_projects`, e.g.:
+url. Within the CJIB this (can) corresponds to the different projects in github.
+These value's can be set in the `argocd.yml` as a list of elements under the variable `argocd_github_projects`, e.g.:
 
 ```yaml
-argocd_bitbucket_projects:
+argocd_github_projects:
   - name: k8s-deployements
     url: "{{ cjib_git_clone_ssh_url }}/kd"
 ```

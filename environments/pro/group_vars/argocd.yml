@@ -1,10 +1,10 @@
 ---
 argocd:
   github:
-    ssh_key: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:bitbucket_svc_key') }}"
-    known_hosts: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:bitbucket_known_hosts') }}"
-argocd_bitbucket_webhook_secret: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:bitbucket_webhook_secret') }}"
-argocd_bitbucket_token: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:bitbucket_token') }}"
+    ssh_key: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:github_svc_key') }}"
+    known_hosts: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:github_known_hosts') }}"
+argocd_github_webhook_secret: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:github_webhook_secret') }}"
+argocd_github_token: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:github_token') }}"
 
 argocd_vault_token: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/all/vault_token:value') }}"
 argocd_avp_role_id: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:avp_role_id') }}"
@@ -20,7 +20,7 @@ argocd_adfs:
 
 # Argo CD needs to be able to connect to our private repositories. This is done using a repository template. This
 # template needs a name and the base of the url of the repository.
-argocd_bitbucket_projects:
+argocd_github_projects:
   - name: k8s-deployements
     url: "{{ cjib_git_clone_ssh_url }}/kd"
 

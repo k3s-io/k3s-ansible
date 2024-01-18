@@ -28,6 +28,20 @@
   loop_control:
     loop_var: plugin
 
+- name: Add ApplicationSet SCM Provider secret
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ argocd_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: Opaque
+      metadata:
+        name: argocd-github-password
+        namespace: "{{ argocd_namespace }}"
+      data:
+        password: "{{ argocd_github_password | b64encode }}"
+
 - name: Setup repository credential templates
   ansible.builtin.include_tasks:
     file: setup_repository_credential_templates.yml
@@ -67,12 +81,22 @@
   loop_control:
     loop_var: argocd_app_project
 
-- name: Add ArgoCD ApplicationSet for different environments
+- name: Add ArgoCD ApplicationSet for provisioning different environments
   kubernetes.core.k8s:
     state: present
     namespace: "{{ argocd_namespace }}"
     template:
-      - path: argocd_application_set.j2
+      - path: argocd_provisioning_application_set.j2
+  loop: "{{ argocd_application_sets }}"
+  loop_control:
+    loop_var: application_set
+
+- name: Add ArgoCD ApplicationSet for deploying applications from templates
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ argocd_namespace }}"
+    template:
+      - path: argocd_deploying_application_set.j2
   loop: "{{ argocd_application_sets }}"
   loop_control:
     loop_var: application_set
