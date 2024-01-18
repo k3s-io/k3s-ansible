@@ -111,17 +111,17 @@ section.
 Argo CD needs to know how it can connect to the different repositories in github. Luckily, it's not needed
 to add every single repository to Argo CD. It is possible to use a template that contains part of the connection
 url. Within the CJIB this (can) corresponds to the different projects in github.
-These value's can be set in the `argocd.yml` as a list of elements under the variable `argocd_github_projects`, e.g.:
+These value's can be set in the `argocd.yml` as a list of elements under the variable `argocd.github.projects`, e.g.:
 
 ```yaml
-argocd_github_projects:
+argocd.github.projects:
   - name: k8s-deployements
     url: "{{ cjib_git_clone_ssh_url }}/kd"
 ```
 
 ### External kubernetes clusters
 
-Argo CD can deploy to external clusters. These can be defined in the `argocd.yml` in the variable `argocd_clusterCredentials`. 
+Argo CD can deploy to external clusters. These can be defined in the `argocd.yml` in the variable `argocd.cluster.credentials`. 
 The format of this section corresponds to the format used by the [Argo CD helm chart](https://github.com/argoproj/argo-helm/blob/4f6f25198e9ebb8085c3c2a561d6750205dcb0bd/charts/argo-cd/values.yaml#L406).
 
 #### Gather config

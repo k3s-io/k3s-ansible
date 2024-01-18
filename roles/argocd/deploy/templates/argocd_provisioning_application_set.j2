@@ -1,7 +1,9 @@
+{% for application_type in application_set.types %}
+---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: {{ application_set.name }}
+  name: "{{ application_set.cluster }}-{{ application_type.type }}-provisioning"
   namespace: {{ argocd_namespace }}
   labels:
 {{ platform_office_hour_support_devops_labels | to_nice_yaml(width=1337) | indent(4,true) }}
@@ -10,13 +12,13 @@ spec:
   goTemplateOptions: ["missingkey=error"]
   generators:
     - git:
-        repoURL: {{ application_set.repo_url }}
+        repoURL: "{{ cjib_git_clone_ssh_url }}/{{ application_set.repo_url }}"
         revision: HEAD
         files:
-          - path: "{{ application_set.git_files }}"
+          - path: "{{ application_type.git_files_path }}"
   template:
     metadata:
-      name: "{{ application_set.project}}-{% raw %}{{ base .path.path | normalize }}{% endraw %}"
+      name: "{{ application_set.project }}-{% raw %}{{ base .path.path | normalize }}{% endraw %}"
       labels:
 {{ platform_office_hour_support_devops_labels | to_nice_yaml(width=1337) | indent(8,true) }}
     spec:
@@ -28,10 +30,10 @@ spec:
 {% else %}
         namespace: "{{ application_set.namespace }}"
 {% endif %}
-{% if application_set.type == 'helm' %}
+{% if application_type.type == 'helm' %}
       source:
         path: "./"
-        repoURL: {{ application_set.repo_url }}
+        repoURL: {{ cjib_git_clone_ssh_url }}/{{ application_set.repo_url }}
         targetRevision: HEAD
 {% raw %}
         plugin:
@@ -87,3 +89,4 @@ spec:
           kind: "*"
           managedFieldsManagers:
           - vault-admission
+{% endfor %}

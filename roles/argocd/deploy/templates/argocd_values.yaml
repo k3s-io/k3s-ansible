@@ -202,11 +202,11 @@ configs:
     oidc.config: |
       name: ADFS
       issuer: {{ adfs_client_url }}
-      clientID: {{ argocd_adfs.client.id }}
-      clientSecret: {{ argocd_adfs.client.secret }}
+      clientID: {{ argocd.adfs.client.id }}
+      clientSecret: {{ argocd.adfs.client.secret }}
       requestedScopes: ["openid", "profile", "email", "groups"]
       rootCA: |
-        {{ argocd_pki2_ca_cert | join('\n        ') }}
+        {{ argocd.pki2.ca_cert | join('\n        ') }}
 
     # Make sure Ingress state is not staying in Progressing state
     resource.customizations: |
@@ -355,9 +355,9 @@ configs:
     # @default -- `{}` (See [values.yaml])
     certificates:
       nexus.shs.cloud.cjib.nl: |
-        {{ argocd_pki2_ca_cert | join('\n        ') }}
+        {{ argocd.pki2.ca_cert | join('\n        ') }}
       github.shs.cloud.cjib.nl: |
-        {{ argocd_pki2_ca_cert | join('\n        ') }}
+        {{ argocd.pki2.ca_cert | join('\n        ') }}
 
   # ConfigMap for Config Management Plugins
   # Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/config-management-plugins/
@@ -409,7 +409,7 @@ configs:
   ## - https://argo-cd.readthedocs.io/en/stable/operator-manual/security/#external-cluster-credentials
   ## - https://argo-cd.readthedocs.io/en/stable/user-guide/projects/#project-scoped-repositories-and-clusters
   clusterCredentials:
-{{ argocd_clusterCredentials | to_nice_yaml(width=1337) | indent(4,true) }}
+{{ argocd.cluster.credentials | to_nice_yaml(width=1337) | indent(4,true) }}
 
   # DEPRECATED - Moved to configs.ssh.annotations
   # knownHostsAnnotations: {}
@@ -482,7 +482,7 @@ configs:
     # -- Shared secret for authenticating GitLab webhook events
     gitlabSecret: ""
     # -- Shared secret for authenticating githubServer webhook events
-    githubServerSecret: "{{ argocd_github_webhook_secret }}"
+    githubServerSecret: "{{ argocd.github.webhook.secret }}"
     # -- UUID for authenticating github webhook events
     githubUUID: ""
     # -- Shared secret for authenticating Gogs webhook events
@@ -505,7 +505,7 @@ configs:
     # -- Bcrypt hashed admin password
     ## Argo expects the password in the secret to be bcrypt hashed. You can create this hash with
     ## `htpasswd -nbBC 10 "" $ARGO_PWD | tr -d ':\n' | sed 's/$2y/$2a/'`
-    argocdServerAdminPassword: "{{ argocd_default_admin_password | password_hash('bcrypt') }}"
+    argocdServerAdminPassword: "{{ argocd.server.admin_password | password_hash('bcrypt') }}"
     # -- Admin password modification time. Eg. `"2006-01-02T15:04:05Z"`
     # @default -- `""` (defaults to current time)
     argocdServerAdminPasswordMtime: ""

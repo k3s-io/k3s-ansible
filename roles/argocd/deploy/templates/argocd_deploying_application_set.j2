@@ -1,0 +1,130 @@
+{% for application_type in application_set.types %}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: '{{ application_set.github_project | lower }}-{{ application_type.type }}-applications'
+  namespace: {{ argocd_namespace }}
+  labels:
+{{ platform_office_hour_support_devops_labels | to_nice_yaml(width=1337) | indent(4,true) }}
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - matrix:
+        generators:
+          - scmProvider:
+              githubServer:
+                allBranches: false
+                api: https://github.shs.cjib.minjus.nl
+                basicAuth:
+                  passwordRef:
+                    key: password
+                    secretName: argocd-github-password
+                  username: {{ argocd_github_username }}
+                project: '{{ application_set.github_project }}'
+              filters:
+                - pathsExist:
+                    - base/kustomization.yml
+          - git:
+              files:
+{% for path in application_type.git_files_path %}
+                - path: '{{ path }}'
+{% endfor %}
+{% raw %}
+              repoURL: '{{ .url }}'
+              revision: HEAD
+              # TODO: In a future release of ArgoCD it will be possible to set values
+              #       Using Go Template and Strig functions.
+              # values:
+              #   overlay: '{{ index .path.segments }}'
+              #   dynamic_overlays: [ 'ont', 'itest' ]
+              #   prefix: '{{ index .path.segments 1 }}'
+              #   suffix: '{{ has .values.overlay .values.dynamic_overlays | ternary ( last . path.segments | print "-%s" ) "" }}'
+              #   overlay: '{{ index .path.segments }}'
+              #   cluster: '{{ has .values.overlay ( list "pro") | ternary "pro-cluster" "ota-cluster" }}'
+              #   namespace: '{{ has .values.overlay .values.dynamic_overlays | ternary "dev-" ""}}{{ has .values.overlay .values.dynamic_overlays | ternary .repository .values.overlay }}{{ .values.suffix }}'
+  template:
+    metadata:
+      # TODO: In a future release of ArgoCD it will be possible to set and use values e.g.:
+      # name: '{{ .values.prefix }}-{{ .repository }}-{{ .values.suffix }}' 
+      name: >-
+        {{ $dynamic_overlays := list "ont" "itest"
+        }}{{ $overlay := ( index .path.segments 1 )
+        }}{{ $suffix := ( has $overlay $dynamic_overlays | ternary ( last .path.segments | printf "-%s" ) "" )
+        }}{{ $overlay }}-{{ .repository }}{{ $suffix }}
+    spec:
+      destination:
+        # TODO: test when 2.10 of Argo CD is released:
+        # name: '{{ .values.cluster }}'
+        name: >-
+          {{ $overlay := index .path.segments 1
+          }}{{ $pro_targets := list "pro"
+          }}{{ has $overlay $pro_targets | ternary "pro-cluster" "ota-cluster" }}
+        namespace: >-
+          {{ $dynamic_overlays := list "ont" "itest"
+          }}{{ $overlay := ( index .path.segments 1 )
+          }}{{ $prefix := ( has $overlay $dynamic_overlays | ternary "dev-" "")
+          }}{{ $suffix := ( has $overlay $dynamic_overlays | ternary ( last .path.segments | printf "-%s" ) "" )
+          }}{{ $prefix }}{{ has $overlay $dynamic_overlays | ternary .repository $overlay }}{{ $suffix }}
+      # project: '{{ .values.overlay }}'
+      project: '{{ index .path.segments 1 }}'
+      source:
+        repoURL: "{{ .url }}"
+        targetRevision: HEAD
+{% endraw %}
+{% if application_type.type == 'helm' %}
+{% raw %}
+        path: "./"
+        plugin:
+          env:
+            - name: HELM_CHART_VERSION
+              value: "{{ .chart.version }}"
+            - name: HELM_REPO_URL
+              value: "{{ .chart.repo_url }}"
+            - name: HELM_CHART_NAME
+              value: "{{ .chart.name }}"
+            - name: HELM_VALUES_FILE
+              value: "{{ .path.path }}/values.yaml"
+{% endraw %}
+{% else %}
+{% raw %}
+        # path: overlays/{{ .values.overlay }}
+        path: overlays/{{ index .path.segments 1 }}
+        plugin:
+          env:
+            - name: DOCKER_IMAGE
+              value: registry.shs.cloud.cjib.nl/{{ .image.repo }}:{{ .image.tag }}
+            - name: TAG
+              value: '{{ .image.tag }}'
+            - name: RND
+              # value: '{{ .values.suffix }}'
+              value: '{{ len .path.segments | eq 2 | ternary "" ( last .path.segments ) }}'
+            - name: NAMESPACE
+              # value: '{{ .values.namespace }}'
+              value: >-
+                {{ $dynamic_overlays := list "ont" "itest"
+                }}{{ $overlay := ( index .path.segments 1 )
+                }}{{ $prefix := ( has $overlay $dynamic_overlays | ternary "dev-" "" )
+                }}{{ $suffix := ( has $overlay $dynamic_overlays | ternary ( last .path.segments | printf "-%s" ) "" )
+                }}{{ $prefix }}{{ has $overlay $dynamic_overlays | ternary $overlay .repository }}{{ $suffix }}
+{% endraw %}
+{% endif %}
+            - name: APPS_OTA_DOMAIN
+              value: {{ (argocd.cluster.credentials | selectattr('name', 'equalto', 'ota-cluster') | map(attribute='domain'))[0] | default('NOCLUSTER')}}
+            - name: APPS_PRO_DOMAIN
+              value: {{ (argocd.cluster.credentials | selectattr('name', 'equalto', 'pro-cluster') | map(attribute='domain'))[0] | default('NOCLUSTER')}}
+            - name: APPS_SHS_DOMAIN
+              value: {{ (argocd.cluster.credentials | selectattr('name', 'equalto', 'shs-cluster') | map(attribute='domain'))[0] | default('NOCLUSTER')}}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+      ignoreDifferences:
+        - group: '*'
+          kind: '*'
+          managedFieldsManagers:
+            - vault-admission      
+{% endfor %}
