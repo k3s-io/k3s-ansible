@@ -140,10 +140,10 @@ and save it as `caData` in Vault `cloud-provision/show/k8s_clusters/<TARGETCLUST
 
 There are several environments to which Argo CD should be able to deploy, e.g. ONT for development, ATO for acceptance
 testing or PRO for production. These environments have a name, a namespace or a namespace prefix and a cluster
-on which they run. This is defined using the variable `argocd_app_projects` in the `argocd.yml` file. E.g.:
+on which they run. This is defined using the variable `argocd.app_projects` in the `argocd.yml` file. E.g.:
 
 ```yaml
-argocd_app_projects:
+argocd.app_projects:
   - name: ont
     namespace: "dev-*" # This is a namespace prefix
     cluster: ota-cluster

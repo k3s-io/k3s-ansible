@@ -77,7 +77,7 @@
     namespace: "{{ argocd_namespace }}"
     template:
       - path: argocd_app_project.j2
-  loop: "{{ argocd_app_projects }}"
+  loop: "{{ argocd.app_projects }}"
   loop_control:
     loop_var: argocd_app_project
 
@@ -87,7 +87,7 @@
     namespace: "{{ argocd_namespace }}"
     template:
       - path: argocd_provisioning_application_set.j2
-  loop: "{{ argocd_application_sets }}"
+  loop: "{{ argocd.application_sets.provisioning }}"
   loop_control:
     loop_var: application_set
 
@@ -96,7 +96,7 @@
     state: present
     namespace: "{{ argocd_namespace }}"
     template:
-      - path: argocd_deploying_application_set.j2
-  loop: "{{ argocd_application_sets }}"
+      - path: argocd_application_set_projects.j2
+  loop: "{{ argocd.application_sets.projects }}"
   loop_control:
     loop_var: application_set
