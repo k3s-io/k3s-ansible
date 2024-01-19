@@ -16,7 +16,7 @@ spec:
           - scmProvider:
               githubServer:
                 allBranches: false
-                api: https://github.shs.cjib.minjus.nl
+                api: https://github.shs.k8s-frambozen.minjus.nl
                 basicAuth:
                   passwordRef:
                     key: password
@@ -94,7 +94,7 @@ spec:
         plugin:
           env:
             - name: DOCKER_IMAGE
-              value: registry.shs.cloud.cjib.nl/{{ .image.repo }}:{{ .image.tag }}
+              value: registry.shs.k8s-frambozen.nl/{{ .image.repo }}:{{ .image.tag }}
             - name: TAG
               value: '{{ .image.tag }}'
             - name: RND

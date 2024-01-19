@@ -2,7 +2,7 @@
 
 - name: Find all repositories for all github projects that ArgoCD should watch
   esp.github.github_repo_info:
-    url: '{{ cjib_github_url }}'
+    url: '{{ k8s-frambozen_github_url }}'
     token: '{{ argocd.github.token }}'
     repository: ['*']
     project_key: "{{ (project_url.path | split('/'))[1] }}"
@@ -27,7 +27,7 @@
 
 - name: Create webhooks
   esp.github.github_webhook:
-    url: '{{ cjib_github_url }}'
+    url: '{{ k8s-frambozen_github_url }}'
     token: '{{ argocd.github.token }}'
     repository: "{{ repo.repository }}"
     project_key: "{{ repo.project }}"

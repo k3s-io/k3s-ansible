@@ -8,7 +8,7 @@ argocd:
   github:
     projects:
       - name: k8s-deployements
-        url: "{{ cjib_git_clone_ssh_url }}/kd"
+        url: "git@github.com:RalphSmeets"
     ssh_key: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:github_svc_key') }}"
     known_hosts: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:github_known_hosts') }}"
     webhook:
@@ -20,35 +20,30 @@ argocd:
   avp.secret_id: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:avp_secret_id') }}"
 
   server.admin_password: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:default_admin_password') }}"
-  pki2.ca_cert: "{{ lookup('ansible.builtin.url', '{{ pki_ca_url }}/PKI2-CJIB-ROOT.pem', split_lines=true, wantlist=true ) }}"
+  pki2.ca_cert: "{{ lookup('ansible.builtin.url', '{{ pki_ca_url }}/PKI2-k8s-frambozen-ROOT.pem', split_lines=true, wantlist=true ) }}"
 
 # Argo CD needs to be able to connect to our private repositories. This is done using a repository template. This
 # template needs a name and the base of the url of the repository.
 
 # Configure each of the clusters (shs, ota and pro).
-  cluster.credentials:
-    - name: shs-cluster
-      server: https://kubernetes.default.svc
-      domain: apps.dev4.cloud.cjib.nl
-      config:
-        tlsClientConfig:
-          insecure: false
-    - name: ota-cluster
-      server: https://k8s-api-100.dev2.cloud.cjib.nl:6443
-      domain: apps.dev2.cloud.cjib.nl
-      config:
-        bearerToken: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/dev2:bearerToken') }}"
-        tlsClientConfig:
-          insecure: false
-          caData: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/dev2:caData') }}"
-    - name: pro-cluster
-      server: https://k8s-api-100.dev1.cloud.cjib.nl:6443
-      domain: apps.dev1.cloud.cjib.nl
-      config:
-        bearerToken: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/dev1:bearerToken') }}"
-        tlsClientConfig:
-          insecure: false
-          caData: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/dev1:caData') }}"
+  cluster:
+    credentials:
+      - name: ota-cluster
+        server: https://k8s-api-100.ota.k8s-frambozen.nl:6443
+        domain: ota.k8s-frambozen.nl
+        config:
+          bearerToken: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/ota:bearerToken') }}"
+          tlsClientConfig:
+            insecure: false
+            caData: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/ota:caData') }}"
+      - name: pro-cluster
+        server: https://k8s-api-100.pro.k8s-frambozen.nl:6443
+        domain: pro.k8s-frambozen.nl
+        config:
+          bearerToken: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/pro:bearerToken') }}"
+          tlsClientConfig:
+            insecure: false
+            caData: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/pro:caData') }}"
 
 # Define the AppProjects. These correspond with the different overlays in
 # customize:
@@ -78,7 +73,7 @@ argocd:
       namespace: "acc2"
       cluster: ota-cluster
     - name: ota-extra
-      namespace: "cjib-s3-bucket-provisioner"  # TODO Single namespace = MVP
+      namespace: "k8s-frambozen-s3-bucket-provisioner"  # TODO Single namespace = MVP
       cluster: ota-cluster
     - name: pro
       namespace: "pro"

@@ -11,14 +11,14 @@
 
 - name: Find all projects defined in github and store the result.
   esp.github.github_project_info:
-    url: '{{ cjib_github_url }}'
+    url: '{{ k8s-frambozen_github_url }}'
     token: '{{ argocd.github.token }}'
     project_key: "*"
   register: argocd_delete_webhook_github_project_info_result
 
 - name: Get all project permissions for the found projects
   esp.github.github_project_permissions_info:
-    url: '{{ cjib_github_url }}'
+    url: '{{ k8s-frambozen_github_url }}'
     token: '{{ argocd.github.token }}'
     project_key: "{{ project.key }}"
   loop: "{{ argocd_delete_webhook_github_project_info_result.projects }}"
@@ -41,7 +41,7 @@
 
 - name: Find all repositories in all found projects of github and store the result
   esp.github.github_repo_info:
-    url: '{{ cjib_github_url }}'
+    url: '{{ k8s-frambozen_github_url }}'
     token: '{{ argocd.github.token }}'
     project_key: "{{ key }}"
   loop: "{{ argocd_delete_webhook_github_projects }}"
@@ -62,7 +62,7 @@
 
 - name: Find all webhooks for the given repositories
   esp.github.github_webhook_info:
-    url: '{{ cjib_github_url }}'
+    url: '{{ k8s-frambozen_github_url }}'
     token: '{{ argocd.github.token }}'
     repository: "{{ repo.repository }}"
     project_key: "{{ repo.project }}"
@@ -95,7 +95,7 @@
 
 - name: Delete the webhooks
   esp.github.github_webhook:
-    url: '{{ cjib_github_url }}'
+    url: '{{ k8s-frambozen_github_url }}'
     token: '{{ argocd.github.token }}'
     repository: "{{ webhook.repository }}"
     project_key: "{{ webhook.project }}"
