@@ -1,5 +1,6 @@
 ---
 - name: Enable cgroup via boot commandline if not already enabled
+  when: skip_rpi_cmdline is undefined
   ansible.builtin.lineinfile:
     path: /boot/firmware/cmdline.txt
     backrefs: true
