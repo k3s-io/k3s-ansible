@@ -6,3 +6,4 @@ inventory.yml
 playbook/debug.yml
 kube-config.yaml
 *.tfstate.*
+terraform/.terraform.*
