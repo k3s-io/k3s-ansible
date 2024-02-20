@@ -1,0 +1,6 @@
+grafana:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - grafana.robertbatson.com

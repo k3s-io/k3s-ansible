@@ -1,0 +1,6 @@
+[raspberry_pis]
+pi1 ansible_host=192.168.0.121
+pi2 ansible_host=192.168.0.146
+pi3 ansible_host=192.168.0.199
+pi4 ansible_host=192.168.0.229
+pi5 ansible_host=192.168.0.234

@@ -1,0 +1,12 @@
+---
+
+- name: Install open-iscsi
+  ansible.builtin.package:
+    name: open-iscsi
+    state: present
+
+- name: Ensure iscsid service is started and enabled
+  ansible.builtin.service:
+    name: iscsid
+    state: started
+    enabled: yes

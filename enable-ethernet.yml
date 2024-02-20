@@ -1,0 +1,18 @@
+- hosts: raspberry_pis
+  become: true
+  tasks:
+    - name: Configure eth0 using Netplan
+      copy:
+        dest: "/etc/netplan/01-netcfg.yaml"
+        content: |
+          network:
+            version: 2
+            ethernets:
+              eth0:
+                dhcp4: true
+        owner: "root"
+        group: "root"
+        mode: "0644"
+    - name: Apply netplan configuration
+      ansible.builtin.command:
+        cmd: netplan apply

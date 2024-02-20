@@ -5,8 +5,8 @@
   become: true
   roles:
     - role: prereq
-    - role: airgap
     - role: raspberrypi
+    - role: longhorn
 
 - name: Setup K3S server
   hosts: server
@@ -19,3 +19,4 @@
   become: true
   roles:
     - role: k3s_agent
+

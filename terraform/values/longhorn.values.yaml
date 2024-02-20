@@ -1,0 +1,85 @@
+image:
+  longhorn:
+    engine:
+      # -- Repository for the Longhorn Engine image.
+      repository: longhornio/longhorn-engine
+      # -- Specify Longhorn engine image tag
+      tag: v1.6.0-arm64
+    manager:
+      # -- Repository for the Longhorn Manager image.
+      repository: longhornio/longhorn-manager
+      # -- Specify Longhorn manager image tag
+      tag: v1.6.0-arm64
+    ui:
+      # -- Repository for the Longhorn UI image.
+      repository: longhornio/longhorn-ui
+      # -- Specify Longhorn ui image tag
+      tag: v1.6.0-arm64
+    instanceManager:
+      # -- Repository for the Longhorn Instance Manager image.
+      repository: longhornio/longhorn-instance-manager
+      # -- Specify Longhorn instance manager image tag
+      tag: v1.6.0-arm64
+    shareManager:
+      # -- Repository for the Longhorn Share Manager image.
+      repository: longhornio/longhorn-share-manager
+      # -- Specify Longhorn share manager image tag
+      tag: v1.6.0-arm64
+    backingImageManager:
+      # -- Repository for the Backing Image Manager image. When unspecified, Longhorn uses the default value.
+      repository: longhornio/backing-image-manager
+      # -- Specify Longhorn backing image manager image tag
+      tag: v1.6.0-arm64
+    supportBundleKit:
+      # -- Repository for the Longhorn Support Bundle Manager image.
+      repository: longhornio/support-bundle-kit
+      # -- Tag for the Longhorn Support Bundle Manager image.
+      tag: v0.0.33-arm64
+  csi:
+    attacher:
+      # -- Repository for the CSI attacher image. When unspecified, Longhorn uses the default value.
+      repository: longhornio/csi-attacher
+      # -- Tag for the CSI attacher image. When unspecified, Longhorn uses the default value.
+      tag: v4.4.2-arm64
+    provisioner:
+      # -- Repository for the CSI Provisioner image. When unspecified, Longhorn uses the default value.
+      repository: longhornio/csi-provisioner
+      # -- Tag for the CSI Provisioner image. When unspecified, Longhorn uses the default value.
+      tag: v3.6.2-arm64
+    nodeDriverRegistrar:
+      # -- Repository for the CSI Node Driver Registrar image. When unspecified, Longhorn uses the default value.
+      repository: longhornio/csi-node-driver-registrar
+      # -- Tag for the CSI Node Driver Registrar image. When unspecified, Longhorn uses the default value.
+      tag: v2.9.2-arm64
+    resizer:
+      # -- Repository for the CSI Resizer image. When unspecified, Longhorn uses the default value.
+      repository: longhornio/csi-resizer
+      # -- Tag for the CSI Resizer image. When unspecified, Longhorn uses the default value.
+      tag: v1.9.2-arm64
+    snapshotter:
+      # -- Repository for the CSI Snapshotter image. When unspecified, Longhorn uses the default value.
+      repository: longhornio/csi-snapshotter
+      # -- Tag for the CSI Snapshotter image. When unspecified, Longhorn uses the default value.
+      tag: v6.3.2-arm64
+    livenessProbe:
+      # -- Repository for the CSI liveness probe image. When unspecified, Longhorn uses the default value.
+      repository: longhornio/livenessprobe
+      # -- Tag for the CSI liveness probe image. When unspecified, Longhorn uses the default value.
+      tag: v2.11.0-arm64
+
+
+
+longhornUI:
+  # -- Replica count for Longhorn UI.
+  replicas: 1
+
+ingress:
+  # -- Setting that allows Longhorn to generate ingress records for the Longhorn UI service.
+  enabled: true
+
+  # -- IngressClass resource that contains ingress configuration, including the name of the Ingress controller.
+  # ingressClassName can replace the kubernetes.io/ingress.class annotation used in earlier Kubernetes releases.
+  ingressClassName: "nginx"
+
+  # -- Hostname of the Layer 7 load balancer.
+  host: longhorn.robertbatson.com
