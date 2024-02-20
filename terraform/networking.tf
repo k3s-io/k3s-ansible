@@ -7,14 +7,15 @@ resource "helm_release" "metallb" {
   version          = "0.14.3"
 }
 
+# todo: move to helm so it can be applied in same run as metallb
 resource "kubernetes_manifest" "metallb_address_pool" {
   manifest = yamldecode(file("./manifests/metallb/ipaddresspool.yaml"))
 }
 
+# todo: move to helm so it can be applied in same run as metallb
 resource "kubernetes_manifest" "metallb-l2_advertisement" {
   manifest = yamldecode(file("./manifests/metallb/l2advertisement.yaml"))
 }
-
 
 resource "helm_release" "nginx" {
   name             = "nginx"
