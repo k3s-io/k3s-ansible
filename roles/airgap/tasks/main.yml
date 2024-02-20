@@ -77,6 +77,7 @@
             - "{{ airgap_dir }}/k3s-airgap-images-amd64.tar.gz"
             - "{{ airgap_dir }}/k3s-airgap-images-amd64.tar"
           skip: true
+      ignore_errors: true
 
     - name: Distribute K3s arm64 images
       when: ansible_architecture == 'aarch64'
@@ -92,6 +93,7 @@
             - "{{ airgap_dir }}/k3s-airgap-images-arm64.tar.gz"
             - "{{ airgap_dir }}/k3s-airgap-images-arm64.tar"
           skip: true
+      ignore_errors: true
 
     - name: Distribute K3s arm images
       when: ansible_architecture == 'armv7l'
@@ -107,6 +109,7 @@
             - "{{ airgap_dir }}/k3s-airgap-images-arm.tar.gz"
             - "{{ airgap_dir }}/k3s-airgap-images-arm.tar"
           skip: true
+      ignore_errors: true
 
     - name: Run K3s Install [server]
       ansible.builtin.command:
