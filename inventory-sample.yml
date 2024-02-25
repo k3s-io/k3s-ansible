@@ -16,7 +16,7 @@ k3s_cluster:
   vars:
     ansible_port: 22
     ansible_user: debian
-    k3s_version: v1.28.5+k3s1
+    k3s_version: v1.29.1+k3s2
     token: "mytoken" # Use ansible vault if you want to keep it secret
     api_endpoint: "{{ groups['server'][0]] }}"
     extra_server_args: ""
@@ -24,7 +24,6 @@ k3s_cluster:
     argo_cd_namespaces: # namespaces where argo-cd will look for apps
       - default
       - some_other
-
 
     # Optional vars
     # k3s_context_name: k3s-ansible

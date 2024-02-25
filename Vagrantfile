@@ -48,7 +48,7 @@ def provision(vm, role, node_num)
       }
       ansible.host_vars = host_vars
       ansible.extra_vars = DEFAULT_EXTRA_VARS.merge({
-        k3s_version: "v1.28.5+k3s1",
+        k3s_version: "v1.29.1+k3s2",
         api_endpoint: NODE_ROLES.grep(/^server/)[0],
         token: "myvagrant",
         # Required to use the private network configured above
