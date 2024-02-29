@@ -29,7 +29,6 @@ k3s_cluster:
     # extra_manifests: [ '/path/to/manifest1.yaml', '/path/to/manifest2.yaml' ]
     # airgap_dir: /tmp/k3s-airgap-images
     # user_kubectl: true, by default kubectl is symlinked and configured for use by ansible_user. Set to false to only kubectl via root user.
-    # skip_rpi_cmdline: true # normal instalations of raspberry don't require this, when set it spiks the checks of
     # server_config_yaml:  |
       # This is now an inner yaml file. Maintain the indentation.
       # YAML here will be placed as the content of /etc/rancher/k3s/config.yaml
