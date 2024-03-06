@@ -1,23 +1,38 @@
 ---
-# If airgapped, all K3s artifacts are already on the node.
-- name: Download K3s install script
-  when: airgap_dir is undefined
-  ansible.builtin.get_url:
-    url: https://get.k3s.io/
-    timeout: 120
-    dest: /usr/local/bin/k3s-install.sh
-    owner: root
-    group: root
-    mode: 0755
+- name: Get k3s installed version
+  ansible.builtin.command: k3s --version
+  register: k3s_version_output
+  changed_when: false
+  ignore_errors: true
 
-- name: Download K3s binary
-  when: airgap_dir is undefined
-  ansible.builtin.command:
-    cmd: /usr/local/bin/k3s-install.sh
-  environment:
-    INSTALL_K3S_SKIP_START: "true"
-    INSTALL_K3S_VERSION: "{{ k3s_version }}"
-  changed_when: true
+- name: Set k3s installed version
+  when: k3s_version_output.rc == 0
+  ansible.builtin.set_fact:
+    installed_k3s_version: "{{ k3s_version_output.stdout_lines[0].split(' ')[2] }}"
+
+# If airgapped, all K3s artifacts are already on the node.
+# We should be downloading and installing the newer version only if we are in one of the following cases :
+#   - we couldn't get k3s installed version in the first task of this role
+#   - the installed version of K3s on the nodes is older than the requested version in ansible vars
+- name: Download artefact only if needed
+  when: k3s_version_output.rc != 0 or installed_k3s_version is version(k3s_version, '<') and airgap_dir is undefined
+  block:
+    - name: Download K3s install script
+      ansible.builtin.get_url:
+        url: https://get.k3s.io/
+        timeout: 120
+        dest: /usr/local/bin/k3s-install.sh
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Download K3s binary
+      ansible.builtin.command:
+        cmd: /usr/local/bin/k3s-install.sh
+      environment:
+        INSTALL_K3S_SKIP_START: "true"
+        INSTALL_K3S_VERSION: "{{ k3s_version }}"
+      changed_when: true
 
 - name: Add K3s autocomplete to user bashrc
   ansible.builtin.lineinfile:

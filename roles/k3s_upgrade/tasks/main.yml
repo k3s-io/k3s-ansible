@@ -1,34 +1,48 @@
 ---
 # with_fileglob doesn't work with remote_src, it tries to find the file on the
 # local control-plane instead of the remote host. Shell supports wildcards.
-- name: Save current K3s service
-  ansible.builtin.shell:
-    cmd: "cp {{ systemd_dir }}/k3s*.service /tmp/"
-  changed_when: true
+- name: Get k3s installed version
+  ansible.builtin.command: k3s --version
+  register: k3s_version_output
+  changed_when: false
 
-- name: Install new K3s Version
-  ansible.builtin.command:
-    cmd: /usr/local/bin/k3s-install.sh
-  environment:
-    INSTALL_K3S_SKIP_START: "true"
-    INSTALL_K3S_VERSION: "{{ k3s_version }}"
-  changed_when: true
+- name: Set k3s installed version
+  ansible.builtin.set_fact:
+    installed_k3s_version: "{{ k3s_version_output.stdout_lines[0].split(' ')[2] }}"
 
-- name: Restore K3s service
-  ansible.builtin.shell:
-    cmd: "mv /tmp/k3s*.service {{ systemd_dir }}/"
-  changed_when: true
+# We should be downloading and installing the newer version only if we are in the following case :
+#   - the installed version of K3s on the nodes is older than the requested version in ansible vars
+- name: Update node only if needed
+  when: installed_k3s_version is version(k3s_version, '<')
+  block:
+    - name: Save current K3s service
+      ansible.builtin.shell:
+        cmd: "cp {{ systemd_dir }}/k3s*.service /tmp/"
+      changed_when: true
 
-- name: Restart K3s service [server]
-  when: "'server' in group_names"
-  ansible.builtin.systemd:
-    state: restarted
-    daemon_reload: true
-    name: k3s
+    - name: Install new K3s Version
+      ansible.builtin.command:
+        cmd: /usr/local/bin/k3s-install.sh
+      environment:
+        INSTALL_K3S_SKIP_START: "true"
+        INSTALL_K3S_VERSION: "{{ k3s_version }}"
+      changed_when: true
 
-- name: Restart K3s service [agent]
-  when: "'agent' in group_names"
-  ansible.builtin.systemd:
-    state: restarted
-    daemon_reload: true
-    name: k3s-agent
+    - name: Restore K3s service
+      ansible.builtin.shell:
+        cmd: "mv /tmp/k3s*.service {{ systemd_dir }}/"
+      changed_when: true
+
+    - name: Restart K3s service [server]
+      when: "'server' in group_names"
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: true
+        name: k3s
+
+    - name: Restart K3s service [agent]
+      when: "'agent' in group_names"
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: true
+        name: k3s-agent
