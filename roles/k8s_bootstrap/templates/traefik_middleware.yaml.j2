@@ -1,8 +1,0 @@
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: path-strip-prefix
-spec:
-  stripPrefix:
-    prefixes:
-      - /{{ path }}

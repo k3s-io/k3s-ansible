@@ -113,3 +113,25 @@ kubectl get nodes
 ```
 
 If you wish for your kubeconfig to be copied elsewhere and not merged, you can set the `kubeconfig` variable in `inventory.yml` to the desired path.
+
+## Bootstrapping
+
+A playbook is provided to bootstrap the K8s cluster with base services ([cert-manager](https://cert-manager.io/), [Longhron](https://longhorn.io/), [Sealed Secrets](https://sealed-secrets.netlify.app/) and [ArgoCD](argo-cd.readthedocs.io)). To use it, update `Bootstrap` vars with the desired configuration of the services and run:
+
+```bash
+ansible-playbook playbook/bootstrap.yml -i inventory.yml
+```
+
+### Debugging
+
+For debugging purposes, you can run the bootstrapping against a local cluster. For that run:
+
+```bash
+k3d cluster create -v "/tmp/k3d/kubelet/pods:/var/lib/kubelet/pods@all" -p "8443:443@loadbalancer" --agents 2
+```
+
+In case you have problems with **traefik** proxy, run this command:
+
+```bash
+kubectl logs -n kube-system $(kubectl get pods --selector "app.kubernetes.io/name=traefik" -n kube-system --output=name)
+```

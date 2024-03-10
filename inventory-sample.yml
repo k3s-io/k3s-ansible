@@ -5,39 +5,87 @@ k3s_cluster:
       hosts:
         k3s-server-0:
           host: 192.0.2.50
+
+          # extra_volumes: # Mount extra volumes if needed
+          #   some_volume_a:
+          #     name: abc # Name of the device taken from /dev/abc.
+          #     path: "/some-path" # Path to mount the volume.
+          #     fstype: ext4 # Type of volume. By default: ext4.
     agent:
       hosts:
         k3s-agent-1:
           host: 192.0.2.51
+
+          # extra_volumes: # Mount extra volumes if needed
+          #   some_volume_a:
+          #     id: abc # Id of the device taken from /dev/abc.
+          #     path: "/some-path" # Path to mount the volume.
+          #     fstype: ext4 # Type of volume. By default: ext4.
         k3s-agent-2:
           host: 192.0.2.52
+
+          # extra_volumes: # Mount extra volumes if needed
+          #   some_volume_a:
+          #     name: abc # Name of the device taken from /dev/abc.
+          #     path: "/some-path" # Path to mount the volume.
+          #     fstype: ext4 # Type of volume. By default: ext4.
 
   # Required Vars
   vars:
     ansible_port: 22
     ansible_user: debian
-    k3s_version: v1.29.1+k3s2
+    k3s_version: v1.29.2+k3s1
     token: "mytoken" # Use ansible vault if you want to keep it secret
     api_endpoint: "{{ groups['server'][0]] }}"
     extra_server_args: ""
-    extra_agent_args: "--node-label 'role=storage-node'" # run rook only in agent nodes
-    argo_cd_namespaces: # namespaces where argo-cd will look for apps
-      - default
-      - some_other
+    extra_agent_args: "--node-label 'role=storage-node'" # run longhorn only in agent nodes
 
+    ###############################
     # Optional vars
+    ###############################
     # k3s_context_name: k3s-ansible
     # api_port: 6443
     # k3s_server_location: /var/lib/rancher/k3s
     # systemd_dir: /etc/systemd/system
     # extra_service_envs: [ 'ENV_VAR1=VALUE1', 'ENV_VAR2=VALUE2' ]
-    # Manifests or Airgap should be either full paths or relative to the playbook directory.
-    # List of locally available manifests to apply to the cluster, useful for PVCs or Traefik modifications.
+    # # Manifests or Airgap should be either full paths or relative to the playbook directory.
+    # # List of locally available manifests to apply to the cluster, useful for PVCs or Traefik modifications.
     # extra_manifests: [ '/path/to/manifest1.yaml', '/path/to/manifest2.yaml' ]
     # airgap_dir: /tmp/k3s-airgap-images
-    # user_kubectl: true, by default kubectl is symlinked and configured for use by ansible_user. Set to false to only kubectl via root user.
-    # server_config_yaml:  |
-    #   This is now an inner yaml file. Maintain the indentation.
-    #   YAML here will be placed as the content of /etc/rancher/k3s/config.yaml
-    #   See https://docs.k3s.io/installation/configuration#configuration-file
-    # sealed_secrets_restore: false, by default create a new sealed_secrets_key.
+    # user_kubectl: true # true by default kubectl is symlinked and configured for use by ansible_user. Set to false to only kubectl via root user.
+    # server_config_yaml: |
+    #   # This is now an inner yaml file. Maintain the indentation.
+    #   # YAML here will be placed as the content of /etc/rancher/k3s/config.yaml
+    #   # See https://docs.k3s.io/installation/configuration#configuration-file
+
+bootstrap:
+  hosts:
+    localhost:
+      ansible_host: 127.0.0.1
+
+  vars:
+    ###############################
+    # Bootstrap vars
+    ###############################
+    # ingress_hostname: "example.com" # hostname used in all the Ingress resources
+
+    # traefik_dashboard_enabled: true # false if we want to enable Traefik dashboard.
+
+    # # See https://cert-manager.io/docs/configuration/acme/ for how to configure cert-manager
+    # cert_manager_email: alvsanand@gmail.com
+    # cert_manager_cluster_issuer_spec:
+    #   selfSigned: {}
+    # cert_manager_cluster_issuer_secret_name: # Name of the secret where the issuer will get the credentials
+    # cert_manager_cluster_issuer_secret_data: # Data of the secret that the issuer will get the credentials
+
+    # longhorn_enabled: true # false if we want to disable Longhorn installation.
+    # longhorn_replica_count: 2 # num of replicas that Longhorn will use. More replicas, more space required
+
+    # sealed_secrets_enabled: true # false if we want to disable Sealed Secrets installation.
+    # sealed_secrets_restore: true # false if we want to reuse an existing sealed_secrets_key.
+    # sealed_secrets_key: # full paths or relative to an existing sealed_secrets_key.
+
+    # longhorn_enabled: true # false if we want to disable ArgoCD installation.
+    # argocd_namespaces: # namespaces where argo-cd will look for apps
+    #   - default
+    #   - other

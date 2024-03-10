@@ -9,6 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 ansible = "^9.1.0"
+kubernetes = "^29.0.0"
 
 [tool.poetry.group.dev.dependencies]
 yamllint = "^1.33.0"

@@ -1,0 +1,16 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ name | default("middleware") }}
+spec:
+{% if strip_prefix_path is defined and strip_prefix_path %}
+  stripPrefix:
+    prefixes:
+      - "/{{ strip_prefix_path }}"
+{% endif %}
+{% if replace_path_src is defined and replace_path_src and replace_path_dst is defined and replace_path_dst %}
+  replacePathRegex:
+    regex: "^/{{ replace_path_src }}/(.*)"
+    replacement: "/{{ replace_path_dst }}/$1"
+{% endif %}

@@ -49,3 +49,12 @@
   become: true
   community.general.timezone:
     name: "Etc/UTC"
+
+- name: Mount extra volumes
+  become: true
+  mount:
+    path: "{{ item.path }}"
+    src: "/dev/{{ item.id }}"
+    fstype: "{{ item.fstype  | default 'ext4' }}"
+    state: present
+  with_items: "{{ extra_volumes }}"

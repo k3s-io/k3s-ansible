@@ -1,7 +1,7 @@
 ---
 - name: Bootstrap Kubernetes
-  hosts: 127.0.0.1
+  hosts: bootstrap
   connection: local
   gather_facts: false
   roles:
-    - role: k8s_bootstrap
+    - role: bootstrap

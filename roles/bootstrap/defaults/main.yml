@@ -1,20 +1,51 @@
 ---
-cert_manager_version: 1.5.3
+ingress_hostname: ""
+
+traefik_dashboard_enabled: true
+
+cert_manager_version: v1.14.4
 cert_manager_email: alvsanand@gmail.com
+cert_manager_cluster_issuer_spec:
+  selfSigned: {}
+cert_manager_cluster_issuer_secret_name:
+cert_manager_cluster_issuer_secret_data:
 
-longhorn_version: v1.13.3
+longhorn_enabled: true
+longhorn_version: 1.6.0
 longhorn_replica_count: 2
+longhorn_helm_values:
+  persistence:
+    defaultClassReplicaCount: "{{ longhorn_replica_count }}"
+  defaultSettings:
+    createDefaultDiskLabeledNodes: "true"
+  ingress:
+    enabled: true
 
-sealed_secrets_version: v2.14.1
+    ingressClassName: "traefik"
+
+    host: "{{ ingress_hostname }}"
+    path: /longhorn
+
+    secureBackends: true
+
+    annotations:
+      cert-manager.io/cluster-issuer: default-cluster-issuer
+      traefik.ingress.kubernetes.io/router.middlewares: longhorn-system-middleware@kubernetescrd
+
+sealed_secrets_enabled: true
+sealed_secrets_version: 2.15.0
 sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json
 sealed_secrets_restore: "false"
 
-argo_cd_version: 5.52.1
-argo_cd_extra_config:
+argocd_enabled: true
+argocd_version: 6.6.0
+argocd_namespaces:
+  - default
+argocd_helm_values:
   configs:
     params:
       server.insecure: true
-      application.namespaces: "{{ argo_cd_namespaces | join(', ') }}"
+      application.namespaces: "{{ argocd_namespaces | join(', ') }}"
     cmp:
       create: true
       plugins:
@@ -38,7 +69,7 @@ argo_cd_extra_config:
   repoServer:
     extraContainers:
       - name: helmfile
-        image: ghcr.io/helmfile/helmfile:v0.157.0
+        image: ghcr.io/helmfile/helmfile:v0.162.0
         command: ["/var/run/argocd/argocd-cmp-server"]
         env:
           - name: HELM_CACHE_HOME
@@ -75,11 +106,12 @@ argo_cd_extra_config:
       - --rootpath
       - /argo-cd
     ingress:
-      enabled: "true"
+      enabled: true
+
+      ingressClassName: "traefik"
+
+      hostname: "{{ ingress_hostname }}"
+      path: /argo-cd
 
       annotations:
-        cert-manager.io/cluster-issuer: self-signed-issuer
-        kubernetes.io/ingress.class: "traefik"
-      host:
-      paths:
-        - /argo-cd
+        cert-manager.io/cluster-issuer: default-cluster-issuer
