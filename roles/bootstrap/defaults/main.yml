@@ -4,7 +4,6 @@ ingress_hostname: ""
 traefik_dashboard_enabled: true
 
 cert_manager_version: v1.14.4
-cert_manager_email: alvsanand@gmail.com
 cert_manager_cluster_issuer_spec:
   selfSigned: {}
 cert_manager_cluster_issuer_secret_name:

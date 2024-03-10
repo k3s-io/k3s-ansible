@@ -72,11 +72,27 @@ bootstrap:
     # traefik_dashboard_enabled: true # false if we want to enable Traefik dashboard.
 
     # # See https://cert-manager.io/docs/configuration/acme/ for how to configure cert-manager
-    # cert_manager_email: alvsanand@gmail.com
     # cert_manager_cluster_issuer_spec:
     #   selfSigned: {}
     # cert_manager_cluster_issuer_secret_name: # Name of the secret where the issuer will get the credentials
     # cert_manager_cluster_issuer_secret_data: # Data of the secret that the issuer will get the credentials
+    # # Example using Cloudfare:
+    # cert_manager_cluster_issuer_spec:
+    #   acme:
+    #     email: "email@example.com"
+    #     server: "https://acme-staging-v02.api.letsencrypt.org/directory"
+
+    #     privateKeySecretRef:
+    #       name: default-cluster-issuer
+    #     solvers:
+    #       - dns01:
+    #           cloudflare:
+    #             apiTokenSecretRef:
+    #               name: cert-manager-token
+    #               key: api-token
+    # cert_manager_cluster_issuer_secret_name: cert-manager-token # Name of the secret where the issuer will get the credentials
+    # cert_manager_cluster_issuer_secret_data: # Data of the secret that the issuer will get the credentials
+    #   api-token: "some-token"
 
     # longhorn_enabled: true # false if we want to disable Longhorn installation.
     # longhorn_replica_count: 2 # num of replicas that Longhorn will use. More replicas, more space required

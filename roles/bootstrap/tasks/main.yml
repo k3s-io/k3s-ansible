@@ -44,10 +44,15 @@
 
           installCRDs: true
         context: "{{ k3s_context_name }}"
-    - name: cert-manager - Create cluster_issuer
+    - name: cert-manager - Create ClusterIssuer
       kubernetes.core.k8s:
         namespace: cert-manager
-        definition: "{{ lookup('ansible.builtin.template', 'cert_manager_cluster_issuer.yaml.j2', template_vars = {}) | from_yaml_all }}"
+        definition: "{{ lookup('ansible.builtin.template', 'cert_manager_cluster_issuer_spec.yaml.j2', template_vars = {}) | from_yaml_all }}"
+        state: present
+    - name: cert-manager - Create Secret
+      kubernetes.core.k8s:
+        namespace: cert-manager
+        definition: "{{ lookup('ansible.builtin.template', 'cert_manager_cluster_issuer_secret.yaml.j2', template_vars = {}) | from_yaml_all }}"
         state: present
 
 - name: Longhorn
