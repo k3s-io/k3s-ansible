@@ -1,7 +1,36 @@
 ---
 ingress_hostname: ""
 
-traefik_dashboard_enabled: true
+traefik_auth_enabled: false
+traefik_auth_oauth_version: 7.1.0
+traefik_auth_provider:
+traefik_auth_client_id:
+traefik_auth_client_secret:
+traefik_auth_whitelist:
+traefik_auth_oauth2_helm_values:
+  fullnameOverride: oauth2-proxy
+  config:
+    clientID: "{{ traefik_auth_client_id}}"
+    clientSecret: "{{ traefik_auth_client_secret}}"
+    cookieSecret: "{{ lookup('community.general.random_string', length=16, special=False)| b64encode  }}"
+  extraArgs:
+    whitelist-domain: "{{ ingress_hostname }}"
+    cookie-domain: "{{ ingress_hostname }}"
+    provider: "{{ traefik_auth_provider}}"
+    reverse-proxy: true
+    set-xauthrequest: true
+
+  authenticatedEmailsFile:
+    enabled: true
+    restricted_access: "{{ traefik_auth_whitelist | split(',') | join('\n') }}"
+
+  ingress:
+    enabled: true
+    className: traefik
+
+    path: /oauth2
+    hosts:
+      - "{{ ingress_hostname }}"
 
 cert_manager_version: v1.14.4
 cert_manager_cluster_issuer_spec:
@@ -29,7 +58,7 @@ longhorn_helm_values:
 
     annotations:
       cert-manager.io/cluster-issuer: default-cluster-issuer
-      traefik.ingress.kubernetes.io/router.middlewares: longhorn-system-middleware@kubernetescrd
+      traefik.ingress.kubernetes.io/router.middlewares: "longhorn-system-middleware@kubernetescrd,{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
 
 sealed_secrets_enabled: true
 sealed_secrets_version: 2.15.0
@@ -38,6 +67,7 @@ sealed_secrets_restore: "false"
 
 argocd_enabled: true
 argocd_version: 6.6.0
+argocd_server_admin_password: "admin"
 argocd_namespaces:
   - default
 argocd_helm_values:
@@ -45,6 +75,7 @@ argocd_helm_values:
     params:
       server.insecure: true
       application.namespaces: "{{ argocd_namespaces | join(', ') }}"
+    secrets: "{{ argocd_server_admin_passwords }}"
     cmp:
       create: true
       plugins:
@@ -114,3 +145,4 @@ argocd_helm_values:
 
       annotations:
         cert-manager.io/cluster-issuer: default-cluster-issuer
+        traefik.ingress.kubernetes.io/router.middlewares: "{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"

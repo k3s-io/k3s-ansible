@@ -1,0 +1,58 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: traefik-auth-errors
+spec:
+  errors:
+    status:
+      - "401-403"
+    service:
+      name: oauth2-proxy
+      port: 80
+    query: "/oauth2/sign_in?rd={url}"
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: traefik-auth-forward
+spec:
+  forwardAuth:
+    address: http://oauth2-proxy.oauth2-proxy.svc.cluster.local/oauth2/auth
+    trustForwardHeader: true
+    authResponseHeaders:
+    - "X-Auth-Request-User"
+    - "X-Auth-Request-Email"
+    - "Set-Cookie"
+    - "X-Auth-Request-Access-Token"
+    - "Authorization"
+    - "X-Auth-Request-Redirect"
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: traefik-auth-https-only
+spec:
+  redirectScheme:
+    scheme: https
+# ---
+# apiVersion: traefik.containo.us/v1alpha1
+# kind: Middleware
+# metadata:
+#   name: traefik-auth-known-ips
+# spec:
+#   ipWhiteList:
+#     sourceRange:
+#     - 192.168.1.7
+#     - 127.0.0.1/32
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: traefik-auth
+spec:
+  chain:
+    middlewares:
+      - name: traefik-auth-https-only
+      # - name: traefik-auth-known-ips
+      - name: traefik-auth-errors
+      - name: traefik-auth-forward

@@ -130,8 +130,14 @@ For debugging purposes, you can run the bootstrapping against a local cluster. F
 k3d cluster create -v "/tmp/k3d/kubelet/pods:/var/lib/kubelet/pods@all" -p "8443:443@loadbalancer" --agents 2
 ```
 
-In case you have problems with **traefik** proxy, run this command:
+In case you have problems with **Traefik + Oauth2-proxy**, run these commands to debug it:
 
 ```bash
-kubectl logs -n kube-system $(kubectl get pods --selector "app.kubernetes.io/name=traefik" -n kube-system --output=name)
+kubectl logs -f -n kube-system $(kubectl get pods -l "app.kubernetes.io/name=traefik" -n kube-system -o=name) # Check traefik logs
+
+kubectl port-forward -n kube-system $(kubectl get pods -l "app.kubernetes.io/name=traefik" -n kube-system -o=name) 9000:9000 # Port forward traefik dashboard
+
+kubectl logs -f -n oauth2-proxy $(kubectl get pod -l 'app.kubernetes.io/name=oauth2-proxy' -n oauth2-proxy -o=name) # Check oauth2-proxy logs
+
+kubectl run -it --rm --image=curlimages/curl curly -- sh # Run a pod with curl
 ```

@@ -1,8 +1,7 @@
----
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
-  name: {{ name | default("middleware") }}
+  name: "{{ name | default("middleware") }}"
 spec:
 {% if strip_prefix_path is defined and strip_prefix_path %}
   stripPrefix:

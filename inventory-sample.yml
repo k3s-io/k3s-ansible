@@ -69,7 +69,12 @@ bootstrap:
     ###############################
     # ingress_hostname: "example.com" # hostname used in all the Ingress resources
 
-    # traefik_dashboard_enabled: true # false if we want to enable Traefik dashboard.
+    # traefik_auth_enabled: false # false if we want to enable Traefik Oauth authentication.
+    # # See https://oauth2-proxy.github.io/oauth2-proxy/ for how to configure the OAuth provider
+    # traefik_auth_client_id: some_client # Client ID
+    # traefik_auth_client_secret: some_secret # Client Secret
+    # traefik_auth_provider: github # Name of the provider
+    # traefik_auth_whitelist: "user1@example.com,user2@example.com" # list of emails that will be validated to auth separated by comma
 
     # # See https://cert-manager.io/docs/configuration/acme/ for how to configure cert-manager
     # cert_manager_cluster_issuer_spec:
@@ -101,7 +106,8 @@ bootstrap:
     # sealed_secrets_restore: true # false if we want to reuse an existing sealed_secrets_key.
     # sealed_secrets_key: # full paths or relative to an existing sealed_secrets_key.
 
-    # longhorn_enabled: true # false if we want to disable ArgoCD installation.
+    # argocd_enabled: true # false if we want to disable ArgoCD installation.
     # argocd_namespaces: # namespaces where argo-cd will look for apps
     #   - default
     #   - other
+    # argocd_server_admin_passwords: admin # Password to use for the admin user

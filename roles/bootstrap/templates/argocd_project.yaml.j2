@@ -1,16 +1,15 @@
----
 kind: AppProject
 apiVersion: argoproj.io/v1alpha1
 metadata:
-  name: namespace-{{ namespace }}
+  name: "namespace-{{ namespace }}"
 spec:
   clusterResourceWhitelist:
-  - group: "*"
-    kind: "*"
+    - group: "*"
+      kind: "*"
   destinations:
-  - namespace: "*"
-    server: "*"
+    - namespace: "*"
+      server: "*"
   sourceNamespaces:
-  - {{ namespace }}
+    - "{{ namespace }}"
   sourceRepos:
-  - "*"
+    - "*"

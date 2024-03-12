@@ -1,7 +1,7 @@
 ---
 # - name: Display all variables/facts known for a host
 #   debug:
-#     msg: "{{ingress_hostname}}"
+#     msg: "{{ lookup('ansible.builtin.template', 'traefik_middleware_path.yaml.j2', template_vars = {'replace_path_src': 'traefik', 'replace_path_dst': 'dashboard', 'name': 'traefik-dashboard'}) }}"
 #   tags: debug_info
 
 - name: K8s - Set context
@@ -9,19 +9,37 @@
     kubectl config use-context {{ k3s_context_name }}
   changed_when: true
 
-- name: traefik
+- name: Traefik
   block:
-    - name: traefik - Enable traefik dashboard
-      kubernetes.core.k8s:
-        namespace: kube-system
-        definition: "{{ lookup('ansible.builtin.template', 'traefik_dashboard.yaml.j2', template_vars = {}) | from_yaml_all }}"
-        state: present
-    - name: traefik - Create middleware
-      kubernetes.core.k8s:
-        namespace: kube-system
-        definition: "{{ lookup('ansible.builtin.template', 'traefik_middleware_path.yaml.j2', template_vars = {'replace_path_src': 'traefik', 'replace_path_dst': 'dashboard', 'name': 'traefik-dashboard-middleware'}) | from_yaml_all }}"
-        state: present
-  when: "traefik_dashboard_enabled"
+    - name: Traefik - TLS
+      block:
+        - name: Traefik - Force TLS
+          kubernetes.core.k8s:
+            namespace: kube-system
+            definition: "{{ lookup('ansible.builtin.template', 'traefik_tls.yaml.j2', template_vars = {}) | from_yaml_all }}"
+            state: present
+    - name: Traefik - Install chart
+      block:
+        - name: oauth0-proxy - Add chart repo
+          kubernetes.core.helm_repository:
+            name: oauth2-proxy
+            repo_url: "https://oauth2-proxy.github.io/manifests"
+            force_update: true
+        - name: oauth0-proxy - Install chart
+          kubernetes.core.helm:
+            name: oauth2-proxy
+            chart_ref: oauth2-proxy/oauth2-proxy
+            chart_version: "{{ traefik_auth_oauth_version }}"
+            create_namespace: true
+            release_namespace: oauth2-proxy
+            values: "{{ traefik_auth_oauth2_helm_values }}"
+            context: "{{ k3s_context_name }}"
+        - name: Traefik - Enable traefik Auth
+          kubernetes.core.k8s:
+            namespace: oauth2-proxy
+            definition: "{{ lookup('ansible.builtin.template', 'traefik_auth.yaml.j2', template_vars = {}) | from_yaml_all }}"
+            state: present
+      when: "traefik_auth_enabled"
 
 - name: cert-manager
   block:
@@ -47,12 +65,7 @@
     - name: cert-manager - Create ClusterIssuer
       kubernetes.core.k8s:
         namespace: cert-manager
-        definition: "{{ lookup('ansible.builtin.template', 'cert_manager_cluster_issuer_spec.yaml.j2', template_vars = {}) | from_yaml_all }}"
-        state: present
-    - name: cert-manager - Create Secret
-      kubernetes.core.k8s:
-        namespace: cert-manager
-        definition: "{{ lookup('ansible.builtin.template', 'cert_manager_cluster_issuer_secret.yaml.j2', template_vars = {}) | from_yaml_all }}"
+        definition: "{{ lookup('ansible.builtin.template', 'cert_manager_cluster_issuer.yaml.j2', template_vars = {}) | from_yaml_all }}"
         state: present
 
 - name: Longhorn
