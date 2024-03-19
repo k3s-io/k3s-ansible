@@ -41,11 +41,14 @@ cert_manager_cluster_issuer_secret_data:
 longhorn_enabled: true
 longhorn_version: 1.6.0
 longhorn_replica_count: 2
+longhorn_data_dir: /var/lib/longhorn/
 longhorn_helm_values:
-  persistence:
-    defaultClassReplicaCount: "{{ longhorn_replica_count }}"
+  csi:
+    defaultDataPath: "{{ longhorn_data_dir }}"
   defaultSettings:
     createDefaultDiskLabeledNodes: "true"
+  persistence:
+    defaultClassReplicaCount: "{{ longhorn_replica_count }}"
   ingress:
     enabled: true
 

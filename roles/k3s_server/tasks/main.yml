@@ -93,7 +93,7 @@
         flat: true
 
     - name: Check whether kubectl is installed on control node
-      ansible.builtin.command: "kubectl"
+      ansible.builtin.shell: "kubectl"
       register: kubectl_installed
       ignore_errors: true
       delegate_to: 127.0.0.1
@@ -113,7 +113,7 @@
       when: kubectl_installed.rc == 0
       ansible.builtin.shell: |
         TFILE=$(mktemp)
-        KUBECONFIG={{ kubeconfig_new }} kubectl rename-context default {{ k3s_context_name }}
+        KUBECONFIG={{ kubeconfig_new }} kubectl config rename-context default {{ k3s_context_name }}
         KUBECONFIG={{ kubeconfig_new }} kubectl config set-context {{ k3s_context_name }} --user=k3s-ansible --cluster=k3s-ansible
         KUBECONFIG={{ kubeconfig_new }}:{{ kubeconfig }} kubectl config view --flatten > ${TFILE}
         mv ${TFILE} {{ kubeconfig }}

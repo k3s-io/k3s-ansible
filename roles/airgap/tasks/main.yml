@@ -2,14 +2,13 @@
 - name: Check for Airgap
   when: airgap_dir is defined
   block:
-
     - name: Verify Ansible meets airgap version requirements.
       ansible.builtin.assert:
         that: "ansible_version.full is version_compare('2.12', '>=')"
         msg: "The Airgap role requires at least ansible-core 2.12"
 
     - name: Download k3s install script
-      delegate_to: localhost
+      delegate_to: 127.0.0.1
       ansible.builtin.get_url:
         url: https://get.k3s.io/
         timeout: 120

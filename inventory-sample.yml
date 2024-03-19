@@ -4,7 +4,7 @@ k3s_cluster:
     server:
       hosts:
         k3s-server-0:
-          host: 192.0.2.50
+          ansible_host: 192.0.2.50
 
           # extra_volumes: # Mount extra volumes if needed
           #   some_volume_a:
@@ -14,7 +14,7 @@ k3s_cluster:
     agent:
       hosts:
         k3s-agent-1:
-          host: 192.0.2.51
+          ansible_host: 192.0.2.51
 
           # extra_volumes: # Mount extra volumes if needed
           #   some_volume_a:
@@ -22,7 +22,7 @@ k3s_cluster:
           #     path: "/some-path" # Path to mount the volume.
           #     fstype: ext4 # Type of volume. By default: ext4.
         k3s-agent-2:
-          host: 192.0.2.52
+          ansible_host: 192.0.2.52
 
           # extra_volumes: # Mount extra volumes if needed
           #   some_volume_a:
@@ -43,6 +43,7 @@ k3s_cluster:
     ###############################
     # Optional vars
     ###############################
+    # os_upgrade: false # Upgrade the OS before installing K3s
     # k3s_context_name: k3s-ansible
     # api_port: 6443
     # k3s_server_location: /var/lib/rancher/k3s
@@ -67,6 +68,7 @@ bootstrap:
     ###############################
     # Bootstrap vars
     ###############################
+    # k3s_context_name: k3s-ansible
     # ingress_hostname: "example.com" # hostname used in all the Ingress resources
 
     # traefik_auth_enabled: false # false if we want to enable Traefik Oauth authentication.
@@ -101,6 +103,7 @@ bootstrap:
 
     # longhorn_enabled: true # false if we want to disable Longhorn installation.
     # longhorn_replica_count: 2 # num of replicas that Longhorn will use. More replicas, more space required
+    # longhorn_data_dir: /var/lib/longhorn/ # Default path for storing data on a host.
 
     # sealed_secrets_enabled: true # false if we want to disable Sealed Secrets installation.
     # sealed_secrets_restore: true # false if we want to reuse an existing sealed_secrets_key.
