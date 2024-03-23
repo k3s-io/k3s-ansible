@@ -9,6 +9,7 @@
         msg: "The Airgap role requires at least ansible-core 2.12"
 
     - name: Download k3s install script
+      become: false
       delegate_to: localhost
       ansible.builtin.get_url:
         url: https://get.k3s.io/
@@ -67,7 +68,7 @@
       when: ansible_architecture == 'x86_64'
       ansible.builtin.copy:
         src: "{{ item }}"
-        dest: /var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar
+        dest: /var/lib/rancher/k3s/agent/images/{{ item | basename }}
         owner: root
         group: root
         mode: 0755
