@@ -52,8 +52,6 @@
   when: hostvars[item].inventory_hostname is defined
   with_items: "{{ groups['k3s_cluster'] }}"
 
-- fail:
-
 - name: Set timezone to UTC
   become: true
   community.general.timezone:
