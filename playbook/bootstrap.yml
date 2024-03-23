@@ -2,6 +2,7 @@
 - name: Bootstrap Kubernetes
   hosts: bootstrap
   connection: local
+  user: "{{ lookup('env', 'USER') }}"
   gather_facts: false
   roles:
     - role: bootstrap

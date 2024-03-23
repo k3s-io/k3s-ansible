@@ -1,4 +1,6 @@
 ---
 os_upgrade: false
 
+etc_hosts_file: /etc/hosts
+
 extra_volumes: {}

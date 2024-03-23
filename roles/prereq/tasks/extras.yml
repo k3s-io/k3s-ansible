@@ -31,17 +31,7 @@
   when: reboot_required_file.stat.exists
 
 # OS config
-- name: Modify /etc/hosts
-  become: true
-  lineinfile:
-    dest: /etc/hosts
-    regexp: ".*{{ item }}$"
-    line: "{{ hostvars[item].external_host | default(hostvars[item].ansible_host) }} {{item}}"
-    state: present
-  delegate_to: 127.0.0.1
-  with_items: "{{ groups.all }}"
-
-- name: Modify /etc/hosts [Local]
+- name: Modify remote hosts file
   become: true
   lineinfile:
     dest: /etc/hosts
@@ -49,7 +39,20 @@
     line: "{{ hostvars[item].external_host | default(hostvars[item].ansible_host) }} {{item}}"
     state: present
   when: hostvars[item].inventory_hostname is defined
-  with_items: "{{ groups.all }}"
+  with_items: "{{ groups['k3s_cluster'] }}"
+
+- name: Modify local hosts file
+  lineinfile:
+    dest: "{{ etc_hosts_file }}"
+    regexp: ".* {{ item }}$"
+    line: "{{ hostvars[item].external_host | default(hostvars[item].ansible_host) }} {{item}}"
+    create: true
+    state: present
+  delegate_to: 127.0.0.1
+  when: hostvars[item].inventory_hostname is defined
+  with_items: "{{ groups['k3s_cluster'] }}"
+
+- fail:
 
 - name: Set timezone to UTC
   become: true

@@ -58,6 +58,8 @@ k3s_cluster:
     #   # This is now an inner yaml file. Maintain the indentation.
     #   # YAML here will be placed as the content of /etc/rancher/k3s/config.yaml
     #   # See https://docs.k3s.io/installation/configuration#configuration-file
+    # etc_hosts_file: /etc/hosts # Sets the hosts file to use
+    
 
 bootstrap:
   hosts:

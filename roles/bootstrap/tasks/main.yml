@@ -91,7 +91,7 @@
         state: present
   when: "longhorn_enabled"
 
-- name: Longhorn
+- name: Sealed Secrets
   block:
     - name: Sealed Secrets - Check if exists sealed-secrets-key
       stat:
