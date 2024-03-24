@@ -2,23 +2,32 @@
 ingress_hostname: ""
 
 traefik_auth_enabled: false
-traefik_auth_oauth_version: 7.1.0
 traefik_auth_provider:
 traefik_auth_client_id:
 traefik_auth_client_secret:
 traefik_auth_whitelist:
+traefik_auth_cookie_expiration: "168h"
+traefik_auth_oauth2_helm_version: 7.1.0
+traefik_auth_oauth2_debug: true
 traefik_auth_oauth2_helm_values:
   fullnameOverride: oauth2-proxy
   config:
-    clientID: "{{ traefik_auth_client_id}}"
-    clientSecret: "{{ traefik_auth_client_secret}}"
-    cookieSecret: "{{ lookup('community.general.random_string', length=16, special=False)| b64encode  }}"
+    clientID: "{{ traefik_auth_client_id }}"
+    clientSecret: "{{ traefik_auth_client_secret }}"
+    cookieSecret: "{{ lookup('community.general.random_string', length=16, special=False) }}"
   extraArgs:
+    provider: "{{ traefik_auth_provider }}"
     whitelist-domain: "{{ ingress_hostname }}"
     cookie-domain: "{{ ingress_hostname }}"
-    provider: "{{ traefik_auth_provider}}"
+    cookie-expire: "{{ traefik_auth_cookie_expiration }}"
+    cookie-csrf-expire: "1h"
+    cookie-samesite: "lax"
+    cookie-secure: false
+    pass-host-header: true
+    pass-user-headers: true
     reverse-proxy: true
     set-xauthrequest: true
+    show-debug-on-error: "{{ traefik_auth_oauth2_debug }}"
 
   authenticatedEmailsFile:
     enabled: true
@@ -32,14 +41,15 @@ traefik_auth_oauth2_helm_values:
     hosts:
       - "{{ ingress_hostname }}"
 
-cert_manager_version: v1.14.4
+cert_manager_helm_version: v1.14.4
 cert_manager_cluster_issuer_spec:
   selfSigned: {}
 cert_manager_cluster_issuer_secret_name:
 cert_manager_cluster_issuer_secret_data:
 
 longhorn_enabled: true
-longhorn_version: 1.6.0
+longhorn_enable_only_workers: false
+longhorn_helm_version: 1.6.0
 longhorn_replica_count: 2
 longhorn_data_dir: /var/lib/longhorn/
 longhorn_helm_values:
@@ -49,6 +59,9 @@ longhorn_helm_values:
     createDefaultDiskLabeledNodes: "true"
   persistence:
     defaultClassReplicaCount: "{{ longhorn_replica_count }}"
+    defaultNodeSelector:
+      enable: "{{ longhorn_enable_only_workers }}"
+      selector: "node-role.kubernetes.io/{{ k3s_agent_role_name }}"
   ingress:
     enabled: true
 
@@ -64,13 +77,12 @@ longhorn_helm_values:
       traefik.ingress.kubernetes.io/router.middlewares: "longhorn-system-middleware@kubernetescrd,{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
 
 sealed_secrets_enabled: true
-sealed_secrets_version: 2.15.0
+sealed_secrets_helm_version: 2.15.0
 sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json
 sealed_secrets_restore: "false"
 
 argocd_enabled: true
-argocd_version: 6.6.0
-argocd_server_admin_password: "admin"
+argocd_helm_version: 6.6.0
 argocd_namespaces:
   - default
 argocd_helm_values:
@@ -78,7 +90,7 @@ argocd_helm_values:
     params:
       server.insecure: true
       application.namespaces: "{{ argocd_namespaces | join(', ') }}"
-    secrets: "{{ argocd_server_admin_passwords }}"
+      server.disable.auth: true
     cmp:
       create: true
       plugins:

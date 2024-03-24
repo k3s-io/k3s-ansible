@@ -35,3 +35,11 @@
     daemon_reload: "{{ true if k3s_agent_service.changed else false }}"
     state: "{{ 'restarted' if k3s_agent_service.changed else 'started' }}"
     enabled: true
+
+- name: Label agent node as worker
+  ansible.builtin.shell: |
+    kubectl config use-context {{ k3s_context_name }}
+
+    kubectl label node {{ inventory_hostname }} 'node-role.kubernetes.io/{{ k3s_agent_role_name }}={{ k3s_agent_role_name }}'
+  delegate_to: 127.0.0.1
+  become: false

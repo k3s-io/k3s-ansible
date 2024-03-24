@@ -38,7 +38,7 @@ k3s_cluster:
     token: "mytoken" # Use ansible vault if you want to keep it secret
     api_endpoint: "{{ groups['server'][0]] }}"
     extra_server_args: ""
-    extra_agent_args: "--node-label 'role=storage-node'" # run longhorn only in agent nodes
+    extra_agent_args: ""
 
     ###############################
     # Optional vars
@@ -59,7 +59,6 @@ k3s_cluster:
     #   # YAML here will be placed as the content of /etc/rancher/k3s/config.yaml
     #   # See https://docs.k3s.io/installation/configuration#configuration-file
     # etc_hosts_file: /etc/hosts # Sets the hosts file to use
-    
 
 bootstrap:
   hosts:
@@ -104,15 +103,15 @@ bootstrap:
     #   api-token: "some-token"
 
     # longhorn_enabled: true # false if we want to disable Longhorn installation.
+    # longhorn_enable_only_workers: false # true if we want to enable Longhorn only in workers.
     # longhorn_replica_count: 2 # num of replicas that Longhorn will use. More replicas, more space required
     # longhorn_data_dir: /var/lib/longhorn/ # Default path for storing data on a host.
 
     # sealed_secrets_enabled: true # false if we want to disable Sealed Secrets installation.
     # sealed_secrets_restore: true # false if we want to reuse an existing sealed_secrets_key.
-    # sealed_secrets_key: # full paths or relative to an existing sealed_secrets_key.
+    # sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json # full paths or relative to an existing sealed_secrets_key.
 
     # argocd_enabled: true # false if we want to disable ArgoCD installation.
     # argocd_namespaces: # namespaces where argo-cd will look for apps
     #   - default
     #   - other
-    # argocd_server_admin_passwords: admin # Password to use for the admin user

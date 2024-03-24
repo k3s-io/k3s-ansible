@@ -1,5 +1,6 @@
 ---
 k3s_context_name: k3s-ansible
 k3s_server_location: "/var/lib/rancher/k3s"
+k3s_agent_role_name: worker
 systemd_dir: "/etc/systemd/system"
 api_port: 6443

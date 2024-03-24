@@ -9,6 +9,7 @@
 
     - name: Download k3s install script
       delegate_to: 127.0.0.1
+      become: false
       ansible.builtin.get_url:
         url: https://get.k3s.io/
         timeout: 120

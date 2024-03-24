@@ -29,7 +29,7 @@
           kubernetes.core.helm:
             name: oauth2-proxy
             chart_ref: oauth2-proxy/oauth2-proxy
-            chart_version: "{{ traefik_auth_oauth_version }}"
+            chart_version: "{{ traefik_auth_oauth2_helm_version }}"
             create_namespace: true
             release_namespace: oauth2-proxy
             values: "{{ traefik_auth_oauth2_helm_values }}"
@@ -52,7 +52,7 @@
       kubernetes.core.helm:
         name: cert-manager
         chart_ref: jetstack/cert-manager
-        chart_version: "{{ cert_manager_version }}"
+        chart_version: "{{ cert_manager_helm_version }}"
         create_namespace: true
         release_namespace: cert-manager
         values:
@@ -79,7 +79,7 @@
       kubernetes.core.helm:
         name: longhorn
         chart_ref: longhorn/longhorn
-        chart_version: "{{ longhorn_version }}"
+        chart_version: "{{ longhorn_helm_version }}"
         create_namespace: true
         release_namespace: longhorn-system
         values: "{{ longhorn_helm_values }}"
@@ -110,7 +110,7 @@
       kubernetes.core.helm:
         name: sealed-secrets
         chart_ref: hashicorp/sealed-secrets
-        chart_version: "{{ sealed_secrets_version }}"
+        chart_version: "{{ sealed_secrets_helm_version }}"
         create_namespace: true
         release_namespace: sealed-secrets
         context: "{{ k3s_context_name }}"
@@ -148,7 +148,7 @@
       kubernetes.core.helm:
         name: argo-cd
         chart_ref: argo/argo-cd
-        chart_version: "{{ argocd_version }}"
+        chart_version: "{{ argocd_helm_version }}"
         create_namespace: true
         release_namespace: argo-cd
         values: "{{ argocd_helm_values }}"
