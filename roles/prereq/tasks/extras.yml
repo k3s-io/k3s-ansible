@@ -1,20 +1,38 @@
 ---
-# Update packages
 - name: Update apt repo and cache on all Debian/Ubuntu boxes
   apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
-  when: ansible_os_family == 'Debian' and os_upgrade
+  when: ansible_os_family == 'Debian'
 
-- name: Upgrade all packages on debian servers
-  apt: upgrade=yes force_apt_get=yes
-  when: ansible_os_family == 'Debian' and os_upgrade
+- name: Install base packages
+  block:
+    - name: Upgrade all packages on debian servers
+      apt: name={{ item }} state=latest
+      when: ansible_os_family == 'Debian'
+      with_items: "{{ base_packages }}"
 
-- name: Upgrade all packages on arch servers
-  pacman: update_cache=yes upgrade=yes
-  when: ansible_os_family == 'Archlinux' and os_upgrade
+    - name: Upgrade all packages on arch servers
+      pacman: name={{ item }} state=latest
+      when: ansible_os_family == 'Archlinux'
+      with_items: "{{ base_packages }}"
 
-- name: Upgrade all packages on redhat servers
-  yum: name=* state=latest
-  when: ansible_os_family == 'RedHat' and os_upgrade
+    - name: Upgrade all packages on redhat servers
+      yum: name={{ item }} state=latest
+      when: ansible_os_family == 'RedHat'
+      with_items: "{{ base_packages }}"
+
+- name: Update packages
+  block:
+    - name: Upgrade all packages on debian servers
+      apt: upgrade=yes force_apt_get=yes
+      when: ansible_os_family == 'Debian' and os_upgrade
+
+    - name: Upgrade all packages on arch servers
+      pacman: update_cache=yes upgrade=yes
+      when: ansible_os_family == 'Archlinux' and os_upgrade
+
+    - name: Upgrade all packages on redhat servers
+      yum: name=* state=latest
+      when: ansible_os_family == 'RedHat' and os_upgrade
 
 - name: Check if a reboot is needed on all servers
   register: reboot_required_file
@@ -78,3 +96,10 @@
     fstype: "{{ item.value.fstype | default('ext4') }}"
     state: mounted
   with_items: "{{ extra_volumes | dict2items }}"
+
+- name: Create required directories
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items: "{{ required_directories }}"

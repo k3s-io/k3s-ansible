@@ -1,6 +1,10 @@
 ---
-os_upgrade: false
-
+base_packages:
+  - curl
+  - net-tools
+  - open-iscsi
+  - vim
 etc_hosts_file: /etc/hosts
-
 extra_volumes: {}
+os_upgrade: false
+required_directories: []

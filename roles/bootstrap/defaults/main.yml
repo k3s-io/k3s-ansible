@@ -28,15 +28,12 @@ traefik_auth_oauth2_helm_values:
     reverse-proxy: true
     set-xauthrequest: true
     show-debug-on-error: "{{ traefik_auth_oauth2_debug }}"
-
   authenticatedEmailsFile:
     enabled: true
     restricted_access: "{{ traefik_auth_whitelist | split(',') | join('\n') }}"
-
   ingress:
     enabled: true
     className: traefik
-
     path: /oauth2
     hosts:
       - "{{ ingress_hostname }}"
@@ -48,30 +45,24 @@ cert_manager_cluster_issuer_secret_name:
 cert_manager_cluster_issuer_secret_data:
 
 longhorn_enabled: true
-longhorn_enable_only_workers: false
+longhorn_enabled_only_workers: false
 longhorn_helm_version: 1.6.0
 longhorn_replica_count: 2
 longhorn_data_dir: /var/lib/longhorn/
 longhorn_helm_values:
-  csi:
-    defaultDataPath: "{{ longhorn_data_dir }}"
   defaultSettings:
-    createDefaultDiskLabeledNodes: "true"
+    defaultDataPath: "{{ longhorn_data_dir }}"
   persistence:
     defaultClassReplicaCount: "{{ longhorn_replica_count }}"
     defaultNodeSelector:
-      enable: "{{ longhorn_enable_only_workers }}"
-      selector: "node-role.kubernetes.io/{{ k3s_agent_role_name }}"
+      enable: "{{ longhorn_enabled_only_workers }}"
+      selector: "WORKER_NODE"
   ingress:
     enabled: true
-
     ingressClassName: "traefik"
-
     host: "{{ ingress_hostname }}"
     path: /longhorn
-
     secureBackends: true
-
     annotations:
       cert-manager.io/cluster-issuer: default-cluster-issuer
       traefik.ingress.kubernetes.io/router.middlewares: "longhorn-system-middleware@kubernetescrd,{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
@@ -152,12 +143,9 @@ argocd_helm_values:
       - /argo-cd
     ingress:
       enabled: true
-
       ingressClassName: "traefik"
-
       hostname: "{{ ingress_hostname }}"
       path: /argo-cd
-
       annotations:
         cert-manager.io/cluster-issuer: default-cluster-issuer
         traefik.ingress.kubernetes.io/router.middlewares: "{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"

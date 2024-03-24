@@ -11,6 +11,8 @@ k3s_cluster:
           #     name: abc # Name of the device taken from /dev/abc.
           #     path: "/some-path" # Path to mount the volume.
           #     fstype: ext4 # Type of volume. By default: ext4.
+          # required_directories: # Create required directories if needed
+          #   - /var/lib/k3s
     agent:
       hosts:
         k3s-agent-1:
@@ -21,6 +23,8 @@ k3s_cluster:
           #     id: abc # Id of the device taken from /dev/abc.
           #     path: "/some-path" # Path to mount the volume.
           #     fstype: ext4 # Type of volume. By default: ext4.
+          # required_directories: # Create required directories if needed
+          #   - /var/lib/k3s
         k3s-agent-2:
           ansible_host: 192.0.2.52
 
@@ -29,6 +33,8 @@ k3s_cluster:
           #     name: abc # Name of the device taken from /dev/abc.
           #     path: "/some-path" # Path to mount the volume.
           #     fstype: ext4 # Type of volume. By default: ext4.
+          # required_directories: # Create required directories if needed
+          #   - /var/lib/k3s
 
   # Required Vars
   vars:
@@ -103,7 +109,7 @@ bootstrap:
     #   api-token: "some-token"
 
     # longhorn_enabled: true # false if we want to disable Longhorn installation.
-    # longhorn_enable_only_workers: false # true if we want to enable Longhorn only in workers.
+    # longhorn_enabled_only_workers: false # true if we want to enable Longhorn only in workers.
     # longhorn_replica_count: 2 # num of replicas that Longhorn will use. More replicas, more space required
     # longhorn_data_dir: /var/lib/longhorn/ # Default path for storing data on a host.
 

@@ -89,6 +89,23 @@
         namespace: longhorn-system
         definition: "{{ lookup('ansible.builtin.template', 'traefik_middleware_path.yaml.j2', template_vars = {'strip_prefix_path': 'longhorn'}) | from_yaml_all }}"
         state: present
+    - name: Longhorn - Tag master nodes
+      ansible.builtin.shell: |
+        kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["MASTER_NODE"]}]' -n longhorn-system
+      with_items: "{{ groups['server'] }}"
+    - name: Longhorn - Tag worker nodes
+      ansible.builtin.shell: |
+        kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["WORKER_NODE"]}]' -n longhorn-system
+      with_items: "{{ groups['agent'] }}"
+    - name: Longhorn - Tag create-default-disk in master nodes
+      ansible.builtin.shell: |
+        kubectl label node {{ item }} 'node.longhorn.io/create-default-disk=true'
+      with_items: "{{ groups['server'] }}"
+      when: "not longhorn_enabled_only_workers"
+    - name: Longhorn - Tag create-default-disk in worker nodes
+      ansible.builtin.shell: |
+        kubectl label node {{ item }} 'node.longhorn.io/create-default-disk=true'
+      with_items: "{{ groups['agent'] }}"
   when: "longhorn_enabled"
 
 - name: Sealed Secrets
