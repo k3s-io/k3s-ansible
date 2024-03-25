@@ -8,3 +8,4 @@ etc_hosts_file: /etc/hosts
 extra_volumes: {}
 os_upgrade: false
 required_directories: []
+wipe_extra_volumes: false

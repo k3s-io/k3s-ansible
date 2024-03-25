@@ -81,6 +81,7 @@
     dev: "/dev/{{ item.value.id }}"
     fstype: "{{ item.value.fstype | default('ext4') }}"
   with_items: "{{ extra_volumes | dict2items }}"
+  when: "{{ wipe_extra_volumes }}"
 
 - name: Ensure extra volumes directory
   file:
