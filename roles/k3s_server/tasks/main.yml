@@ -120,12 +120,12 @@
           changed_when:
             - csa_result.rc == 0
 
-        - name: Setup kubeconfig k3s-ansible context on control node
+        - name: Setup kubeconfig {{ cluster_context }} context on control node
           when: kubeconfig != "~/.kube/config"
           ansible.builtin.replace:
             path: "{{ kubeconfig }}"
             regexp: 'name: default'
-            replace: 'name: k3s-ansible'
+            replace: 'name: {{ cluster_context }}'
           delegate_to: 127.0.0.1
           become: false
 
@@ -133,7 +133,8 @@
           when: kubeconfig != "~/.kube/config"
           ansible.builtin.shell: |
             TFILE=$(mktemp)
-            KUBECONFIG={{ kubeconfig }} kubectl config set-context k3s-ansible --user=k3s-ansible --cluster=k3s-ansible
+            KUBECONFIG={{ kubeconfig }} kubectl config set-context {{cluster_context}} --user={{cluster_context}} --cluster={{cluster_context}}
+            KUBECONFIG={{ kubeconfig }} kubectl config use-context {{cluster_context}} 
             KUBECONFIG={{ kubeconfig }} kubectl config view --flatten > ${TFILE}
             mv ${TFILE} {{ kubeconfig }}
           delegate_to: 127.0.0.1
