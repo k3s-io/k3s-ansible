@@ -4,3 +4,4 @@ systemd_dir: "/etc/systemd/system"
 api_port: 6443
 kubeconfig: ~/.kube/config.new
 user_kubectl: true
+cluster_context: k3s-ansible

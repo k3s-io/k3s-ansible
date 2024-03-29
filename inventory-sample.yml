@@ -20,6 +20,7 @@ k3s_cluster:
     extra_agent_args: ""
 
   # Optional vars
+    # cluster_context: k3s-ansible
     # api_port: 6443
     # k3s_server_location: /var/lib/rancher/k3s
     # systemd_dir: /etc/systemd/system
