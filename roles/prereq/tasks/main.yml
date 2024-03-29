@@ -1,4 +1,7 @@
 ---
+- name: install nfs client
+  action: apt pkg=nfs-common state=present
+
 - name: Enforce minimum Ansible version
   ansible.builtin.assert:
     that:
