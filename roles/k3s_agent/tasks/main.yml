@@ -14,7 +14,7 @@
 # We should be downloading and installing the newer version only if we are in one of the following cases :
 #   - we couldn't get k3s installed version in the first task of this role
 #   - the installed version of K3s on the nodes is older than the requested version in ansible vars
-- name: Download artefact only if needed
+- name: Download artifact only if needed
   when: k3s_version_output.rc != 0 or installed_k3s_version is version(k3s_version, '<') and airgap_dir is undefined
   block:
     - name: Download K3s install script
