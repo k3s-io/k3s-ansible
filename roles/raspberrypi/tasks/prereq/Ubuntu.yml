@@ -1,6 +1,6 @@
 ---
 - name: Enable cgroup via boot commandline if not already enabled
-  when: lookup('fileglob', '/boot/firmware/cmdline.txt', errors='warn') | length == 0
+  when: lookup('fileglob', '/boot/firmware/cmdline.txt', errors='warn') | length > 0
   ansible.builtin.lineinfile:
     path: /boot/firmware/cmdline.txt
     backrefs: true
