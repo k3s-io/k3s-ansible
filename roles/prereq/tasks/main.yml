@@ -248,10 +248,10 @@
     - name: Make k3s config directory
       ansible.builtin.file:
         path: "/etc/rancher/k3s"
-        mode: "0755"
+        mode: 0755
         state: directory
     - name: Copy config values
       ansible.builtin.copy:
         content: "{{ registries_config_yaml }}"
         dest: "/etc/rancher/k3s/registries.yaml"
-        mode: "0644"
+        mode: 0644
