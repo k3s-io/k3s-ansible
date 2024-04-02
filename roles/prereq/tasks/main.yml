@@ -210,3 +210,17 @@
         dest: "/var/lib/rancher/k3s/server/manifests"
         mode: 0600
       loop: "{{ extra_manifests }}"
+
+- name: Setup optional private registry configuration
+  when: registries_config_yaml is defined
+  block:
+    - name: Make k3s config directory
+      ansible.builtin.file:
+        path: "/etc/rancher/k3s"
+        mode: 0755
+        state: directory
+    - name: Copy config values
+      ansible.builtin.copy:
+        content: "{{ registries_config_yaml }}"
+        dest: "/etc/rancher/k3s/registries.yaml"
+        mode: 0644
