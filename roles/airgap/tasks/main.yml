@@ -25,6 +25,25 @@
         group: root
         mode: 0755
 
+    - name: Download install docker script
+      delegate_to: localhost
+      ansible.builtin.get_url:
+        # don't use the docker provided script https://get.docker.com as it doesn't seem to work well with k3s
+        url: https://releases.rancher.com/install-docker/20.10.sh
+        timeout: 120
+        dest: "{{ airgap_dir }}/install-docker.sh"
+        mode: 0755
+      when: use_docker_runtime
+
+    - name: Distribute install docker script
+      ansible.builtin.copy:
+        src: "{{ airgap_dir }}/install-docker.sh"
+        dest: /usr/local/bin/install-docker.sh
+        owner: root
+        group: root
+        mode: 0755
+      when: use_docker_runtime
+
     - name: Distribute K3s binary
       ansible.builtin.copy:
         src: "{{ airgap_dir }}/k3s"
@@ -108,6 +127,12 @@
             - "{{ airgap_dir }}/k3s-airgap-images-arm.tar.gz"
             - "{{ airgap_dir }}/k3s-airgap-images-arm.tar"
           skip: true
+
+    - name: Run install docker script
+      ansible.builtin.command:
+        cmd: /usr/local/bin/install-docker.sh
+      changed_when: true
+      when: use_docker_runtime
 
     - name: Run K3s Install [server]
       ansible.builtin.command:

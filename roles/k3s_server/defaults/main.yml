@@ -5,3 +5,5 @@ api_port: 6443
 kubeconfig: ~/.kube/config.new
 user_kubectl: true
 cluster_context: k3s-ansible
+use_docker_runtime: false
+node_name: "{{ inventory_hostname }}"

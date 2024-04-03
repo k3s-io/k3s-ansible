@@ -25,4 +25,4 @@ Restart=always
 RestartSec=5s
 ExecStartPre=-/sbin/modprobe br_netfilter
 ExecStartPre=-/sbin/modprobe overlay
-ExecStart=/usr/local/bin/k3s server --data-dir {{ k3s_server_location }} --token {{ token }} {{ extra_server_args }} 
+ExecStart=/usr/local/bin/k3s server --node-name {{ node_name }} --data-dir {{ k3s_server_location }} --token {{ token }} {{ '--docker' if use_docker_runtime else '' }} {{ extra_server_args }}
