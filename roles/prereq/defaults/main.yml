@@ -1,2 +1,13 @@
 ---
+# Zone for inter-node traffic
+k3s_firewalld_node_zone: internal
+
+# List of IP addresses or cidr masks of your nodes
+k3s_firewalld_node_cidrs: []
+
+# List of public services
+k3s_firewalld_public_ports:
+  - 80/tcp
+  - 443/tcp
+
 api_port: 6443

@@ -60,7 +60,7 @@ Setting up a loadbalancer or VIP beforehand to use as the API endpoint is possib
 Start provisioning of the cluster using the following command:
 
 ```bash
-ansible-playbook playbook/site.yml -i inventory.yml
+ansible-playbook playbooks/site.yml -i inventory.yml
 ```
 
 ## Upgrading
@@ -68,7 +68,7 @@ ansible-playbook playbook/site.yml -i inventory.yml
 A playbook is provided to upgrade K3s on all nodes in the cluster. To use it, update `k3s_version` with the desired version in `inventory.yml` and run:
 
 ```bash
-ansible-playbook playbook/upgrade.yml -i inventory.yml
+ansible-playbook playbooks/upgrade.yml -i inventory.yml
 ```
 
 ## Airgap Install
@@ -77,7 +77,7 @@ Airgap installation is supported via the `airgap_dir` variable. This variable sh
 
 An example folder for an x86_64 cluster:
 ```bash
-$ ls ./playbook/my-airgap/
+$ ls ./playbooks/my-airgap/
 total 248M
 -rwxr-xr-x 1 $USER $USER  58M Nov 14 11:28 k3s
 -rw-r--r-- 1 $USER $USER 190M Nov 14 11:30 k3s-airgap-images-amd64.tar.gz
