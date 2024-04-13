@@ -57,6 +57,12 @@ An odd number of server nodes is required (3,5,7). Read the [official documentat
 Setting up a loadbalancer or VIP beforehand to use as the API endpoint is possible but not covered here.
 
 
+For Debian/Ubuntu OS, ensure python3-apt is installed in the machines:
+
+```bash
+ansible k3s_cluster -i inventory.yml -b -m shell -a "apt-get update && apt-get install -y python3-apt"
+```
+
 Start provisioning of the cluster using the following command:
 
 ```bash

@@ -3,6 +3,7 @@ base_packages:
   - curl
   - net-tools
   - open-iscsi
+  - openssh-client
   - vim
 etc_hosts_file: /etc/hosts
 extra_volumes: {}

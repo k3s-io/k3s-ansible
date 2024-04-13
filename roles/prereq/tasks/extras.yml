@@ -36,7 +36,8 @@
 
 - name: Check if a reboot is needed on all servers
   register: reboot_required_file
-  stat: path=/var/run/reboot-required get_md5=no
+  stat:
+    path: /var/run/reboot-required
 
 - name: Reboot the box if kernel updated
   reboot:
@@ -81,7 +82,7 @@
     dev: "/dev/{{ item.value.id }}"
     fstype: "{{ item.value.fstype | default('ext4') }}"
   with_items: "{{ extra_volumes | dict2items }}"
-  when: "{{ wipe_extra_volumes }}"
+  when: "wipe_extra_volumes"
 
 - name: Ensure extra volumes directory
   file:
