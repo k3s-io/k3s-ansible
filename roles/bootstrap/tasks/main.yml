@@ -92,10 +92,18 @@
     - name: Longhorn - Tag master nodes
       ansible.builtin.shell: |
         kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["MASTER_NODE"]}]' -n longhorn-system
+      retries: 5
+      delay: 10
+      register: result
+      until: result.rc == 0
       with_items: "{{ groups['server'] }}"
     - name: Longhorn - Tag worker nodes
       ansible.builtin.shell: |
         kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["WORKER_NODE"]}]' -n longhorn-system
+      retries: 5
+      delay: 10
+      register: result
+      until: result.rc == 0
       with_items: "{{ groups['agent'] }}"
     - name: Longhorn - Tag create-default-disk in master nodes
       ansible.builtin.shell: |
