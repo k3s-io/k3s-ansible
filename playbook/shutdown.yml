@@ -1,25 +1,27 @@
 ---
-# - name: Drain nodes from k3s cluster
-#   hosts: k3s_cluster
-#   become: true
-#   tasks:
-#     - name: Drain node [agent]
-#       when: "'agent' in group_names"
-#       ansible.builtin.shell: |
-#         kubectl drain {{ inventory_hostname }} --ignore-daemonsets
+- name: Drain nodes from k3s cluster
+  hosts: k3s_cluster
+  become: true
+  tasks:
+    - name: Drain node [agent]
+      when: "'agent' in group_names"
+      ansible.builtin.shell: |
+        kubectl drain {{ inventory_hostname }} --ignore-daemonsets
+  ignore_errors: true
 
-# - name: Stop k3s cluster
-#   hosts: k3s_cluster
-#   become: true
-#   tasks:
-#     - name: Stop K3s [server]
-#       when: "'server' in group_names"
-#       ansible.builtin.command:
-#         cmd: k3s-killall.sh
-#     - name: Stop K3s [agent]
-#       when: "'agent' in group_names"
-#       ansible.builtin.command:
-#         cmd: k3s-killall.sh
+- name: Stop k3s cluster
+  hosts: k3s_cluster
+  become: true
+  tasks:
+    - name: Stop K3s [server]
+      when: "'server' in group_names"
+      ansible.builtin.command:
+        cmd: k3s-killall.sh
+    - name: Stop K3s [agent]
+      when: "'agent' in group_names"
+      ansible.builtin.command:
+        cmd: k3s-killall.sh
+  ignore_errors: true
 
 - name: Halt servers to gracefully poweroff
   hosts: k3s_cluster
