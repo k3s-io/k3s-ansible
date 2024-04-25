@@ -1,8 +1,10 @@
 {
-	"name": "Python 3",
+	"name": "Python3.12",
 	"image": "mcr.microsoft.com/devcontainers/python:1-3.12-bullseye",
 	"features": {
-		"ghcr.io/devcontainers-contrib/features/poetry:2": {}
+		"ghcr.io/devcontainers-contrib/features/poetry:2": {
+			"version": "1.8.2"
+		}
 	},
 	"postCreateCommand": "poetry install && echo 'source .venv/bin/activate' >> $HOME/.bashrc",
 	"customizations": {
