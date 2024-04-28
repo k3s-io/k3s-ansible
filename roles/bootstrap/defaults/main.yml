@@ -73,7 +73,7 @@ sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json
 sealed_secrets_restore: "false"
 
 argocd_enabled: true
-argocd_helm_version: 6.6.0
+argocd_helm_version: 6.7.17
 argocd_namespaces:
   - default
 argocd_helm_values:
@@ -94,18 +94,28 @@ argocd_helm_values:
               - bash
               - "-c"
               - |
-                if [[ -v ENV_NAME ]]; then
-                  helmfile -n "$ARGOCD_APP_NAMESPACE" -e $ENV_NAME template --include-crds -q
-                elif [[ -v ARGOCD_ENV_ENV_NAME ]]; then
-                  helmfile -n "$ARGOCD_APP_NAMESPACE" -e "$ARGOCD_ENV_ENV_NAME" template --include-crds -q
-                else
-                  helmfile -n "$ARGOCD_APP_NAMESPACE" template --include-crds -q
+                PARAMS=()
+
+                if [[ -v ARGOCD_APP_NAMESPACE ]]; then
+                  PARAMS+=(-n $ARGOCD_APP_NAMESPACE)
                 fi
+
+                if [[ -v ENV_NAME ]]; then
+                  PARAMS+=(-e $ENV_NAME)
+                elif [[ -v ARGOCD_ENV_ENV_NAME ]]; then
+                  PARAMS+=(-e $ARGOCD_ENV_ENV_NAME)
+                fi
+
+                PARAMS+=(template --include-crds -q)
+
+                helmfile "${PARAMS[@]}"
           lockRepo: false
   repoServer:
+    clusterRoleRules:
+      enabled: true
     extraContainers:
       - name: helmfile
-        image: ghcr.io/helmfile/helmfile:v0.162.0
+        image: ghcr.io/helmfile/helmfile:v0.163.1
         command: ["/var/run/argocd/argocd-cmp-server"]
         env:
           - name: HELM_CACHE_HOME
