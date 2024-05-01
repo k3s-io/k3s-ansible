@@ -73,7 +73,7 @@ sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json
 sealed_secrets_restore: "false"
 
 argocd_enabled: true
-argocd_helm_version: 6.7.17
+argocd_helm_version: 6.7.18
 argocd_namespaces:
   - default
 argocd_helm_values:
@@ -88,7 +88,7 @@ argocd_helm_values:
         helmfile:
           allowConcurrency: true
           discover:
-            fileName: helmfile.yaml
+            fileName: "helmfile.yaml*"
           generate:
             command:
               - bash
