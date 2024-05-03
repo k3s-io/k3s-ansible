@@ -1,7 +1,7 @@
 ---
 k3s_server_location: "/var/lib/rancher/k3s"
-systemd_dir: "/etc/systemd/system"
-api_port: 6443
-kubeconfig: ~/.kube/config.new
-user_kubectl: true
-cluster_context: k3s-ansible
+systemd_dir: "/etc/systemd/system"  # noqa var-naming[no-role-prefix]
+api_port: 6443  # noqa var-naming[no-role-prefix]
+kubeconfig: ~/.kube/config.new  # noqa var-naming[no-role-prefix]
+user_kubectl: true  # noqa var-naming[no-role-prefix]
+cluster_context: k3s-ansible  # noqa var-naming[no-role-prefix]
