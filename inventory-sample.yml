@@ -47,6 +47,6 @@ k3s_cluster:
     #   YAML here will be placed as the content of /etc/rancher/k3s/config.yaml
     #   See https://docs.k3s.io/installation/configuration#configuration-file
     # registries_config_yaml:  |
-      # Containerd can be configured to connect to private registries and use them to pull images as needed by the kubelet.
-      # YAML here will be placed as the content of /etc/rancher/k3s/registries.yaml
-      # See https://docs.k3s.io/installation/private-registry
+    #   Containerd can be configured to connect to private registries and use them to pull images as needed by the kubelet.
+    #   YAML here will be placed as the content of /etc/rancher/k3s/registries.yaml
+    #   See https://docs.k3s.io/installation/private-registry
