@@ -25,12 +25,6 @@ metadata:
     traefik.ingress.kubernetes.io/router.middlewares: "kube-system-traefik-dashboard@kubernetescrd,{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
     ingress.kubernetes.io/force-ssl-redirect: "true"
     ingress.kubernetes.io/ssl-redirect: "true"
-
-    gethomepage.dev/enabled: "true"
-    gethomepage.dev/name: "Traefik"
-    gethomepage.dev/description: "The Cloud Native Application Proxy"
-    gethomepage.dev/group: "System"
-    gethomepage.dev/icon: "traefik.png"
 spec:
   ingressClassName: "traefik"
   rules:
@@ -48,12 +42,3 @@ spec:
     - secretName: "{{ ingress_hostname }}-tls"
       hosts:
         - "{{ ingress_hostname }}"
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: traefik-dashboard
-spec:
-  replacePathRegex:
-    regex: "^/traefik/(.*)"
-    replacement: "/dashboard/$1"

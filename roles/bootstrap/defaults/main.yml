@@ -34,7 +34,7 @@ traefik_auth_oauth2_helm_values:
   ingress:
     enabled: true
     className: traefik
-    path: /oauth2/
+    path: /oauth2
     hosts:
       - "{{ ingress_hostname }}"
 
@@ -161,7 +161,7 @@ argocd_helm_values:
       enabled: true
       ingressClassName: "traefik"
       hostname: "{{ ingress_hostname }}"
-      path: /argo-cd/
+      path: /argo-cd
       annotations:
         cert-manager.io/cluster-issuer: default-cluster-issuer
         traefik.ingress.kubernetes.io/router.middlewares: "{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
