@@ -70,7 +70,7 @@ longhorn_helm_values:
       gethomepage.dev/enabled: "true"
       gethomepage.dev/name: "Longhorn"
       gethomepage.dev/description: "Cloud-Native distributed storage built on and for Kubernetes"
-      gethomepage.dev/group: "Core"
+      gethomepage.dev/group: "System"
       gethomepage.dev/icon: "longhorn.png"
 
 sealed_secrets_enabled: true
@@ -169,5 +169,5 @@ argocd_helm_values:
       gethomepage.dev/enabled: "true"
       gethomepage.dev/name: "Argo CD"
       gethomepage.dev/description: "Declarative Continuous Deployment for Kubernetes"
-      gethomepage.dev/group: "Core"
+      gethomepage.dev/group: "System"
       gethomepage.dev/icon: "argocd.png"
