@@ -67,6 +67,12 @@ longhorn_helm_values:
       cert-manager.io/cluster-issuer: default-cluster-issuer
       traefik.ingress.kubernetes.io/router.middlewares: "longhorn-system-middleware@kubernetescrd,{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
 
+      gethomepage.dev/enabled: "true"
+      gethomepage.dev/name: "Longhorn"
+      gethomepage.dev/description: "Cloud-Native distributed storage built on and for Kubernetes"
+      gethomepage.dev/group: "Core"
+      gethomepage.dev/icon: "longhorn.png"
+
 sealed_secrets_enabled: true
 sealed_secrets_helm_version: 2.15.0
 sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json
@@ -159,3 +165,9 @@ argocd_helm_values:
       annotations:
         cert-manager.io/cluster-issuer: default-cluster-issuer
         traefik.ingress.kubernetes.io/router.middlewares: "{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
+
+      gethomepage.dev/enabled: "true"
+      gethomepage.dev/name: "Argo CD"
+      gethomepage.dev/description: "Declarative Continuous Deployment for Kubernetes"
+      gethomepage.dev/group: "Core"
+      gethomepage.dev/icon: "argocd.png"
