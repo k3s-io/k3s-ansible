@@ -22,7 +22,7 @@ metadata:
   name: traefik-tls
   annotations:
     cert-manager.io/cluster-issuer: default-cluster-issuer
-    traefik.ingress.kubernetes.io/router.middlewares: "kube-system-traefik-dashboard@kubernetescrd,{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
+    traefik.ingress.kubernetes.io/router.middlewares: "{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
     ingress.kubernetes.io/force-ssl-redirect: "true"
     ingress.kubernetes.io/ssl-redirect: "true"
 spec:
