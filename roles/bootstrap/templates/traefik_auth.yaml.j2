@@ -1,4 +1,4 @@
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: traefik-auth-errors
@@ -11,7 +11,7 @@ spec:
       port: 80
     query: "/oauth2/sign_in?rd={url}"
 ---
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: traefik-auth-forward
@@ -30,7 +30,7 @@ spec:
       - "X-Forwarded-For"
       - "X-Forwarded-Host"
 ---
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: traefik-auth-https-only
@@ -38,7 +38,7 @@ spec:
   redirectScheme:
     scheme: https
 # ---
-# apiVersion: traefik.containo.us/v1alpha1
+# apiVersion: traefik.io/v1alpha1
 # kind: Middleware
 # metadata:
 #   name: traefik-auth-known-ips
@@ -48,7 +48,7 @@ spec:
 #     - 192.168.1.7
 #     - 127.0.0.1/32
 ---
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: traefik-auth

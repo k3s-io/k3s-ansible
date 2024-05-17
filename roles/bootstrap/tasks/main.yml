@@ -16,7 +16,7 @@
         - name: Traefik - Force TLS
           kubernetes.core.k8s:
             namespace: kube-system
-            definition: "{{ lookup('ansible.builtin.template', 'traefik_tls.yaml.j2', template_vars = {}) | from_yaml_all }}"
+            definition: "{{ lookup('ansible.builtin.template', 'traefik_dashboard.yaml.j2', template_vars = {}) | from_yaml_all }}"
             state: present
     - name: Traefik - Install chart
       block:

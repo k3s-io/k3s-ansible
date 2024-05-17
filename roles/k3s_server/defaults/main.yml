@@ -2,3 +2,11 @@
 kubeconfig: ~/.kube/config
 kubeconfig_new: ~/.kube/config.new
 user_kubectl: true
+
+traefik_manifest_extra: |
+  # custom values
+      globalArguments:
+      - --providers.kubernetescrd.allowexternalnameservices=true
+      - --providers.kubernetescrd.allowCrossNamespace=true
+      - --api.insecure=true
+      - --log.level=info
