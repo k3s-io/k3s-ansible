@@ -128,13 +128,25 @@ A playbook is provided to bootstrap the K8s cluster with base services ([cert-ma
 ansible-playbook playbook/bootstrap.yml -i inventory.yml
 ```
 
-## Shutdown
+## Other commands
 
-Furthermore, a shutdown playbook can be executed to shutdown the K8s cluster in a safe manner. Run:
+Furthermore, there are other playbook that helps you to manage the cluster:
 
-```bash
-ansible-playbook playbook/shutdown.yml -i inventory.yml
-```
+- Reboot the K8s cluster in a safe manner, run:
+
+  ```bash
+  ansible-playbook playbook/reboot.yml -i inventory.yml
+  ```
+- Shutdown the K8s cluster in a safe manner, run:
+
+  ```bash
+  ansible-playbook playbook/shutdown.yml -i inventory.yml
+  ```
+- Execute shell command:
+
+  ```bash
+  ansible -i inventory.yml k3s_cluster -m shell -a 'dietpi-update 1'
+  ```
 
 ### Debugging
 
