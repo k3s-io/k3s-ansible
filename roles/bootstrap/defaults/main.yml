@@ -61,7 +61,7 @@ longhorn_helm_values:
     enabled: true
     ingressClassName: "traefik"
     host: "{{ ingress_hostname }}"
-    path: /longhorn/
+    path: /longhorn
     pathType: Prefix
     secureBackends: false
     annotations:
@@ -70,10 +70,11 @@ longhorn_helm_values:
 
       gethomepage.dev/enabled: "true"
       gethomepage.dev/name: "Longhorn"
+      gethomepage.dev/href: "https://{{ ingress_hostname }}/longhorn/"
+      gethomepage.dev/pod-selector: "app=longhorn-ui"
       gethomepage.dev/description: "Cloud-Native distributed storage built on and for Kubernetes"
       gethomepage.dev/group: "System"
       gethomepage.dev/icon: "longhorn.png"
-      gethomepage.dev/pod-selector: "app=longhorn-ui"
 
 sealed_secrets_enabled: true
 sealed_secrets_helm_version: 2.15.0
@@ -165,12 +166,15 @@ argocd_helm_values:
       hostname: "{{ ingress_hostname }}"
       path: /argo-cd
       annotations:
+        ingress.kubernetes.io/force-ssl-redirect: "true"
+        ingress.kubernetes.io/ssl-redirect: "true"
         traefik.ingress.kubernetes.io/router.entrypoints: websecure
         traefik.ingress.kubernetes.io/router.middlewares: "{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
 
         gethomepage.dev/enabled: "true"
         gethomepage.dev/name: "Argo CD"
+        gethomepage.dev/href: "https://{{ ingress_hostname }}/argo-cd"
+        gethomepage.dev/pod-selector: "app.kubernetes.io/name=argocd-server"
         gethomepage.dev/description: "Declarative Continuous Deployment for Kubernetes"
         gethomepage.dev/group: "Automation"
         gethomepage.dev/icon: "argocd.png"
-        gethomepage.dev/pod-selector: "app.kubernetes.io/name=argocd-server"
