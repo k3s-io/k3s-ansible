@@ -22,10 +22,9 @@ kind: Ingress
 metadata:
   name: traefik-dashboard
   annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
     cert-manager.io/cluster-issuer: default-cluster-issuer
     traefik.ingress.kubernetes.io/router.middlewares: "kube-system-traefik-dashboard-strip-prefix@kubernetescrd{% if traefik_auth_enabled %},oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
-    ingress.kubernetes.io/force-ssl-redirect: "true"
-    ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: "traefik"
   rules:

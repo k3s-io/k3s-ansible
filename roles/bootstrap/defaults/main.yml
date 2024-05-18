@@ -46,7 +46,7 @@ cert_manager_cluster_issuer_secret_data:
 
 longhorn_enabled: true
 longhorn_enabled_only_workers: false
-longhorn_helm_version: 1.6.0
+longhorn_helm_version: 1.6.1
 longhorn_replica_count: 2
 longhorn_data_dir: /var/lib/longhorn/
 longhorn_helm_values:
@@ -63,9 +63,9 @@ longhorn_helm_values:
     host: "{{ ingress_hostname }}"
     path: /longhorn/
     pathType: Prefix
-    secureBackends: true
+    secureBackends: false
     annotations:
-      cert-manager.io/cluster-issuer: default-cluster-issuer
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.middlewares: "longhorn-system-middleware@kubernetescrd,{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
 
       gethomepage.dev/enabled: "true"
@@ -73,6 +73,7 @@ longhorn_helm_values:
       gethomepage.dev/description: "Cloud-Native distributed storage built on and for Kubernetes"
       gethomepage.dev/group: "System"
       gethomepage.dev/icon: "longhorn.png"
+      gethomepage.dev/pod-selector: "app=longhorn-ui"
 
 sealed_secrets_enabled: true
 sealed_secrets_helm_version: 2.15.0
@@ -164,11 +165,12 @@ argocd_helm_values:
       hostname: "{{ ingress_hostname }}"
       path: /argo-cd
       annotations:
-        cert-manager.io/cluster-issuer: default-cluster-issuer
+        traefik.ingress.kubernetes.io/router.entrypoints: websecure
         traefik.ingress.kubernetes.io/router.middlewares: "{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
 
-      gethomepage.dev/enabled: "true"
-      gethomepage.dev/name: "Argo CD"
-      gethomepage.dev/description: "Declarative Continuous Deployment for Kubernetes"
-      gethomepage.dev/group: "Automation"
-      gethomepage.dev/icon: "argocd.png"
+        gethomepage.dev/enabled: "true"
+        gethomepage.dev/name: "Argo CD"
+        gethomepage.dev/description: "Declarative Continuous Deployment for Kubernetes"
+        gethomepage.dev/group: "Automation"
+        gethomepage.dev/icon: "argocd.png"
+        gethomepage.dev/pod-selector: "app.kubernetes.io/name=argocd-server"
