@@ -169,5 +169,5 @@ argocd_helm_values:
       gethomepage.dev/enabled: "true"
       gethomepage.dev/name: "Argo CD"
       gethomepage.dev/description: "Declarative Continuous Deployment for Kubernetes"
-      gethomepage.dev/group: "System"
+      gethomepage.dev/group: "Automation"
       gethomepage.dev/icon: "argocd.png"
