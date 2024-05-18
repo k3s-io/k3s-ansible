@@ -44,14 +44,14 @@ spec:
       hosts:
         - "{{ ingress_hostname }}"
 ---
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: traefik-dashboard-strip-prefix
 spec:
   stripPrefix:
     prefixes:
-    - /traefik
+      - /traefik
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
@@ -59,12 +59,12 @@ metadata:
   name: traefik-dashboard
 spec:
   entryPoints:
-  - websecure
+    - websecure
   routes:
-  - kind: Rule
-    match: "Host(`{{ ingress_hostname }}`) && HeadersRegexp(`Referer`, `.*/traefik/.*`)"
-    middlewares:
-      - name: traefik-dashboard-strip-prefix
-    services:
-    - kind: TraefikService
-      name: api@internal
+    - kind: Rule
+      match: "Host(`{{ ingress_hostname }}`) && HeadersRegexp(`Referer`, `.*/traefik/.*`)"
+      middlewares:
+        - name: traefik-dashboard-strip-prefix
+      services:
+        - kind: TraefikService
+          name: api@internal
