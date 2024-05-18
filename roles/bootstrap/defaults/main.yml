@@ -61,7 +61,7 @@ longhorn_helm_values:
     enabled: true
     ingressClassName: "traefik"
     host: "{{ ingress_hostname }}"
-    path: /longhorn
+    path: /longhorn/
     pathType: Prefix
     secureBackends: true
     annotations:
