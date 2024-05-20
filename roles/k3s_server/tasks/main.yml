@@ -55,10 +55,10 @@
         mode: 0644
 
 - name: Init first server node
-  when: inventory_hostname == groups['server'][0]
+  when: inventory_hostname == groups[server_group][0]
   block:
     - name: Copy K3s service file [Single]
-      when: groups['server'] | length == 1
+      when: groups[server_group] | length == 1
       ansible.builtin.template:
         src: "k3s-single.service.j2"
         dest: "{{ systemd_dir }}/k3s.service"
@@ -67,7 +67,7 @@
         mode: 0644
 
     - name: Copy K3s service file [HA]
-      when: groups['server'] | length > 1
+      when: groups[server_group] | length > 1
       ansible.builtin.template:
         src: "k3s-cluster-init.service.j2"
         dest: "{{ systemd_dir }}/k3s.service"
@@ -90,7 +90,7 @@
         enabled: true
 
     - name: Pause to allow first server startup
-      when: (groups['server'] | length) > 1
+      when: (groups[server_group] | length) > 1
       ansible.builtin.pause:
         seconds: 10
 
@@ -144,11 +144,11 @@
 
 - name: Start other server if any and verify status
   when:
-    - (groups['server'] | length) > 1
-    - inventory_hostname != groups['server'][0]
+    - (groups[server_group] | length) > 1
+    - inventory_hostname != groups[server_group][0]
   block:
     - name: Copy K3s service file [HA]
-      when: groups['server'] | length > 1
+      when: groups[server_group] | length > 1
       ansible.builtin.template:
         src: "k3s-ha.service.j2"
         dest: "{{ systemd_dir }}/k3s.service"
@@ -164,12 +164,12 @@
         enabled: true
 
     - name: Verify that all server nodes joined
-      when: (groups['server'] | length) > 1
+      when: (groups[server_group] | length) > 1
       ansible.builtin.command:
         cmd: >
           k3s kubectl get nodes -l "node-role.kubernetes.io/control-plane=true" -o=jsonpath="{.items[*].metadata.name}"
       register: nodes
-      until: nodes.rc == 0 and (nodes.stdout.split() | length) == (groups['server'] | length)
+      until: nodes.rc == 0 and (nodes.stdout.split() | length) == (groups[server_group] | length)
       retries: 20
       delay: 10
       changed_when: false
