@@ -204,3 +204,20 @@ argocd_helm_values:
       enabled: true
       serviceMonitor:
         enabled: true
+
+k3s_helm_config:
+  - name: traefik
+    namespace: kube-system
+    values_content: |
+      # custom values from https://github.com/traefik/traefik-helm-chart/blob/master/traefik/values.yaml
+      globalArguments:
+      - --providers.kubernetescrd.allowexternalnameservices=true
+      - --providers.kubernetescrd.allowCrossNamespace=true
+      - --api.insecure=true
+      - --log.level=info
+      metrics:
+        prometheus:
+          service:
+            enabled: true
+          serviceMonitor:
+            interval: 30s

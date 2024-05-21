@@ -1,0 +1,11 @@
+#{%- for config in k3s_helm_config %}
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: {{ config.name }}
+  namespace: {{ config.namespace }}
+spec:
+  valuesContent: |-
+    {{ config.values_content | to_nice_yaml | trim | indent(4)}}
+#{%- endfor %}

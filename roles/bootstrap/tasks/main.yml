@@ -9,6 +9,12 @@
     kubectl config use-context {{ k3s_context_name }}
   changed_when: true
 
+- name: Set custom config for K3s Helm charts
+  kubernetes.core.k8s:
+    namespace: oauth2-proxy
+    definition: "{{ lookup('ansible.builtin.template', 'k3s_helm_config.yaml.j2', template_vars = {}) | from_yaml_all }}"
+    state: present
+
 - name: Traefik
   block:
     - name: Traefik - TLS
