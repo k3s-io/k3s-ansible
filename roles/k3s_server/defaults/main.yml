@@ -4,9 +4,16 @@ kubeconfig_new: ~/.kube/config.new
 user_kubectl: true
 
 traefik_manifest_extra: |
-  # custom values
+  # custom values from https://github.com/traefik/traefik-helm-chart/blob/master/traefik/values.yaml
       globalArguments:
       - --providers.kubernetescrd.allowexternalnameservices=true
       - --providers.kubernetescrd.allowCrossNamespace=true
       - --api.insecure=true
       - --log.level=info
+      metrics:
+        prometheus:
+          service:
+            enabled: true
+          serviceMonitor:
+            interval: 30s
+

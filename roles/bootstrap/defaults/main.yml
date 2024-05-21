@@ -57,6 +57,9 @@ longhorn_helm_values:
     defaultNodeSelector:
       enable: "{{ longhorn_enabled_only_workers }}"
       selector: "WORKER_NODE"
+  metrics:
+    serviceMonitor:
+      enabled: true
   ingress:
     enabled: true
     ingressClassName: "traefik"
@@ -119,9 +122,23 @@ argocd_helm_values:
 
                 helmfile "${PARAMS[@]}"
           lockRepo: false
+  applicationSet:
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+  dex:
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
   repoServer:
     clusterRoleRules:
       enabled: true
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
     extraContainers:
       - name: helmfile
         image: ghcr.io/helmfile/helmfile:v0.163.1
@@ -160,6 +177,10 @@ argocd_helm_values:
       - /argo-cd
       - --rootpath
       - /argo-cd
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
     ingress:
       enabled: true
       ingressClassName: "traefik"
@@ -178,3 +199,8 @@ argocd_helm_values:
         gethomepage.dev/description: "Declarative Continuous Deployment for Kubernetes"
         gethomepage.dev/group: "Automation"
         gethomepage.dev/icon: "argocd.png"
+  controller:
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
