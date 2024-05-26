@@ -1,25 +1,25 @@
 ---
 ingress_hostname: ""
 
-traefik_auth_enabled: false
-traefik_auth_provider:
-traefik_auth_client_id:
-traefik_auth_client_secret:
-traefik_auth_whitelist:
-traefik_auth_cookie_expiration: "168h"
-traefik_auth_oauth2_helm_version: 7.1.0
-traefik_auth_oauth2_debug: true
-traefik_auth_oauth2_helm_values:
+auth_enabled: false
+auth_provider: "github"
+auth_client_id:
+auth_client_secret:
+auth_whitelist:
+auth_cookie_expiration: "168h"
+auth_oauth2_helm_version: 7.1.0
+auth_oauth2_debug: true
+auth_oauth2_helm_values:
   fullnameOverride: oauth2-proxy
   config:
-    clientID: "{{ traefik_auth_client_id }}"
-    clientSecret: "{{ traefik_auth_client_secret }}"
+    clientID: "{{ auth_client_id }}"
+    clientSecret: "{{ auth_client_secret }}"
     cookieSecret: "{{ lookup('community.general.random_string', length=16, special=False) }}"
   extraArgs:
-    provider: "{{ traefik_auth_provider }}"
+    provider: "{{ auth_provider }}"
     whitelist-domain: "{{ ingress_hostname }}"
     cookie-domain: "{{ ingress_hostname }}"
-    cookie-expire: "{{ traefik_auth_cookie_expiration }}"
+    cookie-expire: "{{ auth_cookie_expiration }}"
     cookie-csrf-expire: "1h"
     cookie-samesite: "lax"
     cookie-secure: false
@@ -27,10 +27,8 @@ traefik_auth_oauth2_helm_values:
     pass-user-headers: true
     reverse-proxy: true
     set-xauthrequest: true
-    show-debug-on-error: "{{ traefik_auth_oauth2_debug }}"
-  authenticatedEmailsFile:
-    enabled: true
-    restricted_access: "{{ traefik_auth_whitelist | split(',') | join('\n') }}"
+    show-debug-on-error: "{{ auth_oauth2_debug }}"
+    github-org: "{{ auth_organization }}"
   ingress:
     enabled: true
     className: traefik
@@ -69,7 +67,7 @@ longhorn_helm_values:
     secureBackends: false
     annotations:
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      traefik.ingress.kubernetes.io/router.middlewares: "longhorn-system-middleware@kubernetescrd,{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
+      traefik.ingress.kubernetes.io/router.middlewares: "longhorn-system-middleware@kubernetescrd,{% if auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
 
       gethomepage.dev/enabled: "true"
       gethomepage.dev/name: "Longhorn"
@@ -190,7 +188,7 @@ argocd_helm_values:
         ingress.kubernetes.io/force-ssl-redirect: "true"
         ingress.kubernetes.io/ssl-redirect: "true"
         traefik.ingress.kubernetes.io/router.entrypoints: websecure
-        traefik.ingress.kubernetes.io/router.middlewares: "{% if traefik_auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
+        traefik.ingress.kubernetes.io/router.middlewares: "{% if auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
 
         gethomepage.dev/enabled: "true"
         gethomepage.dev/name: "Argo CD"

@@ -24,7 +24,7 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: default-cluster-issuer
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.middlewares: "kube-system-traefik-dashboard-strip-prefix@kubernetescrd{% if traefik_auth_enabled %},oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
+    traefik.ingress.kubernetes.io/router.middlewares: "kube-system-traefik-dashboard-strip-prefix@kubernetescrd{% if auth_enabled %},oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
 
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Traefik"

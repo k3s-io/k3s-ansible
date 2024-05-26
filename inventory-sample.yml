@@ -76,12 +76,11 @@ bootstrap:
     # k3s_context_name: k3s-ansible
     # ingress_hostname: "example.com" # hostname used in all the Ingress resources
 
-    # traefik_auth_enabled: false # false if we want to enable Traefik Oauth authentication.
-    # # See https://oauth2-proxy.github.io/oauth2-proxy/ for how to configure the OAuth provider
-    # traefik_auth_client_id: some_client # Client ID
-    # traefik_auth_client_secret: some_secret # Client Secret
-    # traefik_auth_provider: github # Name of the provider
-    # traefik_auth_whitelist: "user1@example.com,user2@example.com" # list of emails that will be validated to auth separated by comma
+    # auth_enabled: false # false if we want to enable Traefik Oauth authentication.
+    # # See https://oauth2-proxy.github.io/oauth2-proxy/configuration/providers/github for how to configure the OAuth provider with Github
+    # auth_client_id: some_client # Client ID
+    # auth_client_secret: some_secret # Client Secret
+    # auth_organization: "some-org" # Github organization to use
 
     # # See https://cert-manager.io/docs/configuration/acme/ for how to configure cert-manager
     # cert_manager_cluster_issuer_spec:
