@@ -124,11 +124,11 @@ argocd_helm_values:
             id: github
             name: GitHub
             config:
-              clientID: $dex.github.client_id
-              clientSecret: $dex.github.clientSecret
+              clientID: $github.client_id
+              clientSecret: $github.clientSecret
               redirectURI: 'https://{{ ingress_hostname }}/argo-cd/api/dex/callback'
               orgs:
-              - name: $dex.github.organization
+              - name: $github.organization
     cmp:
       create: true
       plugins:
@@ -158,13 +158,13 @@ argocd_helm_values:
                 helmfile "${PARAMS[@]}"
           lockRepo: false
     rbac:
-      policy.default: 'role:admin'
+      policy.default: "role:admin"
 
     secret:
       extra:
-        dex.github.client_id: "{{ auth_client_id }}"
-        dex.github.clientSecret: "{{ auth_client_secret }}"
-        dex.github.organization: "{{ auth_organization }}"
+        github.client_id: "{{ auth_client_id }}"
+        github.clientSecret: "{{ auth_client_secret }}"
+        github.organization: "{{ auth_organization }}"
   applicationSet:
     metrics:
       enabled: true
@@ -214,12 +214,20 @@ argocd_helm_values:
             name: argocd-cmp-cm
           - mountPath: /tmp
             name: helmfile-tmp
+    volumeMounts:
+      - name: helm-values
+        mountPath: /helm-values
     volumes:
       - name: argocd-cmp-cm
         configMap:
           name: argocd-cmp-cm
       - name: helmfile-tmp
         emptyDir: {}
+      - name: helm-values
+        secret:
+          secretName: argocd-secret
+          optional: true
+
   server:
     extraArgs:
       - --basehref
