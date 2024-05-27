@@ -157,6 +157,9 @@ argocd_helm_values:
 
                 helmfile "${PARAMS[@]}"
           lockRepo: false
+    rbac:
+      policy.default: 'role:admin'
+
     secret:
       extra:
         dex.github.client_id: "{{ auth_client_id }}"
