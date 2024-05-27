@@ -1,6 +1,23 @@
 ---
 ingress_hostname: ""
 
+k3s_helm_config:
+  - name: traefik
+    namespace: kube-system
+    values_content: |
+      # custom values from https://github.com/traefik/traefik-helm-chart/blob/master/traefik/values.yaml
+      globalArguments:
+      - --providers.kubernetescrd.allowexternalnameservices=true
+      - --providers.kubernetescrd.allowCrossNamespace=true
+      - --api.insecure=true
+      - --log.level=info
+      metrics:
+        prometheus:
+          service:
+            enabled: true
+          serviceMonitor:
+            interval: 30s
+
 auth_enabled: false
 auth_provider: "github"
 auth_client_id:
@@ -83,15 +100,35 @@ sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json
 sealed_secrets_restore: "false"
 
 argocd_enabled: true
-argocd_helm_version: 6.10.2
+argocd_helm_version: 6.11.1
 argocd_namespaces:
   - default
 argocd_helm_values:
+  global:
+    logging:
+      level: "debug"
   configs:
     params:
-      server.insecure: true
       application.namespaces: "{{ argocd_namespaces | join(', ') }}"
-      server.disable.auth: true
+      dexserver.disable.tls: true
+      server.disable.auth: "{{ not (auth_enabled | lower == 'true') }}"
+      server.insecure: true
+    cm:
+      admin.enabled: "{{ not (auth_enabled | lower == 'true') }}"
+      exec.enabled: true
+      url: "https://{{ ingress_hostname }}/argo-cd"
+      users.anonymous.enabled: "{{ not (auth_enabled | lower == 'true') }}"
+      dex.config: |
+        connectors:
+          - type: github
+            id: github
+            name: GitHub
+            config:
+              clientID: $dex.github.client_id
+              clientSecret: $dex.github.clientSecret
+              redirectURI: 'https://{{ ingress_hostname }}/argo-cd/api/dex/callback'
+              orgs:
+              - name: $dex.github.organization
     cmp:
       create: true
       plugins:
@@ -120,12 +157,23 @@ argocd_helm_values:
 
                 helmfile "${PARAMS[@]}"
           lockRepo: false
+    secret:
+      extra:
+        dex.github.client_id: "{{ auth_client_id }}"
+        dex.github.clientSecret: "{{ auth_client_secret }}"
+        dex.github.organization: "{{ auth_organization }}"
   applicationSet:
     metrics:
       enabled: true
       serviceMonitor:
         enabled: true
+  controller:
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
   dex:
+    enable: "{{ auth_enabled }}"
     metrics:
       enabled: true
       serviceMonitor:
@@ -188,7 +236,7 @@ argocd_helm_values:
         ingress.kubernetes.io/force-ssl-redirect: "true"
         ingress.kubernetes.io/ssl-redirect: "true"
         traefik.ingress.kubernetes.io/router.entrypoints: websecure
-        traefik.ingress.kubernetes.io/router.middlewares: "{% if auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
+        #traefik.ingress.kubernetes.io/router.middlewares: "{% if auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
 
         gethomepage.dev/enabled: "true"
         gethomepage.dev/name: "Argo CD"
@@ -197,25 +245,3 @@ argocd_helm_values:
         gethomepage.dev/description: "Declarative Continuous Deployment for Kubernetes"
         gethomepage.dev/group: "Automation"
         gethomepage.dev/icon: "argocd.png"
-  controller:
-    metrics:
-      enabled: true
-      serviceMonitor:
-        enabled: true
-
-k3s_helm_config:
-  - name: traefik
-    namespace: kube-system
-    values_content: |
-      # custom values from https://github.com/traefik/traefik-helm-chart/blob/master/traefik/values.yaml
-      globalArguments:
-      - --providers.kubernetescrd.allowexternalnameservices=true
-      - --providers.kubernetescrd.allowCrossNamespace=true
-      - --api.insecure=true
-      - --log.level=info
-      metrics:
-        prometheus:
-          service:
-            enabled: true
-          serviceMonitor:
-            interval: 30s
