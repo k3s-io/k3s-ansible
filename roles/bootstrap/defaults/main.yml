@@ -160,6 +160,14 @@ argocd_helm_values:
 
                 PARAMS+=(template --include-crds -q)
 
+                if [[ -v ARGOCD_APP_NAMESPACE ]]; then
+                  PARAMS+=(-n $ARGOCD_APP_NAMESPACE)
+                fi
+
+                for f in $(ls /helm-values/); do
+                  PARAMS+=(--state-values-file /helm-values/$f)
+                done
+
                 helmfile "${PARAMS[@]}"
           lockRepo: false
     rbac:
