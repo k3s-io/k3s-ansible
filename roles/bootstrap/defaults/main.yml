@@ -103,6 +103,11 @@ argocd_enabled: true
 argocd_helm_version: 6.11.1
 argocd_namespaces:
   - default
+argocd_helm_secrets:
+  github.yaml: |
+    github.client_id: "{{ auth_client_id }}"
+    github.clientSecret: "{{ auth_client_secret }}"
+    github.organization: "{{ auth_organization }}"
 argocd_helm_values:
   global:
     logging:
@@ -216,7 +221,7 @@ argocd_helm_values:
             name: helmfile-tmp
     volumeMounts:
       - name: helm-values
-        mountPath: /helm-values
+        mountPath: /helm-values/
     volumes:
       - name: argocd-cmp-cm
         configMap:
@@ -225,9 +230,8 @@ argocd_helm_values:
         emptyDir: {}
       - name: helm-values
         secret:
-          secretName: argocd-secret
+          secretName: argocd-helm-values
           optional: true
-
   server:
     extraArgs:
       - --basehref
@@ -256,3 +260,9 @@ argocd_helm_values:
         gethomepage.dev/description: "Declarative Continuous Deployment for Kubernetes"
         gethomepage.dev/group: "Automation"
         gethomepage.dev/icon: "argocd.png"
+  extraObjects:
+    - apiVersion: v1
+      kind: Secret
+      metadata:
+        name: argocd-helm-values
+      stringData: "{{ argocd_helm_secrets }}"
