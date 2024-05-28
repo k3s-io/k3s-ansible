@@ -219,6 +219,8 @@ argocd_helm_values:
             name: argocd-cmp-cm
           - mountPath: /tmp
             name: helmfile-tmp
+          - name: helm-values
+            mountPath: /helm-values/
     volumeMounts:
       - name: helm-values
         mountPath: /helm-values/
