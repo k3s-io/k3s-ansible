@@ -73,7 +73,7 @@
     - name: If firewalld enabled, open api port
       ansible.posix.firewalld:
         port: "{{ api_port }}/tcp"
-        zone: trusted
+        zone: internal
         state: enabled
         permanent: true
         immediate: true
@@ -82,10 +82,41 @@
       when: groups['server'] | length > 1
       ansible.posix.firewalld:
         port: "2379-2381/tcp"
-        zone: trusted
+        zone: internal
         state: enabled
         permanent: true
         immediate: true
+
+    - name: If firewalld enabled, open inter-node ports
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        zone: internal
+        state: enabled
+        permanent: true
+        immediate: true
+      with_items:
+        - 5001/tcp   # Spegel (Embedded distributed registry)
+        - 8472/udp   # Flannel VXLAN
+        - 10250/tcp  # Kubelet metrics
+        - 51820/udp  # Flannel Wireguard (IPv4)
+        - 51821/udp  # Flannel Wireguard (IPv6)
+
+    - name: If firewalld enabled, allow node CIDRs
+      ansible.posix.firewalld:
+        source: "{{ item }}"
+        zone: internal
+        state: enabled
+        permanent: true
+        immediate: true
+      loop: >-
+        {{
+          (
+            groups['server'] | default([])
+            + groups['agent'] | default([])
+          )
+          | map('extract', hostvars, ['ansible_default_ipv4', 'address'])
+          | flatten | unique | list
+        }}
 
     - name: If firewalld enabled, allow default CIDRs
       ansible.posix.firewalld:
