@@ -17,7 +17,7 @@ metadata:
   name: traefik-auth-forward
 spec:
   forwardAuth:
-    address: http://oauth2-proxy.oauth2-proxy.svc.cluster.local/oauth2/auth
+    address: http://oauth2-proxy.security.svc.cluster.local/oauth2/auth
     trustForwardHeader: true
     authResponseHeaders:
       - "Authorization"

@@ -24,11 +24,11 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: default-cluster-issuer
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.middlewares: "kube-system-traefik-dashboard-strip-prefix@kubernetescrd{% if auth_enabled %},oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
+    traefik.ingress.kubernetes.io/router.middlewares: "kube-system-traefik-dashboard-strip-prefix@kubernetescrd{% if security_enabled %},security-traefik-auth@kubernetescrd{% endif %}"
 
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Traefik"
-    gethomepage.dev/href: "https://{{ ingress_hostname }}/traefik/dashboard/"
+    gethomepage.dev/href: "https://{{ ingress_hostname }}/system/traefik/dashboard/"
     gethomepage.dev/pod-selector: "app.kubernetes.io/name=traefik"
     gethomepage.dev/description: "The Cloud Native Application Proxy"
     gethomepage.dev/group: "System"
@@ -39,7 +39,7 @@ spec:
     - host: "{{ ingress_hostname }}"
       http:
         paths:
-          - path: /traefik
+          - path: /system/traefik
             pathType: Prefix
             backend:
               service:
@@ -58,7 +58,7 @@ metadata:
 spec:
   stripPrefix:
     prefixes:
-      - /traefik
+      - /system/traefik
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute

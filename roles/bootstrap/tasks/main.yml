@@ -15,37 +15,37 @@
     definition: "{{ lookup('ansible.builtin.template', 'k3s_helm_config.yaml.j2', template_vars = {}) | from_yaml_all }}"
     state: present
 
-- name: Traefik
+- name: Security
   block:
-    - name: Traefik - TLS
+    - name: Security - TLS
       block:
         - name: Traefik - Force TLS
           kubernetes.core.k8s:
             namespace: kube-system
             definition: "{{ lookup('ansible.builtin.template', 'traefik_dashboard.yaml.j2', template_vars = {}) | from_yaml_all }}"
             state: present
-    - name: Traefik - Install chart
+    - name: Security - Authentication
       block:
-        - name: oauth0-proxy - Add chart repo
+        - name: Oauth2 Proxy - Add chart repo
           kubernetes.core.helm_repository:
             name: oauth2-proxy
             repo_url: "https://oauth2-proxy.github.io/manifests"
             force_update: true
-        - name: oauth0-proxy - Install chart
+        - name: Oauth2 Proxy - Install chart
           kubernetes.core.helm:
             name: oauth2-proxy
             chart_ref: oauth2-proxy/oauth2-proxy
-            chart_version: "{{ auth_oauth2_helm_version }}"
+            chart_version: "{{ security_oauth2_helm_version }}"
             create_namespace: true
-            release_namespace: oauth2-proxy
-            values: "{{ auth_oauth2_helm_values }}"
+            release_namespace: security
+            values: "{{ security_oauth2_helm_values }}"
             context: "{{ k3s_context_name }}"
-        - name: Traefik - Enable traefik Auth
+        - name: Oauth2 Proxy - Enable traefik Auth
           kubernetes.core.k8s:
-            namespace: oauth2-proxy
-            definition: "{{ lookup('ansible.builtin.template', 'traefik_auth.yaml.j2', template_vars = {}) | from_yaml_all }}"
+            namespace: security
+            definition: "{{ lookup('ansible.builtin.template', 'traefik_security.yaml.j2', template_vars = {}) | from_yaml_all }}"
             state: present
-      when: "auth_enabled"
+      when: "security_enabled"
 
 - name: cert-manager
   block:
@@ -93,7 +93,7 @@
     - name: Longhorn - Create middleware
       kubernetes.core.k8s:
         namespace: longhorn-system
-        definition: "{{ lookup('ansible.builtin.template', 'traefik_middleware_path.yaml.j2', template_vars = {'strip_prefix_path': 'longhorn'}) | from_yaml_all }}"
+        definition: "{{ lookup('ansible.builtin.template', 'traefik_middleware_path.yaml.j2', template_vars = {'strip_prefix_path': 'system/longhorn'}) | from_yaml_all }}"
         state: present
     - name: Longhorn - Tag master nodes
       ansible.builtin.shell: |
@@ -130,7 +130,7 @@
       register: sealed_secrets_key_stat
     - name: Sealed Secrets - Load sealed-secrets-key
       ansible.builtin.shell: |
-        kubectl -n sealed-secrets apply -f {{ sealed_secrets_key }}
+        kubectl -n security apply -f {{ sealed_secrets_key }}
       when: "sealed_secrets_restore == 'true' and sealed_secrets_key_stat.stat.exists"
     - name: Sealed Secrets - Add chart repo
       kubernetes.core.helm_repository:
@@ -143,19 +143,19 @@
         chart_ref: hashicorp/sealed-secrets
         chart_version: "{{ sealed_secrets_helm_version }}"
         create_namespace: true
-        release_namespace: sealed-secrets
+        release_namespace: security
         context: "{{ k3s_context_name }}"
     - name: Sealed Secrets - Save sealed-secrets-key
       ansible.builtin.shell: |
         mkdir -p $(dirname {{ sealed_secrets_key }})
 
         while true; do
-            count=$(kubectl -n sealed-secrets get secret -l "sealedsecrets.bitnami.com/sealed-secrets-key" | tail -n +2 | wc -l)
+            count=$(kubectl -n security get secret -l "sealedsecrets.bitnami.com/sealed-secrets-key" | tail -n +2 | wc -l)
 
             if [ "$count" -eq 1 ]; then
                 pod_names=$(kubectl get pods --namespace=$namespace -o custom-columns=:metadata.name | grep "^$prefix")
 
-                kubectl -n sealed-secrets get secret \
+                kubectl -n security get secret \
                   -l "sealedsecrets.bitnami.com/sealed-secrets-key" -o yaml \
                   > {{ sealed_secrets_key }}
 
@@ -181,13 +181,13 @@
         chart_ref: argo/argo-cd
         chart_version: "{{ argocd_helm_version }}"
         create_namespace: true
-        release_namespace: argo-cd
+        release_namespace: automation
         values: "{{ argocd_helm_values }}"
         context: "{{ k3s_context_name }}"
     - name: ArgoCD - Create Projects
       kubernetes.core.k8s:
         state: present
-        namespace: argo-cd
+        namespace: automation
         definition: "{{ lookup('ansible.builtin.template', 'argocd_project.yaml.j2', template_vars = {'namespace': item}) | from_yaml_all }}"
       with_items: "{{ argocd_namespaces }}"
   when: "sealed_secrets_enabled"

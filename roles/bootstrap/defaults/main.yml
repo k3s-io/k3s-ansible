@@ -18,25 +18,26 @@ k3s_helm_config:
           serviceMonitor:
             interval: 30s
 
-auth_enabled: false
-auth_provider: "github"
-auth_client_id:
-auth_client_secret:
-auth_whitelist:
-auth_cookie_expiration: "168h"
-auth_oauth2_helm_version: 7.1.0
-auth_oauth2_debug: true
-auth_oauth2_helm_values:
+security_enabled: false
+security_github_client_id:
+security_github_client_secret:
+security_github_organization:
+security_cookie_expiration: "168h"
+security_oauth2_helm_version: 7.1.0
+security_oauth2_debug: true
+security_oauth2_helm_values:
   fullnameOverride: oauth2-proxy
+
   config:
-    clientID: "{{ auth_client_id }}"
-    clientSecret: "{{ auth_client_secret }}"
+    clientID: "{{ security_github_client_id }}"
+    clientSecret: "{{ security_github_client_secret }}"
     cookieSecret: "{{ lookup('community.general.random_string', length=16, special=False) }}"
+
   extraArgs:
-    provider: "{{ auth_provider }}"
+    provider: "github"
     whitelist-domain: "{{ ingress_hostname }}"
     cookie-domain: "{{ ingress_hostname }}"
-    cookie-expire: "{{ auth_cookie_expiration }}"
+    cookie-expire: "{{ security_cookie_expiration }}"
     cookie-csrf-expire: "1h"
     cookie-samesite: "lax"
     cookie-secure: false
@@ -44,12 +45,13 @@ auth_oauth2_helm_values:
     pass-user-headers: true
     reverse-proxy: true
     set-xauthrequest: true
-    show-debug-on-error: "{{ auth_oauth2_debug }}"
-    github-org: "{{ auth_organization }}"
+    show-debug-on-error: "{{ security_oauth2_debug }}"
+    github-org: "{{ security_github_organization }}"
   ingress:
     enabled: true
     className: traefik
     path: /oauth2
+    pathType: Prefix
     hosts:
       - "{{ ingress_hostname }}"
 
@@ -79,16 +81,16 @@ longhorn_helm_values:
     enabled: true
     ingressClassName: "traefik"
     host: "{{ ingress_hostname }}"
-    path: /longhorn
+    path: /system/longhorn
     pathType: Prefix
     secureBackends: false
     annotations:
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      traefik.ingress.kubernetes.io/router.middlewares: "longhorn-system-middleware@kubernetescrd,{% if auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
+      traefik.ingress.kubernetes.io/router.middlewares: "longhorn-system-middleware@kubernetescrd,{% if security_enabled %}security-traefik-auth@kubernetescrd{% endif %}"
 
       gethomepage.dev/enabled: "true"
       gethomepage.dev/name: "Longhorn"
-      gethomepage.dev/href: "https://{{ ingress_hostname }}/longhorn/"
+      gethomepage.dev/href: "https://{{ ingress_hostname }}/system/longhorn/"
       gethomepage.dev/pod-selector: "app=longhorn-ui"
       gethomepage.dev/description: "Cloud-Native distributed storage built on and for Kubernetes"
       gethomepage.dev/group: "System"
@@ -104,10 +106,10 @@ argocd_helm_version: 6.11.1
 argocd_namespaces:
   - default
 argocd_helm_secrets:
-  github.yaml: |
-    github.client_id: "{{ auth_client_id }}"
-    github.clientSecret: "{{ auth_client_secret }}"
-    github.organization: "{{ auth_organization }}"
+  security.yaml: |
+    security_github_client_id: "{{ security_github_client_id }}"
+    security_github_client_secret: "{{ security_github_client_secret }}"
+    security_github_organization: "{{ security_github_organization }}"
 argocd_helm_values:
   global:
     logging:
@@ -116,24 +118,24 @@ argocd_helm_values:
     params:
       application.namespaces: "{{ argocd_namespaces | join(', ') }}"
       dexserver.disable.tls: true
-      server.disable.auth: "{{ not (auth_enabled | lower == 'true') }}"
+      server.disable.auth: "{{ not (security_enabled | lower == 'true') }}"
       server.insecure: true
     cm:
-      admin.enabled: "{{ not (auth_enabled | lower == 'true') }}"
+      admin.enabled: "{{ not (security_enabled | lower == 'true') }}"
       exec.enabled: true
-      url: "https://{{ ingress_hostname }}/argo-cd"
-      users.anonymous.enabled: "{{ not (auth_enabled | lower == 'true') }}"
+      url: "https://{{ ingress_hostname }}/automation/argo-cd"
+      users.anonymous.enabled: "{{ not (security_enabled | lower == 'true') }}"
       dex.config: |
         connectors:
           - type: github
             id: github
             name: GitHub
             config:
-              clientID: $github.client_id
-              clientSecret: $github.clientSecret
-              redirectURI: 'https://{{ ingress_hostname }}/argo-cd/api/dex/callback'
+              clientID: $security_github_client_id
+              clientSecret: $security_github_client_secret
+              redirectURI: 'https://{{ ingress_hostname }}/automation/argo-cd/api/dex/callback'
               orgs:
-              - name: $github.organization
+              - name: $security_github_organization
     cmp:
       create: true
       plugins:
@@ -175,9 +177,9 @@ argocd_helm_values:
 
     secret:
       extra:
-        github.client_id: "{{ auth_client_id }}"
-        github.clientSecret: "{{ auth_client_secret }}"
-        github.organization: "{{ auth_organization }}"
+        security_github_client_id: "{{ security_github_client_id }}"
+        security_github_client_secret: "{{ security_github_client_secret }}"
+        security_github_organization: "{{ security_github_organization }}"
   applicationSet:
     metrics:
       enabled: true
@@ -189,7 +191,7 @@ argocd_helm_values:
       serviceMonitor:
         enabled: true
   dex:
-    enable: "{{ auth_enabled }}"
+    enable: "{{ security_enabled }}"
     metrics:
       enabled: true
       serviceMonitor:
@@ -245,9 +247,9 @@ argocd_helm_values:
   server:
     extraArgs:
       - --basehref
-      - /argo-cd
+      - /automation/argo-cd
       - --rootpath
-      - /argo-cd
+      - /automation/argo-cd
     metrics:
       enabled: true
       serviceMonitor:
@@ -256,16 +258,16 @@ argocd_helm_values:
       enabled: true
       ingressClassName: "traefik"
       hostname: "{{ ingress_hostname }}"
-      path: /argo-cd
+      path: /automation/argo-cd
       annotations:
         ingress.kubernetes.io/force-ssl-redirect: "true"
         ingress.kubernetes.io/ssl-redirect: "true"
         traefik.ingress.kubernetes.io/router.entrypoints: websecure
-        #traefik.ingress.kubernetes.io/router.middlewares: "{% if auth_enabled %}oauth2-proxy-traefik-auth@kubernetescrd{% endif %}"
+        #traefik.ingress.kubernetes.io/router.middlewares: "{% if security_enabled %}security-traefik-auth@kubernetescrd{% endif %}"
 
         gethomepage.dev/enabled: "true"
         gethomepage.dev/name: "Argo CD"
-        gethomepage.dev/href: "https://{{ ingress_hostname }}/argo-cd"
+        gethomepage.dev/href: "https://{{ ingress_hostname }}/automation/argo-cd"
         gethomepage.dev/pod-selector: "app.kubernetes.io/name=argocd-server"
         gethomepage.dev/description: "Declarative Continuous Deployment for Kubernetes"
         gethomepage.dev/group: "Automation"

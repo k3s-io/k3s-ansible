@@ -76,11 +76,11 @@ bootstrap:
     # k3s_context_name: k3s-ansible
     # ingress_hostname: "example.com" # hostname used in all the Ingress resources
 
-    # auth_enabled: false # false if we want to enable Traefik Oauth authentication.
+    # security_enabled: false # false if we want to enable Traefik Oauth authentication.
     # # See https://oauth2-proxy.github.io/oauth2-proxy/configuration/providers/github for how to configure the OAuth provider with Github
-    # auth_client_id: some_client # Client ID
-    # auth_client_secret: some_secret # Client Secret
-    # auth_organization: "some-org" # Github organization to use
+    # security_github_client_id: some_client # Client ID
+    # security_github_client_secret: some_secret # Client Secret
+    # security_github_organization: some_org # Github organization to use
 
     # # See https://cert-manager.io/docs/configuration/acme/ for how to configure cert-manager
     # cert_manager_cluster_issuer_spec:
@@ -117,4 +117,4 @@ bootstrap:
     # argocd_enabled: true # false if we want to disable ArgoCD installation.
     # argocd_namespaces: # namespaces where argo-cd will look for apps
     #   - default
-    #   - other
+    #   - automation
