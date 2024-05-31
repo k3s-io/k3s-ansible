@@ -147,6 +147,18 @@ Furthermore, there are other playbook that helps you to manage the cluster:
   ```bash
   ansible -i inventory.yml k3s_cluster -m shell -a 'dietpi-update 1'
   ```
+- Seal a secret:
+
+  ```bash
+  CREDENTIAL_KEY="password"
+  CREDENTIAL_VALUE="strong_password"
+  SECRET_NAMESPACE="default"
+  SECRET_NAME="some-secret"
+
+  echo -n SOME_PASSWORD \
+     | kubectl create secret generic $SECRET_NAME -n $SECRET_NAMESPACE --dry-run=client --from-file=$CREDENTIAL_KEY=/dev/stdin -o json \
+     | kubeseal --controller-namespace security --controller-name sealed-secrets -o yaml
+  ```
 
 ### Debugging
 
