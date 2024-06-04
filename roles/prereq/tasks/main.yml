@@ -215,7 +215,7 @@
     - name: Make rancher directory
       ansible.builtin.file:
         path: "/var/lib/rancher"
-        mode: 0755
+        mode: "0755"
         state: directory
     - name: Create symlink
       ansible.builtin.file:
@@ -230,13 +230,13 @@
     - name: Make manifests directory
       ansible.builtin.file:
         path: "/var/lib/rancher/k3s/server/manifests"
-        mode: 0700
+        mode: "0700"
         state: directory
     - name: Copy manifests
       ansible.builtin.copy:
         src: "{{ item }}"
         dest: "/var/lib/rancher/k3s/server/manifests"
-        mode: 0600
+        mode: "0600"
       loop: "{{ extra_manifests }}"
 
 - name: Setup optional private registry configuration
@@ -245,10 +245,10 @@
     - name: Make k3s config directory
       ansible.builtin.file:
         path: "/etc/rancher/k3s"
-        mode: 0755
+        mode: "0755"
         state: directory
     - name: Copy config values
       ansible.builtin.copy:
         content: "{{ registries_config_yaml }}"
         dest: "/etc/rancher/k3s/registries.yaml"
-        mode: 0644
+        mode: "0644"

@@ -24,7 +24,7 @@
         dest: /usr/local/bin/k3s-install.sh
         owner: root
         group: root
-        mode: 0755
+        mode: "0755"
 
     - name: Download K3s binary
       ansible.builtin.command:
@@ -46,13 +46,13 @@
     - name: Make config directory
       ansible.builtin.file:
         path: "/etc/rancher/k3s"
-        mode: 0755
+        mode: "0755"
         state: directory
     - name: Copy config values
       ansible.builtin.copy:
         content: "{{ server_config_yaml }}"
         dest: "/etc/rancher/k3s/config.yaml"
-        mode: 0644
+        mode: "0644"
 
 - name: Init first server node
   when: inventory_hostname == groups['server'][0]
@@ -64,7 +64,7 @@
         dest: "{{ systemd_dir }}/k3s.service"
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
 
     - name: Copy K3s service file [HA]
       when: groups['server'] | length > 1
@@ -73,7 +73,7 @@
         dest: "{{ systemd_dir }}/k3s.service"
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
 
     - name: Add service environment variables
       when: extra_service_envs is defined
@@ -154,7 +154,7 @@
         dest: "{{ systemd_dir }}/k3s.service"
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
 
     - name: Enable and check K3s service
       ansible.builtin.systemd:
