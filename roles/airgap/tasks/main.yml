@@ -15,7 +15,7 @@
         url: https://get.k3s.io/
         timeout: 120
         dest: "{{ airgap_dir }}/k3s-install.sh"
-        mode: 0755
+        mode: "0755"
 
     - name: Distribute K3s install script
       ansible.builtin.copy:
@@ -23,7 +23,7 @@
         dest: /usr/local/bin/k3s-install.sh
         owner: root
         group: root
-        mode: 0755
+        mode: "0755"
 
     - name: Distribute K3s binary
       ansible.builtin.copy:
@@ -31,7 +31,7 @@
         dest: /usr/local/bin/k3s
         owner: root
         group: root
-        mode: 0755
+        mode: "0755"
 
     - name: Distribute K3s SELinux RPM
       ansible.builtin.copy:
@@ -39,7 +39,7 @@
         dest: /tmp/
         owner: root
         group: root
-        mode: 0755
+        mode: "0755"
       with_fileglob:
         - "{{ airgap_dir }}/k3s-selinux*.rpm"
       register: selinux_copy
@@ -57,7 +57,7 @@
     - name: Make images directory
       ansible.builtin.file:
         path: "/var/lib/rancher/k3s/agent/images/"
-        mode: 0755
+        mode: "0755"
         state: directory
 
     - name: Determine Architecture
@@ -71,7 +71,7 @@
         dest: /var/lib/rancher/k3s/agent/images/{{ item | basename }}
         owner: root
         group: root
-        mode: 0755
+        mode: "0755"
       with_first_found:
         - files:
             - "{{ airgap_dir }}/k3s-airgap-images-amd64.tar.zst"
@@ -86,7 +86,7 @@
         dest: /var/lib/rancher/k3s/agent/images/{{ item | basename }}
         owner: root
         group: root
-        mode: 0755
+        mode: "0755"
       with_first_found:
         - files:
             - "{{ airgap_dir }}/k3s-airgap-images-arm64.tar.zst"
@@ -101,7 +101,7 @@
         dest: /var/lib/rancher/k3s/agent/images/{{ item | basename }}
         owner: root
         group: root
-        mode: 0755
+        mode: "0755"
       with_first_found:
         - files:
             - "{{ airgap_dir }}/k3s-airgap-images-arm.tar.zst"
