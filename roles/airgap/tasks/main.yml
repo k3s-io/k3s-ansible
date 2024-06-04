@@ -49,7 +49,7 @@
       when:
         - ansible_os_family == 'RedHat'
         - selinux_copy.skipped is false
-      ansible.builtin.yum:
+      ansible.builtin.dnf:
         name: "{{ selinux_copy.results[0].dest }}"
         state: present
         disable_gpg_check: true
