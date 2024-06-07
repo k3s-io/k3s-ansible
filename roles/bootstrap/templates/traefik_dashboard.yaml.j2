@@ -24,11 +24,11 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: default-cluster-issuer
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.middlewares: "kube-system-traefik-dashboard-strip-prefix@kubernetescrd{% if security_enabled %},security-traefik-auth@kubernetescrd{% endif %}"
+    traefik.ingress.kubernetes.io/router.middlewares: "{% if security_enabled %}security-security-oauth2@kubernetescrd{% endif %}"
 
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Traefik"
-    gethomepage.dev/href: "https://{{ ingress_hostname }}/system/traefik/dashboard/"
+    gethomepage.dev/href: "https://system-traefik.{{ ingress_hostname }}/dashboard/"
     gethomepage.dev/pod-selector: "app.kubernetes.io/name=traefik"
     gethomepage.dev/description: "The Cloud Native Application Proxy"
     gethomepage.dev/group: "System"
@@ -36,42 +36,13 @@ metadata:
 spec:
   ingressClassName: "traefik"
   rules:
-    - host: "{{ ingress_hostname }}"
+    - host: "system-traefik.{{ ingress_hostname }}"
       http:
         paths:
-          - path: /system/traefik
+          - path: /
             pathType: Prefix
             backend:
               service:
                 name: traefik-dashboard
                 port:
                   number: 9000
-  tls:
-    - secretName: "{{ ingress_hostname }}-tls"
-      hosts:
-        - "{{ ingress_hostname }}"
----
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: traefik-dashboard-strip-prefix
-spec:
-  stripPrefix:
-    prefixes:
-      - /system/traefik
----
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: traefik-dashboard
-spec:
-  entryPoints:
-    - websecure
-  routes:
-    - kind: Rule
-      match: "Host(`{{ ingress_hostname }}`) && HeadersRegexp(`Referer`, `.*/traefik/.*`)"
-      middlewares:
-        - name: traefik-dashboard-strip-prefix
-      services:
-        - kind: TraefikService
-          name: api@internal

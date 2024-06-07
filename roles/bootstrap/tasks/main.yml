@@ -1,9 +1,4 @@
 ---
-# - name: Display all variables/facts known for a host
-#   debug:
-#     msg: "{{ lookup('ansible.builtin.template', 'traefik_middleware_path.yaml.j2', template_vars = {'replace_path_src': 'traefik', 'replace_path_dst': 'dashboard', 'name': 'traefik-dashboard'}) }}"
-#   tags: debug_info
-
 - name: K8s - Set context
   ansible.builtin.shell: |
     kubectl config use-context {{ k3s_context_name }}
@@ -14,6 +9,72 @@
     namespace: oauth2-proxy
     definition: "{{ lookup('ansible.builtin.template', 'k3s_helm_config.yaml.j2', template_vars = {}) | from_yaml_all }}"
     state: present
+
+- name: cert-manager
+  block:
+    - name: cert-manager - Add chart repo
+      kubernetes.core.helm_repository:
+        name: jetstack
+        repo_url: "https://charts.jetstack.io"
+        force_update: true
+    - name: cert-manager - Install chart
+      kubernetes.core.helm:
+        name: cert-manager
+        chart_ref: jetstack/cert-manager
+        chart_version: "{{ cert_manager_helm_version }}"
+        create_namespace: true
+        release_namespace: cert-manager
+        values:
+          ingressShim:
+            defaultIssuerName: "cluster-issuer"
+            defaultIssuerKind: "ClusterIssuer"
+
+          installCRDs: true
+        context: "{{ k3s_context_name }}"
+    - name: cert-manager - Create ClusterIssuer
+      kubernetes.core.k8s:
+        namespace: cert-manager
+        definition: "{{ lookup('ansible.builtin.template', 'cert_manager_cluster_issuer.yaml.j2', template_vars = {}) | from_yaml_all }}"
+        state: present
+
+- name: external-dns
+  block:
+    - name: external-dns - Add chart repo
+      kubernetes.core.helm_repository:
+        name: external-dns
+        repo_url: "https://kubernetes-sigs.github.io/external-dns/"
+        force_update: true
+    - name: external-dns - Create ClusterIssuer
+      kubernetes.core.k8s:
+        namespace: kube-system
+        definition: "{{ lookup('ansible.builtin.template', 'external_dns_secret.yaml.j2', template_vars = {}) | from_yaml_all }}"
+        state: present
+    - name: external-dns - Install chart
+      kubernetes.core.helm:
+        name: external-dns
+        chart_ref: external-dns/external-dns
+        chart_version: "{{ external_dns_helm_version }}"
+        create_namespace: true
+        release_namespace: kube-system
+        values: "{{ external_dns_helm_values }}"
+        context: "{{ k3s_context_name }}"
+
+- name: kubernetes-reflector
+  block:
+    - name: kubernetes-reflector - Add chart repo
+      kubernetes.core.helm_repository:
+        name: emberstack
+        repo_url: "https://emberstack.github.io/helm-charts"
+        force_update: true
+    - name: kubernetes-reflector - Install chart
+      kubernetes.core.helm:
+        name: kubernetes-reflector
+        chart_ref: emberstack/reflector
+        chart_version: "{{kubernetes_reflector_helm_version }}"
+        create_namespace: true
+        release_namespace: kube-system
+        values: "{{ kubernetes_reflector_helm_values }}"
+        context: "{{ k3s_context_name }}"
 
 - name: Security
   block:
@@ -47,33 +108,6 @@
             state: present
       when: "security_enabled"
 
-- name: cert-manager
-  block:
-    - name: cert-manager - Add chart repo
-      kubernetes.core.helm_repository:
-        name: jetstack
-        repo_url: "https://charts.jetstack.io"
-        force_update: true
-    - name: cert-manager - Install chart
-      kubernetes.core.helm:
-        name: cert-manager
-        chart_ref: jetstack/cert-manager
-        chart_version: "{{ cert_manager_helm_version }}"
-        create_namespace: true
-        release_namespace: cert-manager
-        values:
-          ingressShim:
-            defaultIssuerName: "cluster-issuer"
-            defaultIssuerKind: "ClusterIssuer"
-
-          installCRDs: true
-        context: "{{ k3s_context_name }}"
-    - name: cert-manager - Create ClusterIssuer
-      kubernetes.core.k8s:
-        namespace: cert-manager
-        definition: "{{ lookup('ansible.builtin.template', 'cert_manager_cluster_issuer.yaml.j2', template_vars = {}) | from_yaml_all }}"
-        state: present
-
 - name: Longhorn
   block:
     - name: Longhorn - Add chart repo
@@ -90,11 +124,6 @@
         release_namespace: longhorn-system
         values: "{{ longhorn_helm_values }}"
         context: "{{ k3s_context_name }}"
-    - name: Longhorn - Create middleware
-      kubernetes.core.k8s:
-        namespace: longhorn-system
-        definition: "{{ lookup('ansible.builtin.template', 'traefik_middleware_path.yaml.j2', template_vars = {'strip_prefix_path': 'system/longhorn'}) | from_yaml_all }}"
-        state: present
     - name: Longhorn - Tag master nodes
       ansible.builtin.shell: |
         kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["MASTER_NODE"]}]' -n longhorn-system

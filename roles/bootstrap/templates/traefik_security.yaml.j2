@@ -1,62 +1,84 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: "{{ ingress_hostname }}-cert"
+  namespace: default
+spec:
+  secretName: "{{ ingress_hostname }}-cert"
+  issuerRef:
+    name: default-cluster-issuer
+    kind: ClusterIssuer
+  commonName: "*.{{ ingress_hostname }}"
+  dnsNames:
+    - "*.{{ ingress_hostname }}"
+  secretTemplate:
+    annotations:
+      reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+      reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
+---
+apiVersion: traefik.io/v1alpha1
+kind: TLSStore
+metadata:
+  name: default
+  namespace: default
+spec:
+  defaultCertificate:
+    secretName: "{{ ingress_hostname }}-cert"
+---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: traefik-auth-errors
+  name: security-oauth2-headers
+spec:
+  headers:
+    stsSeconds: 315360000
+    browserXssFilter: true
+    contentTypeNosniff: true
+    forceSTSHeader: true
+    stsIncludeSubdomains: true
+    stsPreload: true
+    frameDeny: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: security-oauth2-forward
+spec:
+  forwardAuth:
+    address: https://security-oauth.{{ ingress_hostname }}/oauth2/auth
+    trustForwardHeader: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: security-oauth2-errors
 spec:
   errors:
     status:
-      - "401"
+      - "401-403"
     service:
       name: oauth2-proxy
       port: 80
-    query: "/oauth2/sign_in?rd={url}"
+    query: "/oauth2/sign_in"
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: traefik-auth-forward
-spec:
-  forwardAuth:
-    address: http://oauth2-proxy.security.svc.cluster.local/oauth2/auth
-    trustForwardHeader: true
-    authResponseHeaders:
-      - "Authorization"
-      - "Set-Cookie"
-      - "X-Auth-Request-Access-Token"
-      - "X-Auth-Request-Email"
-      - "X-Auth-Request-Preferred-Username"
-      - "X-Auth-Request-Redirect"
-      - "X-Auth-Request-User"
-      - "X-Forwarded-For"
-      - "X-Forwarded-Host"
----
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: traefik-auth-https-only
+  name: security-oauth2-https-only
 spec:
   redirectScheme:
     scheme: https
     permanent: true
-# ---
-# apiVersion: traefik.io/v1alpha1
-# kind: Middleware
-# metadata:
-#   name: traefik-auth-known-ips
-# spec:
-#   ipWhiteList:
-#     sourceRange:
-#     - 192.168.1.7
-#     - 127.0.0.1/32
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: traefik-auth
+  name: security-oauth2
 spec:
   chain:
     middlewares:
-      - name: traefik-auth-https-only
-      # - name: traefik-auth-known-ips
-      - name: traefik-auth-errors
-      - name: traefik-auth-forward
+      - name: security-oauth2-https-only
+      - name: security-oauth2-headers
+      - name: security-oauth2-errors
+      - name: security-oauth2-forward
