@@ -12,7 +12,7 @@ kind: ClusterIssuer
 metadata:
   name: default-cluster-issuer
 spec:
-{{cert_manager_cluster_issuer_spec | to_nice_yaml | trim | indent(2)}}
+  {{cert_manager_cluster_issuer_spec | to_nice_yaml | trim | indent(2)}}
 
 ---
 #{% if cert_manager_cluster_issuer_secret_name and cert_manager_cluster_issuer_secret_data %}
@@ -22,5 +22,5 @@ metadata:
   name: "{{ cert_manager_cluster_issuer_secret_name }}"
 type: Opaque
 stringData:
-{{cert_manager_cluster_issuer_secret_data | to_nice_yaml | trim | indent(2)}}
+  {{cert_manager_cluster_issuer_secret_data | to_nice_yaml | trim | indent(2)}}
 #{% endif %}
