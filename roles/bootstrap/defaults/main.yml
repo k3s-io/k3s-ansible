@@ -84,7 +84,6 @@ security_oauth2_helm_values:
       - "security-oauth.{{ ingress_hostname }}"
       - "*.{{ ingress_hostname }}"
     annotations:
-      cert-manager.io/cluster-issuer: default-cluster-issuer
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
 
 longhorn_enabled: true
@@ -112,7 +111,6 @@ longhorn_helm_values:
     tls: false
     secureBackends: false
     annotations:
-      cert-manager.io/cluster-issuer: default-cluster-issuer
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.middlewares: "{% if security_enabled %}security-security-oauth2@kubernetescrd{% endif %}"
 
@@ -284,7 +282,6 @@ argocd_helm_values:
       tls: false
 
       annotations:
-        cert-manager.io/cluster-issuer: default-cluster-issuer
         traefik.ingress.kubernetes.io/router.entrypoints: websecure
 
         gethomepage.dev/enabled: "true"

@@ -22,7 +22,6 @@ kind: Ingress
 metadata:
   name: traefik-dashboard
   annotations:
-    cert-manager.io/cluster-issuer: default-cluster-issuer
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.middlewares: "{% if security_enabled %}security-security-oauth2@kubernetescrd{% endif %}"
 
