@@ -114,8 +114,8 @@
       loop: >-
         {{
           (
-            groups['server'] | default([])
-            + groups['agent'] | default([])
+            groups[server_group] | default([])
+            + groups[agent_group] | default([])
           )
           | map('extract', hostvars, ['ansible_default_ipv4', 'address'])
           | flatten | unique | list
