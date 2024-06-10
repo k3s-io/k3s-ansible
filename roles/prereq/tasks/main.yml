@@ -51,7 +51,7 @@
     - name: If ufw enabled, open etcd ports
       when:
         - ufw_status['stdout'] == "Status':' active"
-        - groups['server'] | length > 1
+        - groups[server_group] | length > 1
       community.general.ufw:
         rule: allow
         port: "2379:2381"
@@ -79,7 +79,7 @@
         immediate: true
 
     - name: If firewalld enabled, open etcd ports
-      when: groups['server'] | length > 1
+      when: groups[server_group] | length > 1
       ansible.posix.firewalld:
         port: "2379-2381/tcp"
         zone: internal
@@ -111,8 +111,8 @@
       loop: >-
         {{
           (
-            groups['server'] | default([])
-            + groups['agent'] | default([])
+            groups[server_group] | default([])
+            + groups[agent_group] | default([])
           )
           | map('extract', hostvars, ['ansible_default_ipv4', 'address'])
           | flatten | unique | list
