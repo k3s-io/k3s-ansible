@@ -21,13 +21,13 @@ k3s_helm_config:
           serviceMonitor:
             interval: 30s
 
-cert_manager_helm_version: v1.14.5
+cert_manager_helm_version: v1.15.0
 cert_manager_cluster_issuer_spec:
   selfSigned: {}
 cert_manager_cluster_issuer_secret_name:
 cert_manager_cluster_issuer_secret_data:
 
-external_dns_helm_version: 1.14.4
+external_dns_helm_version: 1.14.5
 external_dns_secret_name:
 external_dns_secret_data:
 external_dns_helm_values:
@@ -40,7 +40,7 @@ security_github_client_id:
 security_github_client_secret:
 security_github_organization:
 security_cookie_expiration: "168h"
-security_oauth2_helm_version: 7.7.1
+security_oauth2_helm_version: 7.7.3
 security_oauth2_debug: true
 security_oauth2_helm_values:
   fullnameOverride: oauth2-proxy
@@ -127,7 +127,7 @@ sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json
 sealed_secrets_restore: "false"
 
 argocd_enabled: true
-argocd_helm_version: 7.1.1
+argocd_helm_version: 7.1.3
 argocd_namespaces:
   - default
 argocd_helm_secrets:
