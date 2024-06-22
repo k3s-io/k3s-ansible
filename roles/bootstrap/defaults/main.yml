@@ -92,6 +92,14 @@ longhorn_helm_version: 1.6.2
 longhorn_replica_count: 2
 longhorn_data_dir: /var/lib/longhorn/
 longhorn_helm_values:
+  global:
+    nodeSelector:
+      "longhorn.io/enabled": "true"
+
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
   defaultSettings:
     defaultDataPath: "{{ longhorn_data_dir }}"
   persistence:
@@ -99,22 +107,6 @@ longhorn_helm_values:
     defaultNodeSelector:
       enable: "{{ longhorn_enabled_only_agent }}"
       selector: "AGENT_NODE"
-  longhornManager:
-    nodeSelector:
-      "longhorn.io/enabled": "true"
-
-    tolerations:
-      - key: nvidia.com/gpu
-        operator: Exists
-        effect: NoSchedule
-  longhornDriver:
-    nodeSelector:
-      "longhorn.io/enabled": "true"
-
-    tolerations:
-      - key: nvidia.com/gpu
-        operator: Exists
-        effect: NoSchedule
   metrics:
     serviceMonitor:
       enabled: true
