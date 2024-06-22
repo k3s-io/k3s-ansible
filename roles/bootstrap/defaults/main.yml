@@ -87,7 +87,7 @@ security_oauth2_helm_values:
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
 
 longhorn_enabled: true
-longhorn_enabled_only_workers: false
+longhorn_enabled_only_agent: false
 longhorn_helm_version: 1.6.2
 longhorn_replica_count: 2
 longhorn_data_dir: /var/lib/longhorn/
@@ -97,8 +97,8 @@ longhorn_helm_values:
   persistence:
     defaultClassReplicaCount: "{{ longhorn_replica_count }}"
     defaultNodeSelector:
-      enable: "{{ longhorn_enabled_only_workers }}"
-      selector: "WORKER_NODE"
+      enable: "{{ longhorn_enabled_only_agent }}"
+      selector: "AGENT_NODE"
   metrics:
     serviceMonitor:
       enabled: true
@@ -296,3 +296,8 @@ argocd_helm_values:
       metadata:
         name: argocd-helm-values
       stringData: "{{ argocd_helm_secrets }}"
+
+k8s_device_plugin_enabled: true
+k8s_device_plugin_helm_version: 0.16.0-rc.1
+k8s_device_plugin_helm_values:
+  runtimeClassName: nvidia

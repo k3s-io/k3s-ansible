@@ -124,30 +124,33 @@
         release_namespace: longhorn-system
         values: "{{ longhorn_helm_values }}"
         context: "{{ k3s_context_name }}"
-    - name: Longhorn - Tag master nodes
+    - name: Longhorn - Tag server nodes
       ansible.builtin.shell: |
-        kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["MASTER_NODE"]}]' -n longhorn-system
+        kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["SERVER_NODE"]}]' -n longhorn-system
       retries: 5
       delay: 10
       register: result
       until: result.rc == 0
+      when: "hostvars[item].k3s_server_longhorn_enabled"
       with_items: "{{ groups['server'] }}"
-    - name: Longhorn - Tag worker nodes
+    - name: Longhorn - Tag agent nodes
       ansible.builtin.shell: |
-        kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["WORKER_NODE"]}]' -n longhorn-system
+        kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["AGENT_NODE"]}]' -n longhorn-system
       retries: 5
       delay: 10
       register: result
       until: result.rc == 0
+      when: "hostvars[item].k3s_agent_longhorn_enabled"
       with_items: "{{ groups['agent'] }}"
     - name: Longhorn - Tag create-default-disk in master nodes
       ansible.builtin.shell: |
         kubectl label node {{ item }} 'node.longhorn.io/create-default-disk=true'
+      when: "not longhorn_enabled_only_agent and hostvars[item].k3s_server_longhorn_enabled"
       with_items: "{{ groups['server'] }}"
-      when: "not longhorn_enabled_only_workers"
-    - name: Longhorn - Tag create-default-disk in worker nodes
+    - name: Longhorn - Tag create-default-disk in agent nodes
       ansible.builtin.shell: |
         kubectl label node {{ item }} 'node.longhorn.io/create-default-disk=true'
+      when: "hostvars[item].k3s_agent_longhorn_enabled"
       with_items: "{{ groups['agent'] }}"
   when: "longhorn_enabled"
 
@@ -219,4 +222,22 @@
         namespace: automation
         definition: "{{ lookup('ansible.builtin.template', 'argocd_project.yaml.j2', template_vars = {'namespace': item}) | from_yaml_all }}"
       with_items: "{{ argocd_namespaces }}"
-  when: "sealed_secrets_enabled"
+  when: "argocd_enabled"
+
+- name: NVIDIA k8s Device Plugin
+  block:
+    - name: NVIDIA k8s Device Plugin - Add chart repo
+      kubernetes.core.helm_repository:
+        name: nvidia-k8s-device-plugin
+        repo_url: "https://nvidia.github.io/k8s-device-plugin"
+        force_update: true
+    - name: NVIDIA k8s Device Plugin - Install chart
+      kubernetes.core.helm:
+        name: nvidia-device-plugin
+        chart_ref: nvidia-k8s-device-plugin/nvidia-device-plugin
+        chart_version: "{{ k8s_device_plugin_helm_version }}"
+        create_namespace: true
+        release_namespace: kube-system
+        values: "{{ k8s_device_plugin_helm_values }}"
+        context: "{{ k3s_context_name }}"
+  when: "k8s_device_plugin_enabled"

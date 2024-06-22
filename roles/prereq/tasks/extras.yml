@@ -105,3 +105,36 @@
     path: "{{ item }}"
     state: directory
   with_items: "{{ required_directories }}"
+
+- name: Install NVIDIA packages
+  block:
+    - name: Install NVIDIA packages on debian servers
+      become: true
+      ansible.builtin.shell: |
+        dpkg -l | grep -qw nvidia-container-toolkit &> /dev/null ||  \
+          curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+          && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+            sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+            tee /etc/apt/sources.list.d/nvidia-container-toolkit.list \
+          && apt-get update \
+          && apt-get install -y nvidia-container-toolkit
+      when: ansible_os_family == 'Debian'
+    - name: Install NVIDIA packages on arch servers
+      become: true
+      ansible.builtin.shell: |
+        pacman -Qi nvidia-container-toolkit &> /dev/null || pacman -S nvidia-container-toolkit
+      when: ansible_os_family == 'Archlinux'
+    - name: Install NVIDIA packages on redhat servers
+      become: true
+      ansible.builtin.shell: |
+        rpm -q nvidia-container-toolkit || curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | \
+          tee /etc/yum.repos.d/nvidia-container-toolkit.repo \
+          && yum install -y nvidia-container-toolkit
+      when: ansible_os_family == 'RedHat'
+
+    - name: Generate a CDI specification
+      become: true
+      ansible.builtin.shell: |
+        nvidia-ctk runtime configure --runtime=containerd
+        nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+  when: k3s_gpu_nvidia_enabled

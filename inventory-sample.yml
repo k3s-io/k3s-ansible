@@ -13,6 +13,7 @@ k3s_cluster:
           #     fstype: ext4 # Type of volume. By default: ext4.
           # required_directories: # Create required directories if needed
           #   - /var/lib/k3s
+          # k3s_server_longhorn_enabled: true # Enable Longhorn in the server
     agent:
       hosts:
         k3s-agent-1:
@@ -25,6 +26,8 @@ k3s_cluster:
           #     fstype: ext4 # Type of volume. By default: ext4.
           # required_directories: # Create required directories if needed
           #   - /var/lib/k3s
+          # k3s_gpu_nvidia_enabled: false # Enable GPU NVIDIA in the agent
+          # k3s_agent_longhorn_enabled: true # Enable Longhorn in the agent
         k3s-agent-2:
           ansible_host: 192.0.2.52
 
@@ -35,6 +38,8 @@ k3s_cluster:
           #     fstype: ext4 # Type of volume. By default: ext4.
           # required_directories: # Create required directories if needed
           #   - /var/lib/k3s
+          # k3s_gpu_nvidia_enabled: false # Enable GPU NVIDIA in the agent
+          # k3s_agent_longhorn_enabled: true # Enable Longhorn in the agent
 
   # Required Vars
   vars:
@@ -111,7 +116,7 @@ bootstrap:
     # external_dns_helm_values: # Helm values to convigure it. See https://github.com/kubernetes-sigs/external-dns/blob/master/charts/external-dns/values.yaml
 
     # longhorn_enabled: true # false if we want to disable Longhorn installation.
-    # longhorn_enabled_only_workers: false # true if we want to enable Longhorn only in workers.
+    # longhorn_enabled_only_agent: false # true if we want to enable Longhorn only in agents.
     # longhorn_replica_count: 2 # num of replicas that Longhorn will use. More replicas, more space required
     # longhorn_data_dir: /var/lib/longhorn/ # Default path for storing data on a host.
 
