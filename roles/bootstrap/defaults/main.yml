@@ -99,6 +99,22 @@ longhorn_helm_values:
     defaultNodeSelector:
       enable: "{{ longhorn_enabled_only_agent }}"
       selector: "AGENT_NODE"
+  longhornManager:
+    nodeSelector:
+      "longhorn.io/enabled": "true"
+
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+  longhornDriver:
+    nodeSelector:
+      "longhorn.io/enabled": "true"
+
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
   metrics:
     serviceMonitor:
       enabled: true

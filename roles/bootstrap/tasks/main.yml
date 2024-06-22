@@ -127,17 +127,17 @@
     - name: Longhorn - Tag server nodes
       ansible.builtin.shell: |
         kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["SERVER_NODE"]}]' -n longhorn-system
-      retries: 5
-      delay: 10
+      retries: 10
+      delay: 30
       register: result
       until: result.rc == 0
-      when: "hostvars[item].k3s_server_longhorn_enabled"
+      when: "hostvars[item].k3s_agent_longhorn_enabled"
       with_items: "{{ groups['server'] }}"
     - name: Longhorn - Tag agent nodes
       ansible.builtin.shell: |
         kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["AGENT_NODE"]}]' -n longhorn-system
-      retries: 5
-      delay: 10
+      retries: 10
+      delay: 30
       register: result
       until: result.rc == 0
       when: "hostvars[item].k3s_agent_longhorn_enabled"
