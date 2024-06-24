@@ -25,6 +25,6 @@ Restart=always
 RestartSec=5s
 ExecStartPre=-/sbin/modprobe br_netfilter
 ExecStartPre=-/sbin/modprobe overlay
-ExecStart=/usr/local/bin/k3s server --data-dir {{ k3s_server_location }} --token '{{ token }}' \
-              {% if k3s_server_longhorn_enabled %}--node-label 'longhorn.io/enabled=true'{% endif %} \
-              {{ extra_server_args }} 
+ExecStart=/usr/local/bin/k3s server --data-dir {{ k3s_server_location }} --token '{{ token }}'
+              {%- if k3s_server_longhorn_enabled %} --node-label 'longhorn.io/enabled=true'{% endif %}
+              {%- if extra_server_args %} {{ extra_server_args }}{% endif %}
