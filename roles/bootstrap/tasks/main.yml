@@ -121,12 +121,12 @@
         chart_ref: longhorn/longhorn
         chart_version: "{{ longhorn_helm_version }}"
         create_namespace: true
-        release_namespace: longhorn-system
+        release_namespace: kube-system
         values: "{{ longhorn_helm_values }}"
         context: "{{ k3s_context_name }}"
     - name: Longhorn - Tag server nodes
       ansible.builtin.shell: |
-        kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["SERVER_NODE"]}]' -n longhorn-system
+        kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["SERVER_NODE"]}]' -n kube-system
       retries: 10
       delay: 30
       register: result
@@ -135,7 +135,7 @@
       with_items: "{{ groups['server'] }}"
     - name: Longhorn - Tag agent nodes
       ansible.builtin.shell: |
-        kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["AGENT_NODE"]}]' -n longhorn-system
+        kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["AGENT_NODE"]}]' -n kube-system
       retries: 10
       delay: 30
       register: result
