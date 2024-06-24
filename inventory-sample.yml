@@ -67,7 +67,7 @@ k3s_cluster:
     # user_kubectl: true # true by default kubectl is symlinked and configured for use by ansible_user. Set to false to only kubectl via root user.
     # server_config_yaml: # See https://docs.k3s.io/installation/configuration#configuration-file
     # etc_hosts_file: /etc/hosts # Sets the hosts file to use
-    # wipe_extra_volumes: false # Wipe the extra volumes
+    # wipe_data: false # Wipe the data
 
 bootstrap:
   hosts:

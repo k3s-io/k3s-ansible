@@ -82,7 +82,7 @@
     dev: "/dev/{{ item.value.id }}"
     fstype: "{{ item.value.fstype | default('ext4') }}"
   with_items: "{{ extra_volumes | dict2items }}"
-  when: "wipe_extra_volumes"
+  when: "wipe_data"
 
 - name: Ensure extra volumes directory
   file:
@@ -98,6 +98,14 @@
     fstype: "{{ item.value.fstype | default('ext4') }}"
     state: mounted
   with_items: "{{ extra_volumes | dict2items }}"
+
+- name: Empty required directories
+  become: true
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items: "{{ required_directories }}"
+  when: "wipe_data"
 
 - name: Create required directories
   become: true
