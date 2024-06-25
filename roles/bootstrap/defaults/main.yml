@@ -132,7 +132,7 @@ longhorn_helm_values:
 sealed_secrets_enabled: true
 sealed_secrets_helm_version: 2.15.4
 sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json
-sealed_secrets_restore: "false"
+sealed_secrets_restore: "true"
 
 argocd_enabled: true
 argocd_helm_version: 7.1.3
