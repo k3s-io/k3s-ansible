@@ -179,3 +179,9 @@ kubectl logs -f -n oauth2-proxy $(kubectl get pod -l 'app.kubernetes.io/name=oau
 
 kubectl run -it --rm --image=curlimages/curl curly -- sh # Run a pod with curl
 ```
+
+Finally, when there are error in Ansible and you want to retrieve the variables:
+
+```bash
+ansible -i inventory.yml -m debug -a 'msg={{hostvars}}' all | grep k3s_server_location
+```
