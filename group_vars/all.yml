@@ -9,3 +9,5 @@ api_port: 6443
 k3s_gpu_nvidia_enabled: false
 k3s_server_longhorn_enabled: true
 k3s_agent_longhorn_enabled: true
+
+enable_service_monitors: false

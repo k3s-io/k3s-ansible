@@ -109,7 +109,7 @@ longhorn_helm_values:
       selector: "AGENT_NODE"
   metrics:
     serviceMonitor:
-      enabled: true
+      enabled: "{{ enable_service_monitors }}"
   ingress:
     enabled: true
     ingressClassName: "traefik"
@@ -217,25 +217,25 @@ argocd_helm_values:
     metrics:
       enabled: true
       serviceMonitor:
-        enabled: true
+        enabled: "{{ enable_service_monitors }}"
   controller:
     metrics:
       enabled: true
       serviceMonitor:
-        enabled: true
+        enabled: "{{ enable_service_monitors }}"
   dex:
     enable: "{{ security_enabled }}"
     metrics:
       enabled: true
       serviceMonitor:
-        enabled: true
+        enabled: "{{ enable_service_monitors }}"
   repoServer:
     clusterRoleRules:
       enabled: true
     metrics:
       enabled: true
       serviceMonitor:
-        enabled: true
+        enabled: "{{ enable_service_monitors }}"
     extraContainers:
       - name: helmfile
         image: ghcr.io/helmfile/helmfile:v0.163.1

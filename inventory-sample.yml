@@ -80,6 +80,7 @@ bootstrap:
     ###############################
     # k3s_context_name: k3s-ansible
     # ingress_hostname: "example.com" # hostname used in all the Ingress resources
+    # enable_service_monitors: "false" # True if service monitors must be created. Must be false until an appropiate Prometheus is installed
 
     # security_enabled: false # false if we want to enable Traefik Oauth authentication.
     # # See https://oauth2-proxy.github.io/oauth2-proxy/configuration/providers/github for how to configure the OAuth provider with Github

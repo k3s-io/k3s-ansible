@@ -44,7 +44,7 @@
         name: external-dns
         repo_url: "https://kubernetes-sigs.github.io/external-dns/"
         force_update: true
-    - name: external-dns - Create ClusterIssuer
+    - name: external-dns - Create DNS Secret
       kubernetes.core.k8s:
         namespace: kube-system
         definition: "{{ lookup('ansible.builtin.template', 'external_dns_secret.yaml.j2', template_vars = {}) | from_yaml_all }}"
