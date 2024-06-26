@@ -281,7 +281,7 @@ argocd_helm_values:
     metrics:
       enabled: true
       serviceMonitor:
-        enabled: true
+        enabled: "{{ enable_service_monitors }}"
     ingress:
       enabled: true
       ingressClassName: "traefik"
