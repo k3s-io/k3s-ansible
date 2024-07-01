@@ -58,7 +58,7 @@
   when: inventory_hostname == groups[server_group][0]
   block:
     - name: Copy K3s service file [Single]
-      when: groups[server_group] | length == 1 or use_external_database | bool
+      when: groups[server_group] | length == 1 or use_external_database
       ansible.builtin.template:
         src: "k3s-single.service.j2"
         dest: "{{ systemd_dir }}/k3s.service"
@@ -69,7 +69,7 @@
     - name: Copy K3s service file [HA]
       when:
         - groups[server_group] | length > 1
-        - use_external_database | bool == false
+        - not use_external_database
       ansible.builtin.template:
         src: "k3s-cluster-init.service.j2"
         dest: "{{ systemd_dir }}/k3s.service"
@@ -152,7 +152,7 @@
     - name: Copy K3s service file [HA]
       when:
         - groups[server_group] | length > 1
-        - use_external_database | bool == false
+        - not use_external_database
       ansible.builtin.template:
         src: "k3s-ha.service.j2"
         dest: "{{ systemd_dir }}/k3s.service"
@@ -163,7 +163,7 @@
     - name: Copy K3s service file [External DB]
       when:
         - groups[server_group] | length > 1
-        - use_external_database | bool
+        - use_external_database
       ansible.builtin.template:
         src: "k3s-single.service.j2"
         dest: "{{ systemd_dir }}/k3s.service"
