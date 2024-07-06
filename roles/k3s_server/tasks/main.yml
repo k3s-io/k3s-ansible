@@ -65,6 +65,7 @@
         owner: root
         group: root
         mode: "0644"
+      notify: Restart K3s Server
 
     - name: Copy K3s service file [HA]
       when:
@@ -76,6 +77,7 @@
         owner: root
         group: root
         mode: "0644"
+      notify: Restart K3s Server
 
     - name: Add service environment variables
       when: extra_service_envs is defined
@@ -159,6 +161,7 @@
         owner: root
         group: root
         mode: "0644"
+      notify: Restart K3s Server
 
     - name: Copy K3s service file [External DB]
       when:
@@ -170,6 +173,7 @@
         owner: root
         group: root
         mode: "0644"
+      notify: Restart K3s Server
 
     - name: Enable and check K3s service
       ansible.builtin.systemd:
