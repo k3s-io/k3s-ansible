@@ -10,6 +10,10 @@
     definition: "{{ lookup('ansible.builtin.template', 'k3s_helm_config.yaml.j2', template_vars = {}) | from_yaml_all }}"
     state: present
 
+- name: Include _version.yaml
+  ansible.builtin.include_vars:
+    file: defaults/_version.yaml
+
 - name: Install Helm charts
   kubernetes.core.helm_repository:
     name: "{{ item.key }}"
