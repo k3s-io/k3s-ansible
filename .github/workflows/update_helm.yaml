@@ -1,0 +1,44 @@
+name: update_helm
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  HELM_CHART_VERSION_FILE: roles/bootstrap/defaults/_version.yaml
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set variables
+        id: vars
+        run: |
+          echo "current_date=$(date --iso-8601=date)" >> $GITHUB_OUTPUT
+          echo "helm_chart_version_file=$HELM_CHART_VERSION_FILE" >> $GITHUB_OUTPUT
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+      - name: Install dependencies
+        run: |
+          pip install -U -r .github/workflows/requirements.txt
+      - name: Update Helm chart versions
+        env:
+          ARTIFACTHUB_API_KEY: ${{ secrets.ARTIFACTHUB_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_NAME: your-repo-name
+        run: |
+          python3 .github/workflows/update_helm_chart_versions.py "${{ steps.vars.outputs.helm_chart_version_file }}"
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: bump version of Helm Charts until ${{ steps.vars.outputs.current_date }}'
+          branch: "chore/bump_help_chart_"
+          title: 'Bump versions of Helm Charts (${{ steps.vars.outputs.current_date }})'
