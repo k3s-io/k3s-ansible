@@ -87,6 +87,8 @@ bootstrap:
     # security_github_client_id: some_client # Client ID
     # security_github_client_secret: some_secret # Client Secret
     # security_github_organization: some_org # Github organization to use
+    # security_htpasswd: htpasswd entries for Basic auth to be used for API calls. Use command: htpasswd -nB some_user
+    #  - "user1:$2y$05$/sZYJOk8.3Etg4V6fV7puuXfCJLmV5Q7u3xvKpjBSJUka.t2YtmmG" # admin:Adm1n1str$t0r
 
     # # See https://cert-manager.io/docs/configuration/acme/ for how to configure cert-manager
     # cert_manager_cluster_issuer_spec:

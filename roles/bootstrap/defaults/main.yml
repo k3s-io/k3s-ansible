@@ -46,6 +46,10 @@ security_oauth2_helm_values:
     clientSecret: "{{ security_github_client_secret }}"
     cookieSecret: "{{ lookup('community.general.random_string', length=16, special=False) }}"
 
+  htpasswdFile:
+    enabled: '{{ "true" if security_htpasswd or (security_htpasswd | length > 0) else "false" }}'
+    entries: "{{ security_htpasswd }}"
+
   extraArgs:
     provider: "github"
     github-org: "{{ security_github_organization }}"
@@ -71,6 +75,8 @@ security_oauth2_helm_values:
     set-xauthrequest: true
     ssl-insecure-skip-verify: true
     ssl-upstream-insecure-skip-verify: true
+
+    skip-jwt-bearer-tokens: true
   ingress:
     enabled: true
     className: traefik
