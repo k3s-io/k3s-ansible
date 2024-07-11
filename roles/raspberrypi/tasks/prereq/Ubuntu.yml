@@ -15,4 +15,4 @@
     name: linux-modules-extra-raspi
     update_cache: true
     state: present
-  when: "ansible_distribution_version is version('20.10', '>=')"
+  when: "ansible_distribution_version is version('20.10', '>=') and ansible_distribution_version is version('24.04', '<')"
