@@ -68,40 +68,40 @@ security_dex_helm_values:
 
     staticClients:
       - id: argo-cd
+        name: "Argo CD"
         redirectURIs:
           - "https://automation-argo-cd.{{ ingress_hostname }}/api/dex/callback"
-        name: "Argo CD"
         secret: "{{ security_github_client_secret }}"
       - id: grafana
+        name: "Grafana"
         redirectURIs:
           - "https://monitoring-grafana.{{ ingress_hostname }}/login/generic_oauth"
           - "https://monitoring-grafana.{{ ingress_hostname }}:443/login/generic_oauth"
-        name: "Grafana"
         secret: "{{ security_github_client_secret }}"
       - id: headscale
+        name: "Headscale"
         redirectURIs:
           - "https://security-headscale.{{ ingress_hostname }}/oidc/callback"
-        name: "Headscale"
         secret: "{{ security_github_client_secret }}"
       - id: minio
+        name: "Minio"
         redirectURIs:
           - "https://data-minio.{{ ingress_hostname }}/oauth_callback"
-        name: "Minio"
         secret: "{{ security_github_client_secret }}"
       - id: oauth2-proxy
+        name: "OAuth2 Proxy"
         redirectURIs:
           - "https://security-oauth2.{{ ingress_hostname }}/oauth2/callback"
-        name: "OAuth2 Proxy"
         secret: "{{ security_github_client_secret }}"
       - id: openwebui
+        name: "Open WebUI"
         redirectURIs:
           - "https://data-openwebui.{{ ingress_hostname }}/oauth/oidc/callback"
-        name: "Open WebUI"
         secret: "{{ security_github_client_secret }}"
       - id: superset
+        name: "SuperSet"
         redirectURIs:
           - "https://data-superset.{{ ingress_hostname }}/oauth-authorized/dex"
-        name: "SuperSet"
         secret: "{{ security_github_client_secret }}"
 
   serviceMonitor:
