@@ -45,6 +45,12 @@ security_dex_helm_values:
         inCluster: true
 
     issuer: https://security-dex.{{ ingress_hostname }}/dex
+    scopes:
+      - email
+      - groups
+      - offline_access
+      - openid
+      - profile
 
     oauth2:
       skipApprovalScreen: true
@@ -68,17 +74,18 @@ security_dex_helm_values:
         secret: "{{ security_github_client_secret }}"
       - id: grafana
         redirectURIs:
-          - "https://security-oauth2.{{ ingress_hostname }}/login/generic_oauth"
+          - "https://monitoring-grafana.{{ ingress_hostname }}/login/generic_oauth"
+          - "https://monitoring-grafana.{{ ingress_hostname }}:443/login/generic_oauth"
         name: "Grafana"
         secret: "{{ security_github_client_secret }}"
       - id: headscale
         redirectURIs:
-          - "https://security-oauth2.{{ ingress_hostname }}/oidc/callback"
+          - "https://security-headscale.{{ ingress_hostname }}/oidc/callback"
         name: "Headscale"
         secret: "{{ security_github_client_secret }}"
       - id: minio
         redirectURIs:
-          - "https://security-oauth2.{{ ingress_hostname }}/oauth_callback"
+          - "https://data-minio.{{ ingress_hostname }}/oauth_callback"
         name: "Minio"
         secret: "{{ security_github_client_secret }}"
       - id: oauth2-proxy
