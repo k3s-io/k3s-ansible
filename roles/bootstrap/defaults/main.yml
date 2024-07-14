@@ -98,6 +98,11 @@ security_dex_helm_values:
           - "https://data-openwebui.{{ ingress_hostname }}/oauth/oidc/callback"
         name: "Open WebUI"
         secret: "{{ security_github_client_secret }}"
+      - id: superset
+        redirectURIs:
+          - "https://data-superset.{{ ingress_hostname }}/oauth-authorized/egaSSO"
+        name: "SuperSet"
+        secret: "{{ security_github_client_secret }}"
 
   serviceMonitor:
     enabled: true
