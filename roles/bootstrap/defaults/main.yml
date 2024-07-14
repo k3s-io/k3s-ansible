@@ -61,20 +61,30 @@ security_dex_helm_values:
             - name: "{{ security_github_organization }}"
 
     staticClients:
-      - id: oauth2-proxy
-        redirectURIs:
-          - "https://security-oauth2.{{ ingress_hostname }}/oauth2/callback"
-        name: "Oauth2 Proxy"
-        secret: "{{ security_github_client_secret }}"
       - id: argo-cd
         redirectURIs:
           - "https://automation-argo-cd.{{ ingress_hostname }}/api/dex/callback"
         name: "Argo CD"
         secret: "{{ security_github_client_secret }}"
+      - id: grafana
+        redirectURIs:
+          - "https://security-oauth2.{{ ingress_hostname }}/login/generic_oauth"
+        name: "Grafana"
+        secret: "{{ security_github_client_secret }}"
+      - id: headscale
+        redirectURIs:
+          - "https://security-oauth2.{{ ingress_hostname }}/oidc/callback"
+        name: "Headscale"
+        secret: "{{ security_github_client_secret }}"
       - id: minio
         redirectURIs:
-          - "https://security-oauth2.{{ ingress_hostname }}/oauth2/callback"
+          - "https://security-oauth2.{{ ingress_hostname }}/oauth_callback"
         name: "Minio"
+        secret: "{{ security_github_client_secret }}"
+      - id: oauth2-proxy
+        redirectURIs:
+          - "https://security-oauth2.{{ ingress_hostname }}/oauth2/callback"
+        name: "Oauth2 Proxy"
         secret: "{{ security_github_client_secret }}"
 
   serviceMonitor:
