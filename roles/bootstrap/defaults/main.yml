@@ -91,7 +91,12 @@ security_dex_helm_values:
       - id: oauth2-proxy
         redirectURIs:
           - "https://security-oauth2.{{ ingress_hostname }}/oauth2/callback"
-        name: "Oauth2 Proxy"
+        name: "OAuth2 Proxy"
+        secret: "{{ security_github_client_secret }}"
+      - id: openwebui
+        redirectURIs:
+          - "https://data-openwebui.{{ ingress_hostname }}/oauth/oidc/callback"
+        name: "Open WebUI"
         secret: "{{ security_github_client_secret }}"
 
   serviceMonitor:
