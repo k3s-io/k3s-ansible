@@ -36,24 +36,80 @@ security_enabled: false
 security_github_client_id:
 security_github_client_secret:
 security_github_organization:
-security_cookie_expiration: "168h"
-security_oauth2_debug: true
-security_oauth2_helm_values:
-  fullnameOverride: oauth2-proxy
 
+security_dex_helm_values:
   config:
-    clientID: "{{ security_github_client_id }}"
-    clientSecret: "{{ security_github_client_secret }}"
-    cookieSecret: "{{ lookup('community.general.random_string', length=16, special=False) }}"
+    storage:
+      type: kubernetes
+      config:
+        inCluster: true
+
+    issuer: https://security-dex.{{ ingress_hostname }}/dex
+
+    oauth2:
+      skipApprovalScreen: true
+
+    connectors:
+      - type: github
+        id: github
+        name: GitHub
+        config:
+          clientID: "{{ security_github_client_id }}"
+          clientSecret: "{{ security_github_client_secret }}"
+          redirectURI: https://security-dex.{{ ingress_hostname }}/dex/callback
+          orgs:
+            - name: "{{ security_github_organization }}"
+
+    staticClients:
+      - id: oauth2-proxy
+        redirectURIs:
+          - "https://security-oauth2.{{ ingress_hostname }}/oauth2/callback"
+        name: "Oauth2 Proxy"
+        secret: "{{ security_github_client_secret }}"
+      - id: argo-cd
+        redirectURIs:
+          - "https://automation-argo-cd.{{ ingress_hostname }}/api/dex/callback"
+        name: "Argo CD"
+        secret: "{{ security_github_client_secret }}"
+      - id: minio
+        redirectURIs:
+          - "https://security-oauth2.{{ ingress_hostname }}/oauth2/callback"
+        name: "Minio"
+        secret: "{{ security_github_client_secret }}"
+
+  serviceMonitor:
+    enabled: true
+
+  ingress:
+    enabled: true
+    className: traefik
+    hosts:
+      - host: "security-dex.{{ ingress_hostname }}"
+        paths:
+          - path: /
+            pathType: Prefix
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+
+security_oauth2_proxy_helm_values:
+  fullnameOverride: oauth2-proxy
 
   htpasswdFile:
     enabled: '{{ "true" if security_htpasswd or (security_htpasswd | length > 0) else "false" }}'
     entries: "{{ security_htpasswd }}"
 
+  config:
+    clientID: oauth2-proxy
+    clientSecret: "{{ security_github_client_secret }}"
+    cookieSecret: "{{ lookup('community.general.random_string', length=16, special=False) }}"
+
   extraArgs:
-    provider: "github"
-    github-org: "{{ security_github_organization }}"
+    provider: "oidc"
+    provider-display-name: "Github"
+    oidc-issuer-url: https://security-dex.{{ ingress_hostname }}/dex
+    redirect-url: https://security-oauth2.{{ ingress_hostname }}/oauth2/callback
     skip-provider-button: false
+    approval-prompt: auto
 
     code-challenge-method: S256
     reverse-proxy: true
@@ -62,7 +118,7 @@ security_oauth2_helm_values:
 
     cookie-csrf-expire: "1h"
     cookie-domain: ".{{ ingress_hostname }}"
-    cookie-expire: "{{ security_cookie_expiration }}"
+    cookie-expire: "168h"
     cookie-samesite: "lax"
     cookie-secure: true
     whitelist-domain: ".{{ ingress_hostname }}"
@@ -77,13 +133,14 @@ security_oauth2_helm_values:
     ssl-upstream-insecure-skip-verify: true
 
     skip-jwt-bearer-tokens: true
+    display-htpasswd-form: false
   ingress:
     enabled: true
     className: traefik
     path: /oauth2
     pathType: Prefix
     hosts:
-      - "security-oauth.{{ ingress_hostname }}"
+      - "security-oauth2.{{ ingress_hostname }}"
       - "*.{{ ingress_hostname }}"
     annotations:
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
@@ -159,15 +216,13 @@ argocd_helm_values:
       url: "https://automation-argo-cd.{{ ingress_hostname }}"
       dex.config: |
         connectors:
-          - type: github
-            id: github
-            name: GitHub
+          - type: oidc
+            id: oidc
+            name: Github
             config:
-              clientID: $security_github_client_id
+              issuer: https://security-dex.{{ ingress_hostname }}/dex
+              clientID: argo-cd
               clientSecret: $security_github_client_secret
-              redirectURI: 'https://automation-argo-cd.{{ ingress_hostname }}/api/dex/callback'
-              orgs:
-              - name: $security_github_organization
     cmp:
       create: true
       plugins:

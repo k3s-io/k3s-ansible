@@ -1,6 +1,7 @@
 helm_chart_repository:
   argo: https://argoproj.github.io/argo-helm
   bitnami-labs: https://bitnami-labs.github.io/sealed-secrets
+  dex: https://charts.dexidp.io
   emberstack: https://emberstack.github.io/helm-charts
   external-dns: https://kubernetes-sigs.github.io/external-dns/
   jetstack: https://charts.jetstack.io
@@ -10,6 +11,7 @@ helm_chart_repository:
 helm_chart_version:
   argo/argo-cd: 7.3.4
   bitnami-labs/sealed-secrets: 2.16.0
+  dex/dex: 0.18.0
   emberstack/reflector: 7.1.288
   external-dns/external-dns: 1.14.5
   jetstack/cert-manager: v1.15.1

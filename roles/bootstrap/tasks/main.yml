@@ -83,6 +83,15 @@
             state: present
     - name: Security - Authentication
       block:
+        - name: Dex - Install chart
+          kubernetes.core.helm:
+            name: dex
+            chart_ref: dex/dex
+            chart_version: "{{ helm_chart_version['dex/dex'] }}"
+            create_namespace: true
+            release_namespace: security
+            values: "{{ security_dex_helm_values }}"
+            context: "{{ k3s_context_name }}"
         - name: Oauth2 Proxy - Install chart
           kubernetes.core.helm:
             name: oauth2-proxy
@@ -90,7 +99,7 @@
             chart_version: "{{ helm_chart_version['oauth2-proxy/oauth2-proxy'] }}"
             create_namespace: true
             release_namespace: security
-            values: "{{ security_oauth2_helm_values }}"
+            values: "{{ security_oauth2_proxy_helm_values }}"
             context: "{{ k3s_context_name }}"
         - name: Oauth2 Proxy - Enable traefik Auth
           kubernetes.core.k8s:
