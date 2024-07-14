@@ -100,7 +100,7 @@ security_dex_helm_values:
         secret: "{{ security_github_client_secret }}"
       - id: superset
         redirectURIs:
-          - "https://data-superset.{{ ingress_hostname }}/oauth-authorized/egaSSO"
+          - "https://data-superset.{{ ingress_hostname }}/oauth-authorized/dex"
         name: "SuperSet"
         secret: "{{ security_github_client_secret }}"
 
