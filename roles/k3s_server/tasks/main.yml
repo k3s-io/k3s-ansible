@@ -65,6 +65,7 @@
         owner: root
         group: root
         mode: "0644"
+      register: service_file_single
 
     - name: Copy K3s service file [HA]
       when:
@@ -76,6 +77,7 @@
         owner: root
         group: root
         mode: "0644"
+      register: service_file_ha
 
     - name: Add service environment variables
       when: extra_service_envs is defined
@@ -84,7 +86,18 @@
         line: "{{ item }}"
       with_items: "{{ extra_service_envs }}"
 
+    - name: Restart K3s service
+      when:
+        - ansible_facts.services['k3s.service'] is defined
+        - ansible_facts.services['k3s.service'].state == 'running'
+        - service_file_single.changed or service_file_ha.changed
+      ansible.builtin.systemd:
+        name: k3s
+        daemon_reload: true
+        state: restarted
+
     - name: Enable and check K3s service
+      when: ansible_facts.services['k3s.service'] is not defined or ansible_facts.services['k3s.service'].state != 'running'
       ansible.builtin.systemd:
         name: k3s
         daemon_reload: true
@@ -171,6 +184,7 @@
         owner: root
         group: root
         mode: "0644"
+      register: service_file_ha
 
     - name: Copy K3s service file [External DB]
       when:
@@ -182,8 +196,20 @@
         owner: root
         group: root
         mode: "0644"
+      register: service_file_external_db
+
+    - name: Restart K3s service
+      when:
+        - ansible_facts.services['k3s.service'] is defined
+        - ansible_facts.services['k3s.service'].state == 'running'
+        - service_file_ha.changed or service_file_external_db.changed
+      ansible.builtin.systemd:
+        name: k3s
+        daemon_reload: true
+        state: restarted
 
     - name: Enable and check K3s service
+      when: ansible_facts.services['k3s.service'] is not defined or ansible_facts.services['k3s.service'].state != 'running'
       ansible.builtin.systemd:
         name: k3s
         daemon_reload: true

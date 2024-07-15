@@ -113,7 +113,7 @@
       ansible.builtin.command:
         cmd: /usr/local/bin/k3s-install.sh
       environment:
-        INSTALL_K3S_SKIP_START: "true"
+        INSTALL_K3S_SKIP_ENABLE: "true"
         INSTALL_K3S_SKIP_DOWNLOAD: "true"
       changed_when: true
 
@@ -121,7 +121,7 @@
       ansible.builtin.command:
         cmd: /usr/local/bin/k3s-install.sh
       environment:
-        INSTALL_K3S_SKIP_START: "true"
+        INSTALL_K3S_SKIP_ENABLE: "true"
         INSTALL_K3S_SKIP_DOWNLOAD: "true"
         INSTALL_K3S_EXEC: "agent"
       changed_when: true
