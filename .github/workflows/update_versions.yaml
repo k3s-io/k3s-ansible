@@ -38,5 +38,5 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'chore: bump version of Helm Charts until ${{ steps.vars.outputs.current_date }}'
-          branch: "chore/bump_help_chart_"
+          branch: "chore/bump_help_chart_${{ steps.vars.outputs.current_date }}"
           title: 'Bump versions of Helm Charts (${{ steps.vars.outputs.current_date }})'
