@@ -1,4 +1,4 @@
-name: update_helm
+name: Update Versions
 
 on:
   schedule:
@@ -13,28 +13,26 @@ env:
   HELM_CHART_VERSION_FILE: roles/bootstrap/defaults/_version.yaml
 
 jobs:
-  deploy:
+  update-versions:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set variables
         id: vars
         run: |
           echo "current_date=$(date --iso-8601=date)" >> $GITHUB_OUTPUT
           echo "helm_chart_version_file=$HELM_CHART_VERSION_FILE" >> $GITHUB_OUTPUT
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.12
-      - name: Install dependencies
-        run: |
-          pip install -U -r .github/workflows/requirements.txt
-      - name: Update Helm chart versions
+
+      - name: Update versions
+        id: check
+        uses: datahub-local/container-helm-version-updater@v1
         env:
-          ARTIFACTHUB_API_KEY: ${{ secrets.ARTIFACTHUB_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO_NAME: your-repo-name
-        run: |
-          python3 .github/workflows/update_helm_chart_versions.py "${{ steps.vars.outputs.helm_chart_version_file }}"
+        with:
+          versions-file: values/_version.yaml
+          version-type: minor
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
