@@ -30,7 +30,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          versions-file: values/_version.yaml
+          versions-file: roles/bootstrap/defaults/_version.yaml
           version-type: minor
 
       - name: Create Pull Request
