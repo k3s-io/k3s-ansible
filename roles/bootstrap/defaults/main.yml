@@ -78,10 +78,10 @@ security_dex_helm_values:
           - "https://monitoring-grafana.{{ ingress_hostname }}/login/generic_oauth"
           - "https://monitoring-grafana.{{ ingress_hostname }}:443/login/generic_oauth"
         secret: "{{ security_github_client_secret }}"
-      - id: headscale
-        name: "Headscale"
+      - id: defguard
+        name: "Defguard"
         redirectURIs:
-          - "https://security-headscale.{{ ingress_hostname }}/oidc/callback"
+          - "https://security-defguard.{{ ingress_hostname }}/oidc/callback"
         secret: "{{ security_github_client_secret }}"
       - id: minio
         name: "Minio"
