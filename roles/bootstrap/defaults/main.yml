@@ -284,6 +284,8 @@ argocd_helm_values:
     rbac:
       policy.default: "role:admin"
 
+    credentialTemplates: "{{argocd_credential_templates}}"
+
     secret:
       extra:
         security_github_client_id: "{{ security_github_client_id }}"

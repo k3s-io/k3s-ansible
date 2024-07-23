@@ -116,7 +116,7 @@ bootstrap:
     # # See https://github.com/kubernetes-sigs/external-dns/blob/master/charts/external-dns/README.md#provider for how to configure external-dns
     # external_dns_secret_name: # Name of the secret where the  will get the credentials
     # external_dns_secret_data: # Data of the secret that the issuer will get the credentials
-    # external_dns_helm_values: # Helm values to convigure it. See https://github.com/kubernetes-sigs/external-dns/blob/master/charts/external-dns/values.yaml
+    # external_dns_helm_values: # Helm values to configure it. See https://github.com/kubernetes-sigs/external-dns/blob/master/charts/external-dns/values.yaml
 
     # longhorn_enabled: true # false if we want to disable Longhorn installation.
     # longhorn_enabled_only_agent: false # true if we want to enable Longhorn only in agents.
@@ -131,3 +131,10 @@ bootstrap:
     # argocd_namespaces: # namespaces where argo-cd will look for apps
     #   - default
     #   - automation
+    # argocd_credential_templates: # Helm values to configure it. See https://argo-cd.readthedocs.io/en/stable/operator-manual/argocd-repo-creds-yaml/ and https://github.com/argoproj/argo-helm/blob/main/charts/argo-cd/values.yaml
+    #   ssh-creds:
+    #     url: git@github.com:argoproj-labs
+    #     sshPrivateKey: |
+    #       -----BEGIN OPENSSH PRIVATE KEY-----
+    #       ...
+    #       -----END OPENSSH PRIVATE KEY-----
