@@ -151,8 +151,8 @@
           when: kubeconfig != "~/.kube/config"
           ansible.builtin.replace:
             path: "{{ kubeconfig }}"
-            regexp: 'name: default'
-            replace: 'name: {{ cluster_context }}'
+            regexp: 'default'
+            replace: '{{ cluster_context }}'
           delegate_to: 127.0.0.1
           become: false
 
@@ -160,8 +160,8 @@
           when: kubeconfig != "~/.kube/config"
           ansible.builtin.shell: |
             TFILE=$(mktemp)
-            KUBECONFIG={{ kubeconfig }} kubectl config set-context {{ cluster_context }} --user={{ cluster_context }} --cluster={{ cluster_context }}
-            KUBECONFIG={{ kubeconfig }} kubectl config view --flatten > ${TFILE}
+            KUBECONFIG={{ kubeconfig }}:~/.kube/config kubectl config set-context {{ cluster_context }} --user={{ cluster_context }} --cluster={{ cluster_context }}
+            KUBECONFIG={{ kubeconfig }}:~/.kube/config kubectl config view --flatten > ${TFILE}
             mv ${TFILE} {{ kubeconfig }}
           delegate_to: 127.0.0.1
           become: false
