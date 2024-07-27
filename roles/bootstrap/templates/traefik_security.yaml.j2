@@ -48,6 +48,7 @@ spec:
   forwardAuth:
     address: https://security-oauth.{{ ingress_hostname }}/oauth2/auth
     trustForwardHeader: true
+    authResponseHeadersRegex: ^X-
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
