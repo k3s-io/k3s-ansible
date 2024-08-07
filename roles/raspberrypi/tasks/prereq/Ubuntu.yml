@@ -1,7 +1,7 @@
 ---
 - name: Enable cgroup via boot commandline if not already enabled
   when: lookup('fileglob', '/boot/firmware/cmdline.txt', errors='warn') | length > 0
-  ansible.builtin.lineinfile:
+  ansible.builtin.replace:
     path: /boot/firmware/cmdline.txt
     regexp: '^([\w](?!.*\b{{ cgroup_item }}\b).*)$'
     replace: '\1 {{ cgroup_item }}'
