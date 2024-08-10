@@ -75,6 +75,19 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
+  name: security-oauth2-https-headers-transform
+spec:
+  plugin:
+    htransformation:
+      Rules:
+        - Name: "Header transformation"
+          Header: "X-Auth-Request-Preferred-Username"
+          Value: "X-Auth-Request-User"
+          Type: "Rename"
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
   name: security-oauth2
 spec:
   chain:
@@ -83,3 +96,4 @@ spec:
       - name: security-oauth2-headers
       - name: security-oauth2-errors
       - name: security-oauth2-forward
+      - name: security-oauth2-https-headers-transform

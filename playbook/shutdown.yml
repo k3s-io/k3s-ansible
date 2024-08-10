@@ -23,7 +23,7 @@
         cmd: k3s-killall.sh
   ignore_errors: true
 
-- name: Halt servers to gracefully poweroff
+- name: Reboot servers
   hosts: k3s_cluster
   become: true
   tasks:
@@ -32,4 +32,4 @@
         /sbin/shutdown --halt now
 
     - name: Wait go down
-      local_action: wait_for host={{ ansible_ssh_host }} port=22 state=stopped
+      local_action: wait_for host={{ ansible_ssh_host }} port=22 state=started
