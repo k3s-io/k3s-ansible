@@ -9,7 +9,7 @@ helm_chart_repository:
   nvidia-k8s-device-plugin: https://nvidia.github.io/k8s-device-plugin
   oauth2-proxy: https://oauth2-proxy.github.io/manifests
 helm_chart_version:
-  argo/argo-cd: 7.4.2
+  argo/argo-cd: 7.4.3
   bitnami-labs/sealed-secrets: 2.16.1
   dex/dex: 0.19.1
   emberstack/reflector: 7.1.288
