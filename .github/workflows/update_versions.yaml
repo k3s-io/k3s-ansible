@@ -31,7 +31,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           versions-file: roles/bootstrap/defaults/_version.yaml
-          version-type: minor
+          version-type: major
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
