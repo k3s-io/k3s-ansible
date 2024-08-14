@@ -9,8 +9,8 @@ spec:
   issuerRef:
     name: default-cluster-issuer
     kind: ClusterIssuer
-  commonName: "*.{{ ingress_hostname }}"
   dnsNames:
+    - "{{ ingress_hostname }}"
     - "*.{{ ingress_hostname }}"
   secretTemplate:
     annotations:
