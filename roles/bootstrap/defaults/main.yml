@@ -289,7 +289,7 @@ argocd_helm_values:
                   PARAMS+=(--state-values-file /helm-values/$f)
                 done
 
-                helmfile "${PARAMS[@]}"
+                helmfile "${PARAMS[@]}" | tee -a "/tmp/helmfile.log" 
           lockRepo: false
     rbac:
       policy.default: "role:admin"
