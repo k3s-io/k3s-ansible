@@ -2,6 +2,7 @@
 base_packages:
   - curl
   - net-tools
+  - ntp
   - open-iscsi
   - openssh-client
   - vim
