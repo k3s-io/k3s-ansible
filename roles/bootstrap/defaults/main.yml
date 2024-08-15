@@ -20,7 +20,7 @@ k3s_helm_config:
       metrics:
         prometheus:
           service:
-            enabled: true
+            enabled: "{{ enable_service_monitors }}"
           serviceMonitor:
             interval: 30s
       deployment:
@@ -234,8 +234,9 @@ argocd_helm_secrets:
     security_github_organization: "{{ security_github_organization }}"
 argocd_helm_values:
   global:
+    domain: "automation-argo-cd.{{ ingress_hostname }}"
     logging:
-      level: "debug"
+      level: "info"
   configs:
     params:
       application.namespaces: "{{ argocd_namespaces | join(', ') }}"
@@ -290,7 +291,7 @@ argocd_helm_values:
                   PARAMS+=(--state-values-file /helm-values/$f)
                 done
 
-                helmfile "${PARAMS[@]}" | tee -a "/tmp/helmfile.log" 
+                helmfile "${PARAMS[@]}" | tee -a "/tmp/helmfile.log"
           lockRepo: false
     rbac:
       policy.default: "role:admin"
@@ -304,25 +305,25 @@ argocd_helm_values:
         security_github_organization: "{{ security_github_organization }}"
   applicationSet:
     metrics:
-      enabled: true
+      enabled: "{{ enable_service_monitors }}"
       serviceMonitor:
         enabled: "{{ enable_service_monitors }}"
   controller:
     metrics:
-      enabled: true
+      enabled: "{{ enable_service_monitors }}"
       serviceMonitor:
         enabled: "{{ enable_service_monitors }}"
   dex:
     enable: "{{ security_enabled }}"
     metrics:
-      enabled: true
+      enabled: "{{ enable_service_monitors }}"
       serviceMonitor:
         enabled: "{{ enable_service_monitors }}"
   repoServer:
     clusterRoleRules:
       enabled: true
     metrics:
-      enabled: true
+      enabled: "{{ enable_service_monitors }}"
       serviceMonitor:
         enabled: "{{ enable_service_monitors }}"
     extraContainers:
@@ -368,7 +369,7 @@ argocd_helm_values:
           optional: true
   server:
     metrics:
-      enabled: true
+      enabled: "{{ enable_service_monitors }}"
       serviceMonitor:
         enabled: "{{ enable_service_monitors }}"
     ingress:
