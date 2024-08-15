@@ -269,9 +269,7 @@ argocd_helm_values:
               - bash
               - "-c"
               - |
-                set -o pipefail
-
-                PARAMS=()
+                PARAMS=()                
 
                 if [[ -v ARGOCD_APP_NAMESPACE ]]; then
                   PARAMS+=(-n $ARGOCD_APP_NAMESPACE)
@@ -293,7 +291,9 @@ argocd_helm_values:
                   PARAMS+=(--state-values-file /helm-values/$f)
                 done
 
-                helmfile "${PARAMS[@]}" | tee -a "/tmp/helmfile.log"
+                helmfile "${PARAMS[@]}" 2>&1 | tee -a "/tmp/helmfile_$(date +'%Y%m%d%H%M').log"
+                
+                test "${PIPESTATUS[0]}" -eq 0
           lockRepo: false
     rbac:
       policy.default: "role:admin"
