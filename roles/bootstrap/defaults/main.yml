@@ -269,6 +269,8 @@ argocd_helm_values:
               - bash
               - "-c"
               - |
+                set -o pipefail
+
                 PARAMS=()
 
                 if [[ -v ARGOCD_APP_NAMESPACE ]]; then
