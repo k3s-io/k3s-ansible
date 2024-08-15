@@ -172,8 +172,9 @@ security_oauth2_proxy_helm_values:
     path: /oauth2
     pathType: Prefix
     hosts:
-      - "security-oauth2.{{ ingress_hostname }}"
+      - "{{ ingress_hostname }}"
       - "*.{{ ingress_hostname }}"
+      - "security-oauth2.{{ ingress_hostname }}"
     annotations:
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
 
