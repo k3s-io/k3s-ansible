@@ -35,9 +35,8 @@
 - name: Undo user setup
   hosts: server
   tasks:
-  - name: Remove K3s commands from ~/.bashrc
-    ansible.builtin.lineinfile:
-      path: "~{{ ansible_user }}/.bashrc"
-      search_string: "Added by k3s-ansible"
-      state: absent
-
+    - name: Remove K3s commands from ~/.bashrc
+      ansible.builtin.lineinfile:
+        path: "~{{ ansible_user }}/.bashrc"
+        search_string: "Added by k3s-ansible"
+        state: absent
