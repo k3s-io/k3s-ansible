@@ -38,7 +38,7 @@ spec:
     forceSTSHeader: true
     stsIncludeSubdomains: true
     stsPreload: true
-    frameDeny: true
+    frameDeny: false
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
@@ -80,7 +80,7 @@ spec:
   plugin:
     htransformation:
       Rules:
-        - Name: "Header transformation"
+        - Name: "Rename X-Auth-Request-User"
           Header: "X-Auth-Request-Preferred-Username"
           Value: "X-Auth-Request-User"
           Type: "Rename"
