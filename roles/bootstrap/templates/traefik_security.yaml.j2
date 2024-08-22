@@ -97,3 +97,15 @@ spec:
       - name: security-oauth2-errors
       - name: security-oauth2-forward
       - name: security-oauth2-https-headers-transform
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: security-oauth2-noXForwarding
+spec:
+  chain:
+    middlewares:
+      - name: security-oauth2-https-only
+      - name: security-oauth2-headers
+      - name: security-oauth2-errors
+      - name: security-oauth2-forward
