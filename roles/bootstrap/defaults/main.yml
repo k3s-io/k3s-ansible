@@ -10,6 +10,9 @@ k3s_helm_config:
         repository: traefik
         tag: v2.11.3
       hostNetwork: true # Fix https://github.com/k3s-io/k3s/discussions/2997
+      ports:
+        metrics:
+          port: 19100
       globalArguments:
       - --providers.kubernetescrd.allowexternalnameservices=true
       - --providers.kubernetescrd.allowCrossNamespace=true
