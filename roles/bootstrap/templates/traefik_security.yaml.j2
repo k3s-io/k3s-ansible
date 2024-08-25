@@ -32,6 +32,7 @@ metadata:
   name: security-oauth2-headers
 spec:
   headers:
+    sslRedirect: true
     stsSeconds: 315360000
     browserXssFilter: true
     contentTypeNosniff: true
@@ -80,10 +81,12 @@ spec:
   plugin:
     htransformation:
       Rules:
-        - Name: "Rename X-Auth-Request-User"
-          Header: "X-Auth-Request-Preferred-Username"
-          Value: "X-Auth-Request-User"
-          Type: "Rename"
+      - Header: X-Auth-Request-Preferred-Username
+        Type: Rename
+        Value: X-Auth-Request-User
+      - Header: X-Real-Ip
+        Type: Rename
+        Value: X-Forwarded-For
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
