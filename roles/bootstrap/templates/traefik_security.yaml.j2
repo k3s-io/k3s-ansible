@@ -75,7 +75,15 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: security-oauth2-https-headers-transform
+  name: security-oauth2-ipwhitelist
+spec:
+  ipWhiteList:
+    sourceRange: {{ security_ip_white_list }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: security-oauth2-headers-transform
 spec:
   plugin:
     htransformation:
@@ -94,8 +102,9 @@ metadata:
 spec:
   chain:
     middlewares:
+      - name: security-oauth2-ipwhitelist
       - name: security-oauth2-https-only
       - name: security-oauth2-headers
       - name: security-oauth2-errors
       - name: security-oauth2-forward
-      - name: security-oauth2-https-headers-transform
+      - name: security-oauth2-headers-transform
