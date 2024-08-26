@@ -75,6 +75,19 @@
         values: "{{ kubernetes_reflector_helm_values }}"
         context: "{{ k3s_context_name }}"
 
+- name: kubernetes-reloader
+  block:
+    - name: kubernetes-reloader - Install chart
+      kubernetes.core.helm:
+        name: kubernetes-reloader
+        chart_ref: stakater/reloader
+        chart_version: "{{ helm_chart_version['stakater/reloader'] }}"
+        create_namespace: true
+        force: true
+        release_namespace: kube-system
+        values: "{{ kubernetes_reloader_helm_values }}"
+        context: "{{ k3s_context_name }}"
+
 - name: Security
   block:
     - name: Security - TLS
@@ -211,8 +224,7 @@
         context: "{{ k3s_context_name }}"
     - name: ArgoCD - Rollout server
       ansible.builtin.shell: |
-        sleep 30 && kubectl rollout restart -n automation deploy/argo-cd-argocd-server || true
-      when: "not sealed_secrets_key_stat.stat.exists"
+        sleep 15 && kubectl rollout restart -n automation deploy/argo-cd-argocd-server || true
     - name: ArgoCD - Create Projects
       kubernetes.core.k8s:
         state: present

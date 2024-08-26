@@ -8,6 +8,7 @@ helm_chart_repository:
   longhorn: https://charts.longhorn.io
   nvidia-k8s-device-plugin: https://nvidia.github.io/k8s-device-plugin
   oauth2-proxy: https://oauth2-proxy.github.io/manifests
+  stakater: https://stakater.github.io/stakater-charts
 helm_chart_version:
   argo/argo-cd: 7.4.4
   bitnami-labs/sealed-secrets: 2.16.1
@@ -18,3 +19,4 @@ helm_chart_version:
   longhorn/longhorn: 1.6.2
   nvidia-k8s-device-plugin/nvidia-device-plugin: 0.16.2
   oauth2-proxy/oauth2-proxy: 7.7.9
+  stakater/reloader: 1.0.121

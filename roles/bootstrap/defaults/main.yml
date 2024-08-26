@@ -52,6 +52,8 @@ external_dns_helm_values:
 
 kubernetes_reflector_helm_values: {}
 
+kubernetes_reloader_helm_values: {}
+
 security_enabled: false
 security_github_client_id:
 security_github_client_secret:
