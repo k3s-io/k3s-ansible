@@ -80,8 +80,6 @@ bootstrap:
     ###############################
     # k3s_context_name: k3s-ansible
     # ingress_hostname: "example.com" # hostname used in all the Ingress resources
-    # ingress_ips: # IPs used in the Ingress Load Balancer
-    # - 192.168.0.100
     # enable_service_monitors: "false" # True if service monitors must be created. Must be false until an appropiate Prometheus is installed
 
     # security_enabled: false # false if we want to enable Traefik Oauth authentication.

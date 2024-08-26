@@ -13,7 +13,6 @@ k3s_helm_config:
       service:
         spec:
           externalTrafficPolicy: Local
-        externalIPs: {{ ingress_ips | list }}
       ports:
         metrics:
           port: 19100
