@@ -181,14 +181,13 @@
     - (groups[server_group] | length) > 1
     - inventory_hostname != groups[server_group][0]
   block:
-    - name: Add the token and first server URL for joining the cluster to the environment
+    - name: Add the token for joining the cluster to the environment
       no_log: true # avoid logging the server token
       ansible.builtin.lineinfile:
         path: "{{ systemd_dir }}/k3s.service.env"
         line: "{{ item }}"
       with_items:
         - "K3S_TOKEN={{ token }}"
-        - "K3S_URL=https://{{ api_endpoint }}:{{ api_port }}"
 
     - name: Copy K3s service file [HA]
       when: not use_external_database
