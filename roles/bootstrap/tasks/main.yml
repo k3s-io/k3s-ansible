@@ -4,12 +4,6 @@
     kubectl config use-context {{ k3s_context_name }}
   changed_when: true
 
-- name: Set custom config for K3s Helm charts
-  kubernetes.core.k8s:
-    namespace: oauth2-proxy
-    definition: "{{ lookup('ansible.builtin.template', 'k3s_helm_config.yaml.j2', template_vars = {}) | from_yaml_all }}"
-    state: present
-
 - name: Include _version.yaml
   ansible.builtin.include_vars:
     file: defaults/_version.yaml
@@ -30,7 +24,7 @@
         chart_version: "{{ helm_chart_version['jetstack/cert-manager'] }}"
         create_namespace: true
         force: true
-        release_namespace: cert-manager
+        release_namespace: security
         values:
           ingressShim:
             defaultIssuerName: "cluster-issuer"
@@ -38,10 +32,10 @@
 
           installCRDs: true
         context: "{{ k3s_context_name }}"
-    - name: cert-manager - Create ClusterIssuer
+    - name: cert-manager - Create resources
       kubernetes.core.k8s:
-        namespace: cert-manager
-        definition: "{{ lookup('ansible.builtin.template', 'cert_manager_cluster_issuer.yaml.j2', template_vars = {}) | from_yaml_all }}"
+        namespace: security
+        definition: "{{ lookup('ansible.builtin.template', 'cert_manager_resources.yaml.j2', template_vars = {}) | from_yaml_all }}"
         state: present
 
 - name: external-dns
@@ -88,15 +82,21 @@
         values: "{{ kubernetes_reloader_helm_values }}"
         context: "{{ k3s_context_name }}"
 
+- name: ingress-nginx
+  block:
+    - name: ingress-nginx - Install chart
+      kubernetes.core.helm:
+        name: ingress-nginx
+        chart_ref: ingress-nginx/ingress-nginx
+        chart_version: "{{ helm_chart_version['ingress-nginx/ingress-nginx'] }}"
+        create_namespace: true
+        force: true
+        release_namespace: kube-system
+        values: "{{ ingress_nginx_helm_config }}"
+        context: "{{ k3s_context_name }}"
+
 - name: Security
   block:
-    - name: Security - TLS
-      block:
-        - name: Traefik - Force TLS
-          kubernetes.core.k8s:
-            namespace: kube-system
-            definition: "{{ lookup('ansible.builtin.template', 'traefik_dashboard.yaml.j2', template_vars = {}) | from_yaml_all }}"
-            state: present
     - name: Security - Authentication
       block:
         - name: Dex - Install chart
@@ -119,11 +119,6 @@
             release_namespace: security
             values: "{{ security_oauth2_proxy_helm_values }}"
             context: "{{ k3s_context_name }}"
-        - name: Oauth2 Proxy - Enable traefik Auth
-          kubernetes.core.k8s:
-            namespace: security
-            definition: "{{ lookup('ansible.builtin.template', 'traefik_security.yaml.j2', template_vars = {}) | from_yaml_all }}"
-            state: present
       when: "security_enabled"
 
 - name: Longhorn

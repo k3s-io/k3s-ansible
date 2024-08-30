@@ -15,6 +15,10 @@ on processor architectures:
 - [X] arm64
 - [X] armhf
 
+**IMPORTANT CHANGES**:
+
+- Use of [Ingress-Nginx Controller](https://kubernetes.github.io/ingress-nginx) insteaf of Traefik.
+
 ## System requirements
 
 The control node **must** have Ansible 8.0+ (ansible-core 2.15+)
@@ -168,14 +172,12 @@ For debugging purposes, you can run the bootstrapping against a local cluster. F
 k3d cluster create -v "/tmp/k3d/kubelet/pods:/var/lib/kubelet/pods@all" -p "8443:443@loadbalancer" --agents 2
 ```
 
-In case you have problems with **Traefik + Oauth2-proxy**, run these commands to debug it:
+In case you have problems with **ingress-nginx + oauth2-proxy**, run these commands to debug it:
 
 ```bash
-kubectl logs -f -n kube-system $(kubectl get pods -l "app.kubernetes.io/name=traefik" -n kube-system -o=name) # Check traefik logs
+kubectl logs -f -n kube-system daemonset/ingress-nginx-controller # Check ngnix logs
 
-kubectl port-forward -n kube-system $(kubectl get pods -l "app.kubernetes.io/name=traefik" -n kube-system -o=name) 9000:9000 # Port forward traefik dashboard
-
-kubectl logs -f -n oauth2-proxy $(kubectl get pod -l 'app.kubernetes.io/name=oauth2-proxy' -n oauth2-proxy -o=name) # Check oauth2-proxy logs
+kubectl logs -f -n kube-system $(kubectl get pod -l 'app.kubernetes.io/name=oauth2-proxy' -n kube-system -o=name) # Check oauth2-proxy logs
 
 kubectl run -it --rm --image=curlimages/curl curly -- sh # Run a pod with curl
 ```

@@ -4,6 +4,7 @@ helm_chart_repository:
   dex: https://charts.dexidp.io
   emberstack: https://emberstack.github.io/helm-charts
   external-dns: https://kubernetes-sigs.github.io/external-dns/
+  ingress-nginx: https://kubernetes.github.io/ingress-nginx
   jetstack: https://charts.jetstack.io
   longhorn: https://charts.longhorn.io
   nvidia-k8s-device-plugin: https://nvidia.github.io/k8s-device-plugin
@@ -15,6 +16,7 @@ helm_chart_version:
   dex/dex: 0.19.1
   emberstack/reflector: 7.1.288
   external-dns/external-dns: 1.14.5
+  ingress-nginx/ingress-nginx: 4.11.2
   jetstack/cert-manager: v1.15.3
   longhorn/longhorn: 1.6.2
   nvidia-k8s-device-plugin/nvidia-device-plugin: 0.16.2

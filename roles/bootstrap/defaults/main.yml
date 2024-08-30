@@ -1,45 +1,85 @@
 ---
 ingress_hostname: ""
 
-k3s_helm_config:
-  - name: traefik
-    namespace: kube-system
-    values_content: |
-      # custom values from https://github.com/traefik/traefik-helm-chart/blob/master/traefik/values.yaml
-      image:
-        repository: traefik
-        tag: v2.11.3
-      hostNetwork: true # Fix https://github.com/k3s-io/k3s/discussions/2997
-      service:
-        spec:
-          externalTrafficPolicy: Local
-      ports:
-        metrics:
-          port: 19100
-      globalArguments:
-      - --global.sendanonymoususage=false
-      - --global.checknewversion=false
-      - --providers.kubernetescrd.allowexternalnameservices=true
-      - --providers.kubernetescrd.allowCrossNamespace=true
-      - --api.insecure=true
-      - --log.level=info
-      # - --accesslog
-      # - --accesslog.format=json
-      # - --accesslog.fields.headers.defaultmode=keep
-      - --experimental.plugins.htransformation.modulename=github.com/tomMoulard/htransformation
-      - --experimental.plugins.htransformation.version=v0.3.1
-      deployment:
-        additionalVolumes:
-        - name: plugins
-      additionalVolumeMounts:
-      - name: plugins
-        mountPath: /plugins-storage
-      metrics:
-        prometheus:
-          service:
-            enabled: "{{ enable_service_monitors }}"
-          serviceMonitor:
-            interval: 30s
+
+
+ingress_nginx_helm_config:
+  # custom values from https://github.com/kubernetes/ingress-nginx/blob/main/charts/ingress-nginx/values.yaml
+  controller:
+    kind: DaemonSet
+    port:
+      https: 443
+    containerPort:
+      https: 443
+    hostNetwork: true
+    service:
+      externalTrafficPolicy: "Local"
+      enableHttp: false
+
+    ingressClass: nginx
+    ingressClassResource:
+      name: nginx
+      enabled: true
+      default: true
+      controllerValue: "k8s.io/ingress-nginx"
+    watchIngressWithoutClass: true
+
+    allowSnippetAnnotations: true
+    config:
+      custom-http-errors: 404,408,500,501,502,503,504,50
+      use-forwarded-headers: "true"
+    extraArgs:
+      default-ssl-certificate: "kube-system/{{ ingress_hostname }}-cert"
+
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: "{{ enable_service_monitors }}"
+      prometheusRule:
+        enabled: "{{ enable_service_monitors }}"
+        rules:
+          - alert: NGINXConfigFailed
+            expr: count(nginx_ingress_controller_config_last_reload_successful == 0) > 0
+            for: 1s
+            labels:
+              severity: critical
+            annotations:
+              description: bad ingress config - nginx config test failed
+              summary: uninstall the latest ingress changes to allow config reloads to resume
+          - alert: NGINXCertificateExpiry
+            expr: (avg(nginx_ingress_controller_ssl_expire_time_seconds{host!="_"}) by (host) - time()) < 604800
+            for: 1s
+            labels:
+              severity: critical
+            annotations:
+              description: ssl certificate(s) will expire in less then a week
+              summary: renew expiring certificates to avoid downtime
+          - alert: NGINXTooMany500s
+            expr: 100 * ( sum( nginx_ingress_controller_requests{status=~"5.+"} ) / sum(nginx_ingress_controller_requests) ) > 5
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              description: Too many 5XXs
+              summary: More than 5% of all requests returned 5XX, this requires your attention
+          - alert: NGINXTooMany400s
+            expr: 100 * ( sum( nginx_ingress_controller_requests{status=~"4.+"} ) / sum(nginx_ingress_controller_requests) ) > 5
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              description: Too many 4XXs
+              summary: More than 5% of all requests returned 4XX, this requires your attention
+  defaultBackend:
+    enabled: true
+    image:
+      repository: ghcr.io/tarampampam/error-pages
+      tag: 3.3.0
+    extraEnvs:
+      - name: TEMPLATE_NAME
+        value: ghost
+      - name: SHOW_DETAILS
+        value: "false"
 
 cert_manager_cluster_issuer_spec:
   selfSigned: {}
@@ -133,14 +173,12 @@ security_dex_helm_values:
 
   ingress:
     enabled: true
-    className: traefik
+    className: nginx
     hosts:
       - host: "security-dex.{{ ingress_hostname }}"
         paths:
           - path: /
             pathType: Prefix
-    annotations:
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
 
 security_oauth2_proxy_helm_values:
   fullnameOverride: oauth2-proxy
@@ -165,7 +203,6 @@ security_oauth2_proxy_helm_values:
     code-challenge-method: S256
     reverse-proxy: true
     show-debug-on-error: true
-    upstream: "static://202"
 
     cookie-csrf-expire: "1h"
     cookie-domain: ".{{ ingress_hostname }}"
@@ -187,15 +224,26 @@ security_oauth2_proxy_helm_values:
     display-htpasswd-form: false
   ingress:
     enabled: true
-    className: traefik
+    className: nginx
     path: /oauth2
     pathType: Prefix
     hosts:
       - "{{ ingress_hostname }}"
       - "*.{{ ingress_hostname }}"
       - "security-oauth2.{{ ingress_hostname }}"
-    annotations:
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+
+security_oauth2_annotations: &security_oauth2_annotations
+  nginx.ingress.kubernetes.io/auth-response-headers: Authorization
+  nginx.ingress.kubernetes.io/auth-signin: https://security-oauth2.{{ ingress_hostname }}/oauth2/start?rd=https://$host$escaped_request_uri
+  nginx.ingress.kubernetes.io/auth-url: https://security-oauth2.{{ ingress_hostname }}/oauth2/auth
+  nginx.ingress.kubernetes.io/configuration-snippet: |
+    auth_request_set $name_upstream_1 $upstream_cookie__oauth2_proxy_1;
+
+    access_by_lua_block {
+      if ngx.var.name_upstream_1 ~= "" then
+        ngx.header["Set-Cookie"] = "_oauth2_proxy_1=" .. ngx.var.name_upstream_1 .. ngx.var.auth_cookie:match("(; .*)")
+      end
+    }
 
 longhorn_enabled: true
 longhorn_enabled_only_agent: false
@@ -222,15 +270,14 @@ longhorn_helm_values:
       enabled: "{{ enable_service_monitors }}"
   ingress:
     enabled: true
-    ingressClassName: "traefik"
+    ingressClassName: "nginx"
     host: "system-longhorn.{{ ingress_hostname }}"
     path: /
     pathType: Prefix
     tls: false
     secureBackends: false
     annotations:
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      traefik.ingress.kubernetes.io/router.middlewares: "{% if security_enabled %}security-security-oauth2@kubernetescrd{% endif %}"
+      <<: *security_oauth2_annotations
 
       gethomepage.dev/enabled: "true"
       gethomepage.dev/name: "Longhorn"
@@ -395,14 +442,12 @@ argocd_helm_values:
         enabled: "{{ enable_service_monitors }}"
     ingress:
       enabled: true
-      ingressClassName: "traefik"
+      ingressClassName: "nginx"
       hostname: "automation-argo-cd.{{ ingress_hostname }}"
       path: /
       tls: false
 
       annotations:
-        traefik.ingress.kubernetes.io/router.entrypoints: websecure
-
         gethomepage.dev/enabled: "true"
         gethomepage.dev/name: "Argo CD"
         gethomepage.dev/pod-selector: "app.kubernetes.io/name=argocd-server"
