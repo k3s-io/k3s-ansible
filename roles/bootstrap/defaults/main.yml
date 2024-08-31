@@ -30,6 +30,7 @@ ingress_nginx_helm_config:
       use-forwarded-headers: "true"
     extraArgs:
       default-ssl-certificate: "kube-system/{{ ingress_hostname }}-cert"
+      # v: 5
 
     metrics:
       enabled: true
@@ -233,7 +234,6 @@ security_oauth2_proxy_helm_values:
       - "security-oauth2.{{ ingress_hostname }}"
 
 security_oauth2_annotations: &security_oauth2_annotations
-  nginx.ingress.kubernetes.io/auth-response-headers: Authorization
   nginx.ingress.kubernetes.io/auth-signin: https://security-oauth2.{{ ingress_hostname }}/oauth2/start?rd=https://$host$escaped_request_uri
   nginx.ingress.kubernetes.io/auth-url: https://security-oauth2.{{ ingress_hostname }}/oauth2/auth
   nginx.ingress.kubernetes.io/configuration-snippet: |
