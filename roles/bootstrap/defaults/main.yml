@@ -236,15 +236,23 @@ security_oauth2_proxy_helm_values:
 security_oauth2_annotations: &security_oauth2_annotations
   nginx.ingress.kubernetes.io/auth-signin: https://security-oauth2.{{ ingress_hostname }}/oauth2/start?rd=https://$host$escaped_request_uri
   nginx.ingress.kubernetes.io/auth-url: https://security-oauth2.{{ ingress_hostname }}/oauth2/auth
+  nginx.ingress.kubernetes.io/auth-snippet: |
+    if ( $request_uri ~* "^SOME_REGEX_TO_SKIP" ) {
+        return 200;
+    }
+
+    set $auth_header "";
+
+    if ( $request_uri ~* ^/auth-basic/([^/]+)/(.*)$ ) {
+      set $basic_auth $1;
+      set $auth_header "Basic ${basic_auth}";
+    }
+
+    proxy_set_header Authorization $auth_header;
   nginx.ingress.kubernetes.io/configuration-snippet: |
     auth_request_set $name_upstream_1 $upstream_cookie__oauth2_proxy_1;
 
-    access_by_lua_block {
-      if ngx.var.name_upstream_1 ~= "" then
-        ngx.header["Set-Cookie"] = "_oauth2_proxy_1=" .. ngx.var.name_upstream_1 .. ngx.var.auth_cookie:match("(; .*)")
-      end
-    }
-
+    rewrite ^(/auth-basic/[^/]+)/(.*)$ /$2 break;
 longhorn_enabled: true
 longhorn_enabled_only_agent: false
 longhorn_replica_count: 2
