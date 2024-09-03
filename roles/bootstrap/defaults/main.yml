@@ -298,6 +298,7 @@ argocd_helm_secrets:
     security_github_client_id: "{{ security_github_client_id }}"
     security_github_client_secret: "{{ security_github_client_secret }}"
     security_github_organization: "{{ security_github_organization }}"
+# custom values from https://github.com/argoproj/argo-helm/blob/main/charts/argo-cd/values.yaml
 argocd_helm_values:
   global:
     domain: "automation-argo-cd.{{ ingress_hostname }}"
@@ -323,6 +324,20 @@ argocd_helm_values:
               issuer: https://security-dex.{{ ingress_hostname }}/dex
               clientID: argo-cd
               clientSecret: $security_github_client_secret
+      resource.customizations: |
+        networking.k8s.io/Ingress:
+          health.lua: |
+            hs = {}
+            
+            if obj.status ~= nil then
+              hs.status = "Healthy"
+              hs.message = "Ingress created"
+              return hs
+            end
+
+            hs.status = "Progressing"
+            hs.message = "Waiting for creation"
+            return hs
     cmp:
       create: true
       plugins:
