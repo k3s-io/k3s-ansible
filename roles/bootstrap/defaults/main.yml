@@ -112,7 +112,7 @@ security_dex_helm_values_default_clients: |
       - "https://automation-argo-cd.{{ ingress_hostname }}/api/dex/callback"
     secret: "{{ security_github_client_secret }}"
 security_dex_extra_clients: []
-security_dex_helm_values:
+security_dex_helm_values: # https://github.com/dexidp/helm-charts/blob/master/charts/dex/values.yaml
   config:
     storage:
       type: kubernetes
@@ -126,6 +126,10 @@ security_dex_helm_values:
       - offline_access
       - openid
       - profile
+
+    web:
+      allowedOrigins:
+        - "*"
 
     oauth2:
       skipApprovalScreen: true
