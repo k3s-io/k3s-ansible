@@ -1,8 +1,6 @@
 ---
 ingress_hostname: ""
 
-
-
 ingress_nginx_helm_config:
   # custom values from https://github.com/kubernetes/ingress-nginx/blob/main/charts/ingress-nginx/values.yaml
   controller:
@@ -107,6 +105,13 @@ security_ip_white_list:
   - 10.43.0.0/16
   - 192.168.31.0/24
 
+security_dex_helm_values_default_clients: |
+  - id: argo-cd
+    name: "Argo CD"
+    redirectURIs:
+      - "https://automation-argo-cd.{{ ingress_hostname }}/api/dex/callback"
+    secret: "{{ security_github_client_secret }}"
+security_dex_extra_clients: []
 security_dex_helm_values:
   config:
     storage:
@@ -136,38 +141,7 @@ security_dex_helm_values:
           orgs:
             - name: "{{ security_github_organization }}"
 
-    staticClients:
-      - id: argo-cd
-        name: "Argo CD"
-        redirectURIs:
-          - "https://automation-argo-cd.{{ ingress_hostname }}/api/dex/callback"
-        secret: "{{ security_github_client_secret }}"
-      - id: grafana
-        name: "Grafana"
-        redirectURIs:
-          - "https://monitoring-grafana.{{ ingress_hostname }}/login/generic_oauth"
-          - "https://monitoring-grafana.{{ ingress_hostname }}:443/login/generic_oauth"
-        secret: "{{ security_github_client_secret }}"
-      - id: minio
-        name: "Minio"
-        redirectURIs:
-          - "https://data-minio.{{ ingress_hostname }}/oauth_callback"
-        secret: "{{ security_github_client_secret }}"
-      - id: oauth2-proxy
-        name: "OAuth2 Proxy"
-        redirectURIs:
-          - "https://security-oauth2.{{ ingress_hostname }}/oauth2/callback"
-        secret: "{{ security_github_client_secret }}"
-      - id: openwebui
-        name: "Open WebUI"
-        redirectURIs:
-          - "https://data-openwebui.{{ ingress_hostname }}/oauth/oidc/callback"
-        secret: "{{ security_github_client_secret }}"
-      - id: superset
-        name: "SuperSet"
-        redirectURIs:
-          - "https://data-superset.{{ ingress_hostname }}/oauth-authorized/dex"
-        secret: "{{ security_github_client_secret }}"
+    staticClients: "{{ (security_dex_helm_values_default_clients | from_yaml) + (security_dex_extra_clients | from_yaml) }}"
 
   serviceMonitor:
     enabled: true

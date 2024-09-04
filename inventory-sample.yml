@@ -89,6 +89,12 @@ bootstrap:
     # security_github_organization: some_org # Github organization to use
     # security_htpasswd: htpasswd entries for Basic auth to be used for API calls. Use command: htpasswd -nB some_user
     #  - "user1:$2y$05$/sZYJOk8.3Etg4V6fV7puuXfCJLmV5Q7u3xvKpjBSJUka.t2YtmmG" # admin:Adm1n1str$t0r
+    # security_dex_extra_clients: | # List extra clients to create in DEX.
+    #   - id: some-app
+    #     name: "Some App"
+    #     redirectURIs:
+    #       - "https://some-app.{{ingress_hostname}}/api/dex/callback"
+    #   secret: "{{ some_secret_var }}"
 
     # # See https://cert-manager.io/docs/configuration/acme/ for how to configure cert-manager
     # cert_manager_cluster_issuer_spec:

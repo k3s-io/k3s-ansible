@@ -1,4 +1,11 @@
 ---
+# - name: Display all variables/facts known for a host
+#   debug:
+#     msg: "{{ security_dex_helm_values }}"
+#   tags: debug_info
+
+# - fail:
+
 - name: K8s - Set context
   ansible.builtin.shell: |
     kubectl config use-context {{ k3s_context_name }}
