@@ -26,4 +26,4 @@ RestartSec=5s
 ExecStartPre=/bin/sh -xc '! /usr/bin/systemctl is-enabled --quiet nm-cloud-setup.service'
 ExecStartPre=-/sbin/modprobe br_netfilter
 ExecStartPre=-/sbin/modprobe overlay
-ExecStart=/usr/local/bin/k3s agent --data-dir {{ k3s_server_location }} --server https://{{ api_endpoint }}:{{ api_port }} --token {{ token }} {{ extra_agent_args }}
+ExecStart=/usr/local/bin/k3s agent --data-dir {{ k3s_server_location }} --server https://{{ api_endpoint }}:{{ api_port }} {{ extra_agent_args }}
