@@ -96,7 +96,18 @@ kubernetes_reloader_helm_values: {}
 security_enabled: false
 security_github_client_id:
 security_github_client_secret:
-security_github_organization:
+security_github_organizations:
+security_github_organizations_mapped: |
+  {% for org in security_github_organizations.split(',') %}
+  - name: "{{ org.split(':')[0] }}"
+  {% if ":" in org %}
+    teams:
+  {% for team in org.split(':')[1].split('|') %}
+    - "{{ team }}"
+  {% endfor %}
+  {% endif %}
+  {% endfor %}
+  
 security_htpasswd: []
 
 security_ip_white_list:
@@ -142,9 +153,7 @@ security_dex_helm_values: # https://github.com/dexidp/helm-charts/blob/master/ch
           clientID: "{{ security_github_client_id }}"
           clientSecret: "{{ security_github_client_secret }}"
           redirectURI: https://security-dex.{{ ingress_hostname }}/dex/callback
-          orgs:
-            - name: "{{ security_github_organization }}"
-
+          orgs: "{{ security_github_organizations_mapped | from_yaml }}"
     staticClients: "{{ (security_dex_helm_values_default_clients | from_yaml) + (security_dex_extra_clients | from_yaml) }}"
 
   serviceMonitor:
@@ -283,7 +292,7 @@ argocd_helm_secrets:
   security.yaml: |
     security_github_client_id: "{{ security_github_client_id }}"
     security_github_client_secret: "{{ security_github_client_secret }}"
-    security_github_organization: "{{ security_github_organization }}"
+    security_github_organizations: "{{ security_github_organizations }}"
 # custom values from https://github.com/argoproj/argo-helm/blob/main/charts/argo-cd/values.yaml
 argocd_helm_values:
   global:
@@ -371,7 +380,7 @@ argocd_helm_values:
       extra:
         security_github_client_id: "{{ security_github_client_id }}"
         security_github_client_secret: "{{ security_github_client_secret }}"
-        security_github_organization: "{{ security_github_organization }}"
+        security_github_organizations: "{{ security_github_organizations }}"
   applicationSet:
     metrics:
       enabled: "{{ enable_service_monitors }}"
