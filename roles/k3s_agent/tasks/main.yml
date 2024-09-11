@@ -35,13 +35,13 @@
         INSTALL_K3S_EXEC: "agent"
       changed_when: true
 
-    - name: Add the token for joining the cluster to the environment
-      no_log: true # avoid logging the server token
-      ansible.builtin.lineinfile:
-        path: "{{ systemd_dir }}/k3s-agent.service.env"
-        line: "{{ item }}"
-      with_items:
-        - "K3S_TOKEN={{ token }}"
+- name: Add the token for joining the cluster to the environment
+  no_log: true # avoid logging the server token
+  ansible.builtin.lineinfile:
+    path: "{{ systemd_dir }}/k3s-agent.service.env"
+    line: "{{ item }}"
+  with_items:
+    - "K3S_TOKEN={{ token }}"
 
 - name: Copy K3s service file
   register: k3s_agent_service
