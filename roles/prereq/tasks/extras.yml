@@ -145,7 +145,7 @@
       ansible.builtin.shell: |
         nvidia-ctk runtime configure --runtime=containerd
         nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
-  when: k3s_gpu_nvidia_enabled and ansible_os_family == 'Debian'
+  when: k3s_gpu_nvidia_enabled
 
 - name: Configure NTP service
   block:
@@ -155,4 +155,5 @@
         daemon_reload: true
         state: started
         enabled: true
-  when: k3s_gpu_nvidia_enabled and ansible_os_family == 'Debian'
+  when: ansible_os_family == 'Debian'
+  ignore_errors: true
