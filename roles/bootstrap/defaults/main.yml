@@ -157,7 +157,7 @@ security_dex_helm_values: # https://github.com/dexidp/helm-charts/blob/master/ch
     staticClients: "{{ (security_dex_helm_values_default_clients | from_yaml) + (security_dex_extra_clients | from_yaml) }}"
 
   serviceMonitor:
-    enabled: true
+    enabled: "{{ enable_service_monitors }}"
 
   ingress:
     enabled: true
@@ -283,7 +283,7 @@ longhorn_helm_values:
 
 sealed_secrets_enabled: true
 sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json
-sealed_secrets_restore: "true"
+sealed_secrets_restore: true
 
 argocd_enabled: true
 argocd_namespaces:

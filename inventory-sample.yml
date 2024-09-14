@@ -130,7 +130,7 @@ bootstrap:
     # longhorn_data_dir: /var/lib/longhorn/ # Default path for storing data on a host.
 
     # sealed_secrets_enabled: true # false if we want to disable Sealed Secrets installation.
-    # sealed_secrets_restore: true # false if we want to reuse an existing sealed_secrets_key.
+    # sealed_secrets_restore: "true" # false if we want to reuse an existing sealed_secrets_key.
     # sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json # full paths or relative to an existing sealed_secrets_key.
 
     # argocd_enabled: true # false if we want to disable ArgoCD installation.
