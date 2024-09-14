@@ -20,5 +20,5 @@ helm_chart_version:
   jetstack/cert-manager: v1.15.3
   longhorn/longhorn: 1.7.1
   nvidia-k8s-device-plugin/nvidia-device-plugin: 0.16.2
-  oauth2-proxy/oauth2-proxy: 7.7.14
+  oauth2-proxy/oauth2-proxy: 7.7.16
   stakater/reloader: 1.1.0
