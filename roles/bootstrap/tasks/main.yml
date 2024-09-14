@@ -179,7 +179,9 @@
     - name: Sealed Secrets - Load sealed-secrets-key
       ansible.builtin.shell: |
         kubectl -n security apply -f {{ sealed_secrets_key }}
+      ignore_errors: true
       when: "sealed_secrets_restore and sealed_secrets_key_stat.stat.exists"
+
     - name: Sealed Secrets - Install chart
       kubernetes.core.helm:
         name: sealed-secrets
