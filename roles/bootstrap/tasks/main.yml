@@ -194,11 +194,12 @@
     - name: Sealed Secrets - Save sealed-secrets-key
       ansible.builtin.shell: |
         mkdir -p $(dirname {{ sealed_secrets_key }})
+        
 
         while true; do
             count=$(kubectl -n security get secret -l "sealedsecrets.bitnami.com/sealed-secrets-key" | tail -n +2 | wc -l)
 
-            if [ "$count" -eq 1 ]; then
+            if [ "$count" -eq 2 ]; then
                 pod_names=$(kubectl get pods --namespace=$namespace -o custom-columns=:metadata.name | grep "^$prefix")
 
                 kubectl -n security get secret \
@@ -211,7 +212,6 @@
                 sleep 1
             fi
         done
-      when: "not sealed_secrets_key_stat.stat.exists"
   when: "sealed_secrets_enabled"
 
 - name: ArgoCD
