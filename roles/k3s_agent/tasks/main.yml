@@ -29,6 +29,21 @@
     group: root
     mode: "u=rw,g=r,o=r"
 
+- name: Make config directory
+  ansible.builtin.file:
+    path: "/etc/rancher/k3s"
+    mode: 0755
+    state: directory
+
+- name: Create kubelet config
+  when: kubelet_config_enabled
+  ansible.builtin.template:
+    src: "kubelet.config.j2"
+    dest: "/etc/rancher/k3s/kubelet.config"
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+
 - name: Enable and check K3s service
   ansible.builtin.systemd:
     name: k3s-agent

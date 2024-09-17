@@ -1,0 +1,60 @@
+---
+- name: Drain nodes from k3s cluster
+  block:
+  - name: Drain nodes from k3s cluster
+    hosts: k3s_cluster
+    connection: local
+    tasks:
+      - name: Drain node [agent]
+        when: "'agent' in group_names"
+        ansible.builtin.shell: |
+          kubectl config use-context {{ k3s_context_name }}
+          kubectl drain {{ inventory_hostname }} \
+            --force \
+            --grace-period=30 \
+            --ignore-daemonsets \
+            --delete-emptydir-data \
+            --timeout=60s
+    ignore_errors: true
+
+  - name: Sleep for previous step to finish
+    hosts: bootstrap
+    connection: local
+    tasks:
+    - ansible.builtin.wait_for:
+        timeout: "30"
+  when: "drain_nodes"
+
+- name: Stop K3s [agent]
+  hosts: k3s_cluster
+  become: true
+  tasks:
+    - name: Stop K3s [agent]
+      when: "'server' in group_names"
+      ansible.builtin.command:
+        cmd: k3s-killall.sh
+  ignore_errors: true
+
+- name: Sleep for previous step to finish
+  hosts: bootstrap
+  connection: local
+  tasks:
+  - ansible.builtin.wait_for:
+      timeout: "30"
+
+- name: Stop K3s [server]
+  hosts: server
+  become: true
+  tasks:
+    - name: Stop K3s [server]
+      when: "'agent' in group_names"
+      ansible.builtin.command:
+        cmd: k3s-killall.sh
+  ignore_errors: true
+
+- name: Sleep for previous step to finish
+  hosts: bootstrap
+  connection: local
+  tasks:
+  - ansible.builtin.wait_for:
+      timeout: "30"

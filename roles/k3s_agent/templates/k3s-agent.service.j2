@@ -30,6 +30,7 @@ ExecStart=/usr/local/bin/k3s agent \
               --data-dir {{ k3s_server_location }} \
               --server https://{{ api_endpoint }}:{{ api_port }} \
               --token '{{ token }}'
+              {%- if kubelet_config_enabled %} --kubelet-arg="config=/etc/rancher/k3s/kubelet.config"{% endif %}
               {%- if k3s_agent_longhorn_enabled %} --node-label 'longhorn.io/enabled=true'{% endif %}
               {%- if k3s_gpu_nvidia_enabled %} --node-label 'nvidia.com/gpu.present=true' --node-taint 'nvidia.com/gpu=:NoSchedule'{% endif %}
               {%- if extra_agent_args %} {{ extra_agent_args }}{% endif %}

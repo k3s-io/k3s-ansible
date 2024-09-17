@@ -101,6 +101,8 @@
         release_namespace: kube-system
         values: "{{ ingress_nginx_helm_config }}"
         context: "{{ k3s_context_name }}"
+    - ansible.builtin.wait_for:
+        timeout: "120"
 
 - name: Security
   block:
