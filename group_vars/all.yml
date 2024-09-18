@@ -16,3 +16,5 @@ k3s_server_longhorn_enabled: true
 k3s_agent_longhorn_enabled: true
 
 enable_service_monitors: false
+
+drain_nodes: false

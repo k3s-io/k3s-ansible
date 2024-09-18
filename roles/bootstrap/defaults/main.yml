@@ -29,7 +29,6 @@ ingress_nginx_helm_config:
       proxy-body-size: 100m
     extraArgs:
       default-ssl-certificate: "kube-system/{{ ingress_hostname }}-cert"
-      # v: 5
 
     metrics:
       enabled: true
