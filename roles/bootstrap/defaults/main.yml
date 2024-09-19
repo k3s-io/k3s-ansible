@@ -228,9 +228,9 @@ security_oauth2_annotations: &security_oauth2_annotations
         return 200;
     }
 
-    set $auth_header "";
+    set $auth_header $http_authorization;
 
-    if ( $request_uri ~* ^/auth-basic/([^/]+)/(.*)$ ) {
+    if ( $request_uri ~* ^/basic-auth/([^/]+)/(.*)$ ) {
       set $basic_auth $1;
       set $auth_header "Basic ${basic_auth}";
     }
