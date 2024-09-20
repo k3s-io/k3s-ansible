@@ -87,7 +87,13 @@ bootstrap:
     # security_github_client_id: some_client # Client ID
     # security_github_client_secret: some_secret # Client Secret
     # security_github_organizations: security_github_organizations: "my-organization,my-organization-with-teams:red-team|blue-team" # List of organizations
-    # security_htpasswd: htpasswd entries for Basic auth to be used for API calls. Use command: htpasswd -nB some_user
+    # security_static_users: | # htpasswd entries for auth with DEX Token (https://dexidp.io/docs/connectors/local/).
+    #   - email: "admin@example.com"
+    #     # bcrypt hash of the string "password": $(echo password | htpasswd -BinC 10 admin | cut -d: -f2)
+    #     hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+    #     username: "admin"
+    #     userID: "08a8684b-db88-4b73-90a9-3cd1661f5466"
+    
     #  - "user1:$2y$05$/sZYJOk8.3Etg4V6fV7puuXfCJLmV5Q7u3xvKpjBSJUka.t2YtmmG" # admin:Adm1n1str$t0r
     # security_dex_extra_clients: | # List extra clients to create in DEX.
     #   - id: some-app

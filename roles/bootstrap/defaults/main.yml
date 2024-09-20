@@ -107,8 +107,8 @@ security_github_organizations_mapped: |
   {% endfor %}
   {% endif %}
   {% endfor %}
-  
-security_htpasswd: []
+
+security_static_users: ""
 
 security_ip_white_list:
   - 127.0.0.1/32
@@ -117,6 +117,12 @@ security_ip_white_list:
   - 192.168.31.0/24
 
 security_dex_helm_values_default_clients: |
+  - id: dex-static-clients
+    name: "dex-static-clients"
+    public: true
+    redirectURIs:
+      - 'https://example.com/oidc/callback'
+    secret: "{{ security_github_client_secret }}"
   - id: argo-cd
     name: "Argo CD"
     redirectURIs:
@@ -141,9 +147,16 @@ security_dex_helm_values: # https://github.com/dexidp/helm-charts/blob/master/ch
     web:
       allowedOrigins:
         - "*"
+    
+    staticClients: "{{ (security_dex_helm_values_default_clients | from_yaml) + (security_dex_extra_clients | from_yaml) }}"
+    
+    staticPasswords: "{{ security_static_users | from_yaml }}"
+    
+    enablePasswordDB: true
 
     oauth2:
       skipApprovalScreen: true
+      passwordConnector: local
 
     connectors:
       - type: github
@@ -154,7 +167,6 @@ security_dex_helm_values: # https://github.com/dexidp/helm-charts/blob/master/ch
           clientSecret: "{{ security_github_client_secret }}"
           redirectURI: https://security-dex.{{ ingress_hostname }}/dex/callback
           orgs: "{{ security_github_organizations_mapped | from_yaml }}"
-    staticClients: "{{ (security_dex_helm_values_default_clients | from_yaml) + (security_dex_extra_clients | from_yaml) }}"
 
   serviceMonitor:
     enabled: "{{ enable_service_monitors }}"
@@ -170,10 +182,6 @@ security_dex_helm_values: # https://github.com/dexidp/helm-charts/blob/master/ch
 
 security_oauth2_proxy_helm_values:
   fullnameOverride: oauth2-proxy
-
-  htpasswdFile:
-    enabled: '{{ "true" if security_htpasswd or (security_htpasswd | length > 0) else "false" }}'
-    entries: "{{ security_htpasswd }}"
 
   config:
     clientID: oauth2-proxy
@@ -209,6 +217,8 @@ security_oauth2_proxy_helm_values:
     ssl-upstream-insecure-skip-verify: true
 
     skip-jwt-bearer-tokens: true
+    oidc-extra-audience: 'dex-static-clients'
+    
     display-htpasswd-form: false
   ingress:
     enabled: true
@@ -228,14 +238,14 @@ security_oauth2_annotations: &security_oauth2_annotations
         return 200;
     }
 
-    set $auth_header $http_authorization;
+    # set $auth_header $http_authorization;
 
-    if ( $request_uri ~* ^/basic-auth/([^/]+)/(.*)$ ) {
-      set $basic_auth $1;
-      set $auth_header "Basic ${basic_auth}";
-    }
+    # if ( $request_uri ~* ^/auth-bearer/([^/]+)/(.*)$ ) {
+    #   set $auth $1;
+    #   set $auth_header "Bearer ${auth}";
+    # }
 
-    proxy_set_header Authorization $auth_header;
+    # proxy_set_header Authorization $auth_header;
   nginx.ingress.kubernetes.io/configuration-snippet: |
     auth_request_set $name_upstream_1 $upstream_cookie__oauth2_proxy;
 
