@@ -249,7 +249,7 @@ security_oauth2_annotations: &security_oauth2_annotations
   nginx.ingress.kubernetes.io/configuration-snippet: |
     auth_request_set $name_upstream_1 $upstream_cookie__oauth2_proxy;
 
-    rewrite ^(/auth-basic/[^/]+)/(.*)$ /$2 break;
+    # rewrite ^(/auth-basic/[^/]+)/(.*)$ /$2 break;
 
     access_by_lua_block {
       if ngx.var.name_upstream_1 ~= "" then
