@@ -356,7 +356,7 @@ configs:
     certificates:
       dockerhub.io: |
         {{ argocd.pki2.ca_cert | join('\n        ') }}
-      github.shs.cloud.cjib.nl: |
+      github.shs.k8s-frambozen.nl: |
         {{ argocd.pki2.ca_cert | join('\n        ') }}
 
   # ConfigMap for Config Management Plugins
@@ -2106,7 +2106,7 @@ repoServer:
   extraContainers:
     - name: frambozen-helm-avp
       command: [/var/run/argocd/argocd-cmp-server]
-      image: {{ argocd_extra_container_images.cjib_helm_avp }}
+      image: {{ argocd_extra_container_images.k8s-frambozen_helm_avp }}
       securityContext:
         runAsNonRoot: true
         runAsUser: 999
@@ -2130,7 +2130,7 @@ repoServer:
           name: cache
     - name: frambozen-kustomize
       command: [/var/run/argocd/argocd-cmp-server]
-      image: {{ argocd_extra_container_images.cjib_kustomize }}
+      image: {{ argocd_extra_container_images.k8s-frambozen_kustomize }}
       securityContext:
         runAsNonRoot: true
         runAsUser: 999
