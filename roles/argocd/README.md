@@ -35,10 +35,10 @@ path "cloud-provision/*"
 ```
 
 Check if this policy is already added to approles in The Vault (Replace `{TOKEN}`
-with the token used to connect to the Vault):
+with the k3s_cluster.token used to connect to the Vault):
 
 ```bash
-curl -H "X-Vault-Token: {TOKEN}}" -X GET https://vault-ota.shs.cjib.minjus.nl:8200/v1/auth/approle/role/argocd/role-id | jq
+curl -H "X-Vault-Token: {TOKEN}}" -X GET https://vault-ota.tools.local.k8s-frambozen.nl:8200/v1/auth/approle/role/argocd/role-id | jq
 ```
 
 If the policy in the role exists, then note down the returned id. If not, add
@@ -48,15 +48,15 @@ the pollicy to the approles in The Vault and get the id of the role again:
 cat > add_argocd_policy_to_approle.json << EOF
 {
   "secret_id_ttl": 0,
-  "token_ttl":3600,
-  "token_max_ttl": 14400,
-  "token_policies": [
+  "k3s_cluster.token_ttl":3600,
+  "k3s_cluster.token_max_ttl": 14400,
+  "k3s_cluster.token_policies": [
     "argocd"
   ],
-  "token_type": "default"
+  "k3s_cluster.token_type": "default"
 }
 EOF
-curl -H "X-Vault-Token: {TOKEN}}" -X POST --data @add_argocd_policy_to_approle.json https://vault-ota.shs.cjib.minjus.nl:8200/v1/auth/approle/role/argocd | jq
+curl -H "X-Vault-Token: {TOKEN}}" -X POST --data @add_argocd_policy_to_approle.json https://vault-ota.tools.local.k8s-frambozen.nl:8200/v1/auth/approle/role/argocd | jq
 ```
 
 The plugin also needs the secret id in order to connect. Get it by executing the
@@ -68,7 +68,7 @@ cat > genereate_secret_id_for_argocd.json << EOF
   "metadata":"{\"service\":\"argocd-dev0\"}"
 }
 EOF
-curl -H "X-Vault-Token: {TOKEN}" -X POST --data @genereate_secret_id_for_argocd.json https://vault-ota.shs.cjib.minjus.nl:8200/v1/auth/approle/role/argocd | jq
+curl -H "X-Vault-Token: {TOKEN}" -X POST --data @genereate_secret_id_for_argocd.json https://vault-ota.tools.local.k8s-frambozen.nl:8200/v1/auth/approle/role/argocd | jq
 ```
 
 Note down the secret id so it can be stored in The Vault as shown in the following
@@ -116,7 +116,7 @@ These value's can be set in the `argocd.yml` as a list of elements under the var
 ```yaml
 argocd.github.projects:
   - name: k8s-deployements
-    url: "{{ cjib_git_clone_ssh_url }}/kd"
+    url: "{{ git_clone_ssh_url }}/kd"
 ```
 
 ### External kubernetes clusters
@@ -130,10 +130,10 @@ The format of this section corresponds to the format used by the [Argo CD helm c
 
 Gather `bearerToken` and `caData` from the target cluster default `cd` namespace user:
 
-1. Lookup the token used with the service account with. `kubectl describe serviceaccount default -n cd`.
-1. Print the token with: `kubectl describe secret default-token-<TOKEN> -n cd`
+1. Lookup the k3s_cluster.token used with the service account with. `kubectl describe serviceaccount default -n cd`.
+1. Print the k3s_cluster.token with: `kubectl describe secret default-k3s_cluster.token-<TOKEN> -n cd`
 and save it as `bearerToken` in Vault `cloud-provision/show/k8s_clusters/<TARGETCLUSTER>`.
-1. Print the certificate with: `kubectl get -o yaml secret default-token-<TOKEN> -n cd`
+1. Print the certificate with: `kubectl get -o yaml secret default-k3s_cluster.token-<TOKEN> -n cd`
 and save it as `caData` in Vault `cloud-provision/show/k8s_clusters/<TARGETCLUSTER>`.
 
 ### Environments AppProject
@@ -170,13 +170,13 @@ argocd_application_sets:
   - name: ont-kustomize
     type: kustomize
     project: ont
-    repo_url: "{{ cjib_git_clone_ssh_url }}/cdtool/cdtools-argocd-environments.git"
+    repo_url: "{{ git_clone_ssh_url }}/cdtool/cdtools-argocd-environments.git"
     git_files: "ont/**/service.yaml"
     cluster: ota-cluster
   - name: shs-helm
     type: helm
     project: shs
-    repo_url: "{{ cjib_git_clone_ssh_url }}/cdtool/cdtools-argocd-environments.git"
+    repo_url: "{{ git_clone_ssh_url }}/cdtool/cdtools-argocd-environments.git"
     git_files: "shs/**/application.yaml"
     cluster: shs-cluster
 ```

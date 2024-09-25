@@ -161,7 +161,7 @@ configs:
     annotations: {}
 
     # -- Argo CD's externally facing base URL (optional). Required when configuring SSO
-    url: "https://{{ argocd_alias }}.{{ universe.apps_domain }}.{{ universe.name }}"
+    url: "https://{{ argocd_alias }}.{{ universe.environment }}.{{ universe.domain }}"
 
     # -- The name of tracking label used by Argo CD for resource pruning
     # @default -- Defaults to app.kubernetes.io/instance
@@ -354,7 +354,7 @@ configs:
     # -- TLS certificates for Git repositories
     # @default -- `{}` (See [values.yaml])
     certificates:
-      nexus.shs.cloud.cjib.nl: |
+      dockerhub.io: |
         {{ argocd.pki2.ca_cert | join('\n        ') }}
       github.shs.cloud.cjib.nl: |
         {{ argocd.pki2.ca_cert | join('\n        ') }}
@@ -1881,7 +1881,7 @@ server:
     ## Hostnames must be provided if Ingress is enabled.
     ## Secrets must be manually created in the namespace
     hosts:
-      - "{{ argocd_alias }}.{{ universe.apps_domain }}.{{ universe.name }}"
+      - "{{ argocd_alias }}.{{ universe.environment }}.{{ universe.domain }}"
 
     # -- List of ingress paths
     paths:
@@ -1902,7 +1902,7 @@ server:
     tls:
       # - secretName: your-certificate-name
       - hosts:
-          - "{{ argocd_alias }}.{{ universe.apps_domain }}.{{ universe.name }}"
+          - "{{ argocd_alias }}.{{ universe.environment }}.{{ universe.domain }}"
 
     # -- Uses `server.service.servicePortHttps` instead `server.service.servicePortHttp`
     https: false
@@ -2158,10 +2158,10 @@ repoServer:
       args:
         - >-
           cd /downloads &&
-          wget -q -O argocd-vault-plugin https://nexus.shs.cloud.cjib.nl/repository/github.com/argoproj-labs/argocd-vault-plugin/releases/download/v${AVP_VERSION}/argocd-vault-plugin_${AVP_VERSION}_linux_amd64 &&
+          wget -q -O argocd-vault-plugin https://dockerhub.io/repository/github.com/argoproj-labs/argocd-vault-plugin/releases/download/v${AVP_VERSION}/argocd-vault-plugin_${AVP_VERSION}_linux_amd64 &&
           chmod +x argocd-vault-plugin &&
           mv argocd-vault-plugin /custom-tools/ &&
-          wget -q -O helm-installer.tgz https://nexus.shs.cloud.cjib.nl/repository/get.helm.sh/helm-v${HELM_DIST}-linux-amd64.tar.gz &&
+          wget -q -O helm-installer.tgz https://dockerhub.io/repository/get.helm.sh/helm-v${HELM_DIST}-linux-amd64.tar.gz &&
           tar xf helm-installer.tgz &&
           mv linux-amd64/helm /custom-tools/
       volumeMounts:
@@ -2838,13 +2838,13 @@ notifications:
     ## Can be used for templates, notification services etc. Some examples given below.
     ## For more information: https://argocd-notifications.readthedocs.io/en/stable/services/overview/
     items: {}
-      # slack-token:
+      # slack-k3s_cluster.token:
       #   # For more information: https://argocd-notifications.readthedocs.io/en/stable/services/slack/
 
       # grafana-apiKey:
       #   # For more information: https://argocd-notifications.readthedocs.io/en/stable/services/grafana/
 
-      # webhooks-github-token:
+      # webhooks-github-k3s_cluster.token:
 
       # email-username:
       # email-password:
@@ -2893,7 +2893,7 @@ notifications:
   ## For more information: https://argocd-notifications.readthedocs.io/en/stable/services/overview/
   notifiers: {}
     # service.slack: |
-    #   token: $slack-token
+    #   k3s_cluster.token: $slack-k3s_cluster.token
 
   # -- Annotations to be applied to the notifications controller Deployment
   deploymentAnnotations: {}

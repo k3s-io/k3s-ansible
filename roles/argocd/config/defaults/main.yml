@@ -1,7 +1,8 @@
+---
 # code language=ansible
-argocd_helm_repo_name: helm-argo-cd
-argocd_helm_repo_chart: "{{ cjib_nexus_repository_url }}/{{ argocd_helm_repo_name }}"
-argocd_helm_chart_version: 5.46.7
+argocd_helm_repo_name: argo
+argocd_helm_repo_chart: "https://argoproj.github.io/argo-helm"
+argocd_helm_chart_version: 7.5.2
 argocd_helm_chart: "{{ argocd_helm_repo_name }}/argo-cd"
 
 argocd_namespace: argocd
@@ -10,7 +11,7 @@ argocd_alias: argocd
 argocd_helm_ingress: true
 
 # Define the Vault server that will be used by the argo cd vault plugin.
-argocd_vault_server: "https://vault{{ environment_name is regex('^dev\\d+$') | ternary('-ota', '') }}.shs.cjib.minjus.nl:8200"
+argocd_vault_server: "http://192.168.1.72:8205"
 
 # Define the images that should be used by plugins:
 argocd_init_container_images:
@@ -20,6 +21,6 @@ argocd_extra_container_images:
   cjib_kustomize: "registry.shs.cloud.cjib.nl/cdinnovatie/kubectl:1.24.16-0"
 
 argocd_webhook:
-  name: "ArgoCD {{ environment_name | upper }} webhook"
-  url: "https://argocd.apps.{{ environment_name }}.cloud.cjib.nl/api/webhook"
+  name: "ArgoCD {{ universe.environment | upper }} webhook"
+  url: "https://argocd.apps.{{ universe.environment }}.cloud.cjib.nl/api/webhook"
   event: "repo:refs_changed"

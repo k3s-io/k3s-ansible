@@ -1,91 +1,66 @@
 ---
 argocd:
-  adfs:
-    client:
-      id: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ oidc_environment }}/group_vars/adfs/clients/argocd-dev:id') }}"
-      secret: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ oidc_environment }}/group_vars/adfs/clients/argocd-dev:secret') }}"
+  # Uncomment if needed:
+  # adfs:
+  #  client:
+  #    id: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ oidc_environment }}/group_vars/adfs/clients/argocd-dev:id') }}"
+  #    secret: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ oidc_environment }}/group_vars/adfs/clients/argocd-dev:secret') }}"
 
   github:
     projects:
       - name: k8s-deployements
-        url: "{{ cjib_git_clone_ssh_url }}/kd"
-    ssh_key: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:github_svc_key') }}"
-    known_hosts: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:github_known_hosts') }}"
+        url: "{{ git_clone_ssh_url }}/kd"
+    ssh_key: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd:github_svc_key') }}"
+    known_hosts: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd:github_known_hosts') }}"
     webhook:
-      secret: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:github_webhook_secret') }}"
-    token: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:github_token') }}"
+      secret: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd:github_webhook_secret') }}"
+    k3s_cluster.token: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd:github_k3s_cluster.token') }}"
 
-  vault.token: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/all/vault_token:value') }}"
-  avp.role_id: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:avp_role_id') }}"
-  avp.secret_id: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:avp_secret_id') }}"
+  vault.k3s_cluster.token: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/all/vault_k3s_cluster.token:value') }}"
+  avp.role_id: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd:avp_role_id') }}"
+  avp.secret_id: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd:avp_secret_id') }}"
 
-  server.admin_password: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ environment_name }}/group_vars/helm/argocd:default_admin_password') }}"
+  server.admin_password: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd:default_admin_password') }}"
   pki2.ca_cert: "{{ lookup('ansible.builtin.url', '{{ pki_ca_url }}/PKI2-CJIB-ROOT.pem', split_lines=true, wantlist=true ) }}"
 
 # Argo CD needs to be able to connect to our private repositories. This is done using a repository template. This
 # template needs a name and the base of the url of the repository.
 
-# Configure each of the clusters (shs, ota and pro).
+# Configure each of the clusters (ota, pro).
   cluster.credentials:
-    - name: shs-cluster
+    - name: pro-cluster
       server: https://kubernetes.default.svc
-      domain: apps.dev4.cloud.cjib.nl
+      domain: pro.local.k8s-frambozen.nl
       config:
         tlsClientConfig:
           insecure: false
     - name: ota-cluster
-      server: https://k8s-api-100.dev2.cloud.cjib.nl:6443
-      domain: apps.dev2.cloud.cjib.nl
+      server: https://k3s-api.ota.local.k8s-frambozen.nl:6443
+      domain: ota.local.k8s-frambozen.nl
       config:
         bearerToken: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/dev2:bearerToken') }}"
         tlsClientConfig:
           insecure: false
           caData: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/dev2:caData') }}"
-    - name: pro-cluster
-      server: https://k8s-api-100.dev1.cloud.cjib.nl:6443
-      domain: apps.dev1.cloud.cjib.nl
-      config:
-        bearerToken: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/dev1:bearerToken') }}"
-        tlsClientConfig:
-          insecure: false
-          caData: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/dev1:caData') }}"
 
 # Define the AppProjects. These correspond with the different overlays in
 # customize:
   app_projects:
-    - name: ont
+    - name: dev
       namespace: "dev-*"  # This is a namespace prefix
       cluster: ota-cluster
-    - name: itest
-      namespace: "dev-*"  # This is a namespace prefix
+    - name: test
+      namespace: "test"
       cluster: ota-cluster
-    - name: sto
-      namespace: "sto"
-      cluster: ota-cluster
-    - name: ato
-      namespace: "ato"
-      cluster: ota-cluster
-    - name: tst1
-      namespace: "tst1"
-      cluster: ota-cluster
-    - name: tst2
-      namespace: "tst2"
-      cluster: ota-cluster
-    - name: acc1
-      namespace: "acc1"
-      cluster: ota-cluster
-    - name: acc2
-      namespace: "acc2"
-      cluster: ota-cluster
-    - name: ota-extra
-      namespace: "cjib-s3-bucket-provisioner"  # TODO Single namespace = MVP
+    - name: acc
+      namespace: "acc"
       cluster: ota-cluster
     - name: pro
       namespace: "pro"
       cluster: pro-cluster
     - name: shs
       namespace: "*"  # TODO
-      cluster: shs-cluster
+      cluster: pro-cluster
 
   # Setup the different provisioning applications sets:
   # - cluster: The cluster that needs to be provisioned
@@ -105,16 +80,6 @@ argocd:
           - type: helm
             git_files_path: "*/helm-application.yaml"
         project: ota-provision
-        namespace: "-*"
-
-      - cluster: shs-cluster
-        repo_url: "kad/shs-provision.git"
-        types:
-          - type: kustomize
-            git_files_path: "*/kustomize-application.yaml"
-          - type: helm
-            git_files_path: "*/helm-application.yaml"
-        project: shs-provision
         namespace: "-*"
 
       - cluster: pro-cluster

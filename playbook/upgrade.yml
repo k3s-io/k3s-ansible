@@ -7,10 +7,10 @@
   become: true
   serial: 1
   roles:
-    - role: k3s_upgrade
+    - role: k3s_cluster/k3s_upgrade
 
 - name: Upgrade K3s Agents
   hosts: agent
   become: true
   roles:
-    - role: k3s_upgrade
+    - role: k3s_cluster/k3s_upgrade

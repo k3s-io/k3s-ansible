@@ -12,7 +12,7 @@ spec:
   goTemplateOptions: ["missingkey=error"]
   generators:
     - git:
-        repoURL: "{{ cjib_git_clone_ssh_url }}/{{ application_set.repo_url }}"
+        repoURL: "{{ git_clone_ssh_url }}/{{ application_set.repo_url }}"
         revision: HEAD
         files:
           - path: "{{ application_type.git_files_path }}"
@@ -33,7 +33,7 @@ spec:
 {% if application_type.type == 'helm' %}
       source:
         path: "./"
-        repoURL: {{ cjib_git_clone_ssh_url }}/{{ application_set.repo_url }}
+        repoURL: {{ git_clone_ssh_url }}/{{ application_set.repo_url }}
         targetRevision: HEAD
 {% raw %}
         plugin:
