@@ -170,6 +170,22 @@
         kubectl label node {{ item }} 'node.longhorn.io/create-default-disk=true'
       when: "hostvars[item].k3s_agent_longhorn_enabled"
       with_items: "{{ groups['agent'] }}"
+    - name: Longhorn - Install Snapshot Controller chart
+      kubernetes.core.helm:
+        name: snapshot-controller
+        chart_ref: piraeus-charts/snapshot-controller
+        chart_version: "{{ helm_chart_version['piraeus-charts/snapshot-controller'] }}"
+        create_namespace: true
+        force: true
+        release_namespace: kube-system
+        values: "{{ snapshot_controller }}"
+        context: "{{ k3s_context_name }}"
+    - ansible.builtin.wait_for:
+        timeout: "120"
+    - name: Longhorn - Install Extra resources
+      kubernetes.core.k8s:
+        namespace: kube-system
+        definition: "{{ lookup('ansible.builtin.template', 'longhorn_resources.yaml.j2', template_vars = {}) | from_yaml_all }}"
   when: "longhorn_enabled"
 
 - name: Sealed Secrets

@@ -297,6 +297,8 @@ longhorn_helm_values:
       gethomepage.dev/group: "System"
       gethomepage.dev/icon: "longhorn.png"
 
+snapshot_controller: {}
+
 sealed_secrets_enabled: true
 sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json
 sealed_secrets_restore: true
