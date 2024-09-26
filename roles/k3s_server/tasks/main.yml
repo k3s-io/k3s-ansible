@@ -86,6 +86,12 @@
         line: "{{ item }}"
       with_items: "{{ extra_service_envs }}"
 
+    - name: Delete any existing token from the environment
+      ansible.builtin.lineinfile:
+        state: absent
+        path: "{{ systemd_dir }}/k3s.service.env"
+        search_string: "K3S_TOKEN="
+
     # Add the token to the environment.
     - name: Add token as an environment variable
       no_log: true # avoid logging the server token
@@ -181,6 +187,12 @@
     - (groups[server_group] | length) > 1
     - inventory_hostname != groups[server_group][0]
   block:
+    - name: Delete any existing token from the environment
+      ansible.builtin.lineinfile:
+        state: absent
+        path: "{{ systemd_dir }}/k3s.service.env"
+        search_string: "K3S_TOKEN="
+
     - name: Add the token for joining the cluster to the environment
       no_log: true # avoid logging the server token
       ansible.builtin.lineinfile:
