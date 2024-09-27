@@ -332,7 +332,7 @@ argocd_helm_values:
         connectors:
           - type: oidc
             id: oidc
-            name: Github
+            name: IAM
             config:
               issuer: https://security-dex.{{ ingress_hostname }}/dex
               clientID: argo-cd
