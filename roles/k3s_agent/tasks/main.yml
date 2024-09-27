@@ -35,11 +35,11 @@
         INSTALL_K3S_EXEC: "agent"
       changed_when: true
 
-- name: Delete any existing token from the environment
+- name: Delete any existing token from the environment if different from the new one
   ansible.builtin.lineinfile:
     state: absent
     path: "{{ systemd_dir }}/k3s-agent.service.env"
-    search_string: "K3S_TOKEN="
+    regexp: "^K3S_TOKEN=\\s*(?!{{ token }}\\s*$)"
 
 - name: Add the token for joining the cluster to the environment
   no_log: true # avoid logging the server token
