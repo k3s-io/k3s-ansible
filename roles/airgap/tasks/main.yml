@@ -28,7 +28,7 @@
     - name: Determine architecture and set k3s_arch
       set_fact:
         k3s_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'arm' if ansible_architecture == 'armv7l' else 'amd64' }}"
-    
+
     - name: Distribute K3s binary {{ k3s_arch }}
       ansible.builtin.copy:
         src: "{{ item }}"
