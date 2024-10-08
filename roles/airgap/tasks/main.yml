@@ -40,6 +40,9 @@
         - files:
             - "{{ airgap_dir }}/k3s-{{ k3s_arch }}"
             - "{{ airgap_dir }}/k3s"
+          # with_first_found always runs, even inside the when block
+          # so we need to skip it if the file is not found
+          skip: true
 
     - name: Distribute K3s SELinux RPM
       ansible.builtin.copy:
@@ -80,6 +83,9 @@
             - "{{ airgap_dir }}/k3s-airgap-images-{{ k3s_arch }}.tar.zst"
             - "{{ airgap_dir }}/k3s-airgap-images-{{ k3s_arch }}.tar.gz"
             - "{{ airgap_dir }}/k3s-airgap-images-{{ k3s_arch }}.tar"
+          # with_first_found always runs, even inside the when block
+          # so we need to skip it if the file is not found
+          skip: true
 
     - name: Run K3s Install [server]
       ansible.builtin.command:
