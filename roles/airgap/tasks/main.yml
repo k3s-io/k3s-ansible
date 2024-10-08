@@ -42,7 +42,7 @@
             - "{{ airgap_dir }}/k3s"
           # with_first_found always runs, even inside the when block
           # so we need to skip it if the file is not found
-          skip: true 
+          skip: true
 
     - name: Distribute K3s SELinux RPM
       ansible.builtin.copy:
