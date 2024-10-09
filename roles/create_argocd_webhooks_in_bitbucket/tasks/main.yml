@@ -1,3 +1,4 @@
+---
 # code: language=ansible
 
 - name: Find all repositories for all github projects that ArgoCD should watch

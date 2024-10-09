@@ -1,3 +1,29 @@
 ---
 #ansible_port: 22
 ansible_user: root
+
+## devops labels
+platform_daily_support_devops_labels:
+  team: "devops_tools_team"
+  chat_to: "{{ universe.name | upper }}"
+  deployer: "devops_team"
+  support-level: "24x7"
+
+platform_office_hour_support_devops_labels:
+  team: "devops_tools_team"
+  chat_to: "{{ universe.environment | upper }}"
+  deployer: "devops_team"
+  support-level: "8x5"
+
+git_clone_ssh_url: "ssh://git@github.com:RalphSmeets"
+
+vault_secrets_mountpath: "k8s-provisioning"
+
+oidc_client_host: vault.k8s-raspberry.nl
+oidc_client_uri: "{{ oidc_client_host }}"
+oidc_client_url: "https://{{ oidc_client_uri }}/webman/sso"
+oidc_client_auth_url: "{{ oidc_client_url }}/SDSOOauth.cgi"
+oidc_client_token_url: "{{ oidc_client_url }}/SSOAccessToken.cgi"
+oidc_client_userinfo_url: "{{ oidc_client_url }}/SSOUserInfo.cgi"
+oidc_client_keys_url: "{{ oidc_client_url }}/openid-jwks.json"
+oidc_client_well_known_config_url: "{{ oidc_client_url }}/.well-known/openid-configuration"

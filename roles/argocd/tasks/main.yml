@@ -1,5 +1,6 @@
 # code: language=ansible
 ---
+
 - name: Add ArgoCD helm repo
   kubernetes.core.helm_repository:
     name: "{{ argocd_helm_repo_name }}"
@@ -40,7 +41,7 @@
         name: argocd-github-password
         namespace: "{{ argocd_namespace }}"
       data:
-        password: "{{ argocd_github_password | b64encode }}"
+        password: "{{ argocd.github.password | b64encode }}"
 
 - name: Setup repository credential templates
   ansible.builtin.include_tasks:

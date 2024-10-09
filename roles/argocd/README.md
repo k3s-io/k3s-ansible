@@ -38,7 +38,7 @@ Check if this policy is already added to approles in The Vault (Replace `{TOKEN}
 with the k3s_cluster.token used to connect to the Vault):
 
 ```bash
-curl -H "X-Vault-Token: {TOKEN}}" -X GET https://vault-ota.tools.local.k8s-frambozen.nl:8200/v1/auth/approle/role/argocd/role-id | jq
+curl -H "X-Vault-Token: {TOKEN}}" -X GET https://vault-ota.tools.local.{{ universe.domain }}:8200/v1/auth/approle/role/argocd/role-id | jq
 ```
 
 If the policy in the role exists, then note down the returned id. If not, add
@@ -56,7 +56,7 @@ cat > add_argocd_policy_to_approle.json << EOF
   "k3s_cluster.token_type": "default"
 }
 EOF
-curl -H "X-Vault-Token: {TOKEN}}" -X POST --data @add_argocd_policy_to_approle.json https://vault-ota.tools.local.k8s-frambozen.nl:8200/v1/auth/approle/role/argocd | jq
+curl -H "X-Vault-Token: {TOKEN}}" -X POST --data @add_argocd_policy_to_approle.json https://vault-ota.tools.local.{{ universe.domain }}:8200/v1/auth/approle/role/argocd | jq
 ```
 
 The plugin also needs the secret id in order to connect. Get it by executing the
@@ -68,7 +68,7 @@ cat > genereate_secret_id_for_argocd.json << EOF
   "metadata":"{\"service\":\"argocd-dev0\"}"
 }
 EOF
-curl -H "X-Vault-Token: {TOKEN}" -X POST --data @genereate_secret_id_for_argocd.json https://vault-ota.tools.local.k8s-frambozen.nl:8200/v1/auth/approle/role/argocd | jq
+curl -H "X-Vault-Token: {TOKEN}" -X POST --data @genereate_secret_id_for_argocd.json https://vault-ota.tools.local.{{ universe.domain }}:8200/v1/auth/approle/role/argocd | jq
 ```
 
 Note down the secret id so it can be stored in The Vault as shown in the following

@@ -16,7 +16,7 @@ spec:
           - scmProvider:
               githubServer:
                 allBranches: false
-                api: https://github.tools.local.k8s-frambozen.nl
+                api: https://github.tools.local.{{ universe.domain }}
                 basicAuth:
                   passwordRef:
                     key: password
@@ -94,7 +94,7 @@ spec:
         plugin:
           env:
             - name: DOCKER_IMAGE
-              value: registry.shs.k8s-frambozen.nl/{{ .image.repo }}:{{ .image.tag }}
+              value: registry.shs.{{ universe.domain }}/{{ .image.repo }}:{{ .image.tag }}
             - name: TAG
               value: '{{ .image.tag }}'
             - name: RND

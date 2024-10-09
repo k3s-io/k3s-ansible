@@ -15,12 +15,13 @@ argocd_vault_server: "http://192.168.1.72:8205"
 
 # Define the images that should be used by plugins:
 argocd_init_container_images:
-  download_tools: "registry.shs.k8s-frambozen.nl/cdinnovatie/kubectl:1.24.16-0"
+  download_tools: "registry.shs.{{ universe.domain }}/cdinnovatie/kubectl:1.24.16-0"
+
 argocd_extra_container_images:
-  k8s-frambozen_helm_avp: "registry.shs.k8s-frambozen.nl/cdinnovatie/kubectl:1.24.16-0"
-  k8s-frambozen_kustomize: "registry.shs.k8s-frambozen.nl/cdinnovatie/kubectl:1.24.16-0"
+  k8s-frambozen_helm_avp: "registry.shs.{{ universe.domain }}/cdinnovatie/kubectl:1.24.16-0"
+  k8s-frambozen_kustomize: "registry.shs.{{ universe.domain }}/cdinnovatie/kubectl:1.24.16-0"
 
 argocd_webhook:
   name: "ArgoCD {{ universe.environment | upper }} webhook"
-  url: "https://argocd.apps.{{ universe.environment }}.cloud.cjib.nl/api/webhook"
+  url: "https://argocd.apps.{{ universe.environment }}.{{ universe.domain }}/api/webhook"
   event: "repo:refs_changed"

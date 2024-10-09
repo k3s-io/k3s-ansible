@@ -1,27 +1,28 @@
 ---
 argocd:
-  # Uncomment if needed:
-  # adfs:
-  #  client:
-  #    id: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ oidc_environment }}/group_vars/adfs/clients/argocd-dev:id') }}"
-  #    secret: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ oidc_environment }}/group_vars/adfs/clients/argocd-dev:secret') }}"
+  oidc:
+    client:
+      id: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/oidc/clients/argocd[id]') }}"
+      secret: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/oidc/clients/argocd[secret]') }}"
 
   github:
     projects:
       - name: k8s-deployements
         url: "{{ git_clone_ssh_url }}/kd"
-    ssh_key: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd:github_svc_key') }}"
-    known_hosts: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd:github_known_hosts') }}"
+    ssh_key: "{{ lookup('community.hashi_vault.vault_kv2_get', engine_mount_pointt='{{ vault_secrets_mountpath }}',secret='{{ universe.environment }}/group_vars/helm/argocd[github_svc_key]') }}"
+    known_hosts: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[github_known_hosts]') }}"
     webhook:
-      secret: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd:github_webhook_secret') }}"
-    k3s_cluster.token: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd:github_k3s_cluster.token') }}"
+      secret: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[github_webhook_secret]') }}"
+    token: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[github_token]') }}"
+    username: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[github_username]') }}"
+    password: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[github_password]') }}"
+  #vault.k3s_cluster.token: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/all/vault_k3s_cluster')['token_value'] }}"
+  avp:
+    role_id: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[avp_role_id]') }}"
+    secret_id: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[avp_secret_id]') }}"
 
-  vault.k3s_cluster.token: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/all/vault_k3s_cluster.token:value') }}"
-  avp.role_id: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd:avp_role_id') }}"
-  avp.secret_id: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd:avp_secret_id') }}"
-
-  server.admin_password: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd:default_admin_password') }}"
-  pki2.ca_cert: "{{ lookup('ansible.builtin.url', '{{ pki_ca_url }}/PKI2-CJIB-ROOT.pem', split_lines=true, wantlist=true ) }}"
+  server.admin_password: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[default_admin_password]') }}"
+  # pki2.ca_cert: "{{ lookup('ansible.builtin.url', '{{ pki_ca_url }}/PKI2-CJIB-ROOT.pem', split_lines=true, wantlist=true ) }}"
 
 # Argo CD needs to be able to connect to our private repositories. This is done using a repository template. This
 # template needs a name and the base of the url of the repository.
@@ -30,18 +31,18 @@ argocd:
   cluster.credentials:
     - name: pro-cluster
       server: https://kubernetes.default.svc
-      domain: pro.local.k8s-frambozen.nl
+      domain: pro.local.{{ universe.domain }}
       config:
         tlsClientConfig:
           insecure: false
     - name: ota-cluster
-      server: https://k3s-api.ota.local.k8s-frambozen.nl:6443
-      domain: ota.local.k8s-frambozen.nl
+      server: https://k3s-api.ota.local.{{ universe.domain }}:6443
+      domain: ota.local.{{ universe.domain }}
       config:
-        bearerToken: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/dev2:bearerToken') }}"
+        bearerToken: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/k8s_clusters/dev2:bearerToken') }}"
         tlsClientConfig:
           insecure: false
-          caData: "{{ lookup('hashi_vault', 'secret={{ vault_secrets_mountpath }}/k8s_clusters/dev2:caData') }}"
+          caData: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/k8s_clusters/dev2:caData') }}"
 
 # Define the AppProjects. These correspond with the different overlays in
 # customize:

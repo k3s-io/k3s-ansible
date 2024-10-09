@@ -1,0 +1,14 @@
+---
+# code language=ansible
+
+- name: Install Argo CD on cluster
+  hosts: helm
+  connection: local
+  gather_facts: false
+  roles:
+    - role: argocd
+  environment:
+    KUBECONFIG: "~/.kube/config.pro.new"
+    VAULT_TOKEN: "hvs.W15uVdOrNmindAkIJQztaVoK"
+    VAULT_ADDR: "https://vault.k8s-frambozen.nl:8200"
+  

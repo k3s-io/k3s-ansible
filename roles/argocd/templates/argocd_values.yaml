@@ -1,3 +1,4 @@
+---
 # Helm values based on version chart version 5.46.7
 # https://raw.githubusercontent.com/argoproj/argo-helm/argo-cd-5.46.7/charts/argo-cd/values.yaml
 
@@ -200,13 +201,13 @@ configs:
 
     # OIDC configuration as an alternative to dex (optional).
     oidc.config: |
-      name: ADFS
-      issuer: {{ adfs_client_url }}
-      clientID: {{ argocd.adfs.client.id }}
-      clientSecret: {{ argocd.adfs.client.secret }}
+      name: OIDC
+      issuer: {{ oidc_client_url }}
+      clientID: {{ argocd.oidc.client.id }}
+      clientSecret: {{ argocd.oidc.client.secret }}
       requestedScopes: ["openid", "profile", "email", "groups"]
-      rootCA: |
-        {{ argocd.pki2.ca_cert | join('\n        ') }}
+    #  rootCA: |
+    #    {{ argocd.pki2.ca_cert | join('\n        ') }}
 
     # Make sure Ingress state is not staying in Progressing state
     resource.customizations: |
@@ -353,11 +354,11 @@ configs:
 
     # -- TLS certificates for Git repositories
     # @default -- `{}` (See [values.yaml])
-    certificates:
-      dockerhub.io: |
-        {{ argocd.pki2.ca_cert | join('\n        ') }}
-      github.shs.k8s-frambozen.nl: |
-        {{ argocd.pki2.ca_cert | join('\n        ') }}
+    #certificates:
+    #  dockerhub.io: |
+    #    {{ argocd.pki2.ca_cert | join('\n        ') }}
+    #  github.shs.{{ universe.domain }}: |
+    #    {{ argocd.pki2.ca_cert | join('\n        ') }}
 
   # ConfigMap for Config Management Plugins
   # Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/config-management-plugins/

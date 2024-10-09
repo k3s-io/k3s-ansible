@@ -12,4 +12,4 @@ data:
   AVP_AUTH_TYPE: {{ "approle" | b64encode }}
   AVP_ROLE_ID: {{ argocd.avp.role_id | b64encode }}
   AVP_SECRET_ID: {{ argocd.avp.secret_id | b64encode }}
-  AVP_KV_VERSION: {{ "1" | b64encode }}
+  AVP_KV_VERSION: {{ "12" | b64encode }}
