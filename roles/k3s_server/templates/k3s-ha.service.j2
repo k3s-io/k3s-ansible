@@ -29,4 +29,5 @@ ExecStart=/usr/local/bin/k3s server --data-dir {{ k3s_server_location }} --serve
               --disable=traefik --disable=servicelb
               {%- if kubelet_config_enabled %} --kubelet-arg="config=/etc/rancher/k3s/kubelet.config"{% endif %}
               {%- if k3s_server_longhorn_enabled %} --node-label 'longhorn.io/enabled=true'{% endif %}
+              {%- if k3s_server_no_schedule %} --node-label 'server-no-schedule=true' --node-taint 'server-no-schedule=true:NoSchedule'{% endif %}
               {%- if extra_server_args %} {{ extra_server_args }}{% endif %}

@@ -58,6 +58,7 @@ k3s_cluster:
     # k3s_context_name: k3s-ansible
     # api_port: 6443
     # k3s_server_location: /var/lib/rancher/k3s
+    # k3s_server_no_schedule: true # No schedule pods by default in the server nodes
     # systemd_dir: /etc/systemd/system
     # extra_service_envs: [ 'ENV_VAR1=VALUE1', 'ENV_VAR2=VALUE2' ]
     # # Manifests or Airgap should be either full paths or relative to the playbook directory.

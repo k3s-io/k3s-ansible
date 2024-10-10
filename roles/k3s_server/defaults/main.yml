@@ -3,3 +3,5 @@ kubeconfig: ~/.kube/config
 kubeconfig_new: ~/.kube/config.new
 user_kubectl: true
 
+k3s_server_no_schedule: true
+
