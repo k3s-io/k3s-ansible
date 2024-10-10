@@ -206,8 +206,10 @@ configs:
       clientID: {{ argocd.oidc.client.id }}
       clientSecret: {{ argocd.oidc.client.secret }}
       requestedScopes: ["openid", "profile", "email", "groups"]
-    #  rootCA: |
-    #    {{ argocd.pki2.ca_cert | join('\n        ') }}
+{% if "pki2" in argocd %}
+      rootCA: |
+        {{ argocd.pki2.ca_cert | join('\n        ') }}
+{% endif %}
 
     # Make sure Ingress state is not staying in Progressing state
     resource.customizations: |
@@ -354,11 +356,13 @@ configs:
 
     # -- TLS certificates for Git repositories
     # @default -- `{}` (See [values.yaml])
-    #certificates:
-    #  dockerhub.io: |
-    #    {{ argocd.pki2.ca_cert | join('\n        ') }}
-    #  github.shs.{{ universe.domain }}: |
-    #    {{ argocd.pki2.ca_cert | join('\n        ') }}
+{% if "pki2" in argocd %}
+    certificates:
+      dockerhub.io: |
+        {{ argocd.pki2.ca_cert | join('\n        ') }}
+      github.shs.{{ universe.domain }}: |
+        {{ argocd.pki2.ca_cert | join('\n        ') }}
+{% endif %}
 
   # ConfigMap for Config Management Plugins
   # Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/config-management-plugins/
@@ -409,7 +413,7 @@ configs:
   ## - https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#clusters
   ## - https://argo-cd.readthedocs.io/en/stable/operator-manual/security/#external-cluster-credentials
   ## - https://argo-cd.readthedocs.io/en/stable/user-guide/projects/#project-scoped-repositories-and-clusters
-  clusterCredentials:
+  clusterCredentials: 
 {{ argocd.cluster.credentials | to_nice_yaml(width=1337) | indent(4,true) }}
 
   # DEPRECATED - Moved to configs.ssh.annotations
@@ -504,7 +508,7 @@ configs:
     #  crt: ''
 
     # -- Bcrypt hashed admin password
-    ## Argo expects the password in the secret to be bcrypt hashed. You can create this hash with
+    ## Argo expects the password in the secret to be hashed. You can create this hash with
     ## `htpasswd -nbBC 10 "" $ARGO_PWD | tr -d ':\n' | sed 's/$2y/$2a/'`
     argocdServerAdminPassword: "{{ argocd.server.admin_password | password_hash('bcrypt') }}"
     # -- Admin password modification time. Eg. `"2006-01-02T15:04:05Z"`
@@ -2107,7 +2111,7 @@ repoServer:
   extraContainers:
     - name: frambozen-helm-avp
       command: [/var/run/argocd/argocd-cmp-server]
-      image: {{ argocd_extra_container_images.k8s-frambozen_helm_avp }}
+      image: {{ argocd_extra_container_images.helm_avp }}
       securityContext:
         runAsNonRoot: true
         runAsUser: 999
@@ -2124,14 +2128,11 @@ repoServer:
         - mountPath: /usr/local/bin/argocd-vault-plugin
           subPath: argocd-vault-plugin
           name: custom-tools
-        - mountPath: /usr/local/bin/helm
-          subPath: helm
-          name: custom-tools
         - mountPath: /.cache
           name: cache
     - name: frambozen-kustomize
       command: [/var/run/argocd/argocd-cmp-server]
-      image: {{ argocd_extra_container_images.k8s-frambozen_kustomize }}
+      image: {{ argocd_extra_container_images.kustomize }}
       securityContext:
         runAsNonRoot: true
         runAsUser: 999
@@ -2152,24 +2153,16 @@ repoServer:
       image: {{ argocd_init_container_images.download_tools }}
       env:
         - name: AVP_VERSION
-          value: 1.14.0
-        - name: HELM_DIST
-          value: 3.12.0
+          value: 1.18.1
       command: [ sh, -c]
       args:
         - >-
-          cd /downloads &&
-          wget -q -O argocd-vault-plugin https://dockerhub.io/repository/github.com/argoproj-labs/argocd-vault-plugin/releases/download/v${AVP_VERSION}/argocd-vault-plugin_${AVP_VERSION}_linux_amd64 &&
+          curl -L https://github.com/argoproj-labs/argocd-vault-plugin/releases/download/v$(AVP_VERSION)/argocd-vault-plugin_$(AVP_VERSION)_linux_arm64 -o argocd-vault-plugin &&
           chmod +x argocd-vault-plugin &&
-          mv argocd-vault-plugin /custom-tools/ &&
-          wget -q -O helm-installer.tgz https://dockerhub.io/repository/get.helm.sh/helm-v${HELM_DIST}-linux-amd64.tar.gz &&
-          tar xf helm-installer.tgz &&
-          mv linux-amd64/helm /custom-tools/
+          mv argocd-vault-plugin /custom-tools/ 
       volumeMounts:
         - mountPath: /custom-tools
           name: custom-tools
-        - mountPath: /downloads
-          name: downloads
 
   # -- Additional volumeMounts to the repo server main container
   volumeMounts: []
@@ -2185,8 +2178,6 @@ repoServer:
       name: frambozen-helm-avp-tmp
     - emptyDir: {}
       name: custom-tools
-    - emptyDir: {}
-      name: downloads
     - emptyDir: {}
       name: cache
 

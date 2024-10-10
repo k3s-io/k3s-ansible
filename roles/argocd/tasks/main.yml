@@ -56,6 +56,7 @@
 - name: Install ArgoCD helm chart
   kubernetes.core.helm:
     name: argocd
+    kubeconfig: "~/.kube/config.pro.new"
     release_namespace: "{{ argocd_namespace }}"
     create_namespace: true
     chart_ref: "{{ argocd_helm_chart }}"
@@ -87,7 +88,7 @@
     state: present
     namespace: "{{ argocd_namespace }}"
     template:
-      - path: argocd_provisioning_application_set.j2
+      - path: argocd_application_set_provisioning.j2
   loop: "{{ argocd.application_sets.provisioning }}"
   loop_control:
     loop_var: application_set
@@ -97,7 +98,7 @@
     state: present
     namespace: "{{ argocd_namespace }}"
     template:
-      - path: argocd_application_set_projects.j2
-  loop: "{{ argocd.application_sets.projects }}"
+      - path: argocd_application_set_applications.j2
+  loop: "{{ argocd.application_sets.applications }}"
   loop_control:
     loop_var: application_set

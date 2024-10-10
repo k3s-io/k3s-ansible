@@ -1,7 +1,9 @@
+{% for application_type in application_set.types %}
+---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: {{ application_set.name }}
+  name: {{ application_set.cluster | lower }}-{{ application_type.type }}-provisioning 
   namespace: {{ argocd_namespace }}
   labels:
 {{ platform_office_hour_support_devops_labels | to_nice_yaml(width=1337) | indent(4,true) }}
@@ -13,7 +15,7 @@ spec:
         repoURL: {{ application_set.repo_url }}
         revision: HEAD
         files:
-          - path: "{{ application_set.git_files }}"
+          - path: "{{ application_type.git_files_path }}"
   template:
     metadata:
       name: "{{ application_set.project}}-{% raw %}{{ base .path.path | normalize }}{% endraw %}"
@@ -28,7 +30,7 @@ spec:
 {% else %}
         namespace: "{{ application_set.namespace }}"
 {% endif %}
-{% if application_set.type == 'helm' %}
+{% if application_type.type == 'helm' %}
       source:
         path: "./"
         repoURL: {{ application_set.repo_url }}
@@ -69,11 +71,11 @@ spec:
 {% endif %}
 
             - name: APPS_OTA_DOMAIN
-              value: {{ (argocd.cluster.credentials | selectattr('name', 'equalto', 'ota-cluster') | map(attribute='domain'))[0] | default('NOCLUSTER')}}
+              value: {{ argocd.cluster.credentials['ota-cluster'].domain | default('NOCLUSTER') }}
             - name: APPS_PRO_DOMAIN
-              value: {{ (argocd.cluster.credentials | selectattr('name', 'equalto', 'pro-cluster') | map(attribute='domain'))[0] | default('NOCLUSTER')}}
+              value: {{ argocd.cluster.credentials['pro-cluster'].domain | default('NOCLUSTER') }}
             - name: APPS_SHS_DOMAIN
-              value: {{ (argocd.cluster.credentials | selectattr('name', 'equalto', 'shs-cluster') | map(attribute='domain'))[0] | default('NOCLUSTER')}}
+              value: {{ argocd.cluster.credentials['shs-cluster'].domain | default('NOCLUSTER') }}
       syncPolicy:
         automated:
           prune: true
@@ -87,3 +89,4 @@ spec:
           kind: "*"
           managedFieldsManagers:
           - vault-admission
+{% endfor %}

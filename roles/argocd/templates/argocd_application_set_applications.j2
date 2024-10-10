@@ -16,12 +16,12 @@ spec:
           - scmProvider:
               githubServer:
                 allBranches: false
-                api: https://github.tools.local.{{ universe.domain }}
+                api: https://api.github.com
                 basicAuth:
                   passwordRef:
                     key: password
                     secretName: argocd-github-password
-                  username: {{ argocd_github_username }}
+                  username: {{ argocd.github.username }}
                 project: '{{ application_set.github_project }}'
               filters:
                 - pathsExist:
@@ -111,11 +111,11 @@ spec:
 {% endraw %}
 {% endif %}
             - name: APPS_OTA_DOMAIN
-              value: {{ (argocd.cluster.credentials | selectattr('name', 'equalto', 'ota-cluster') | map(attribute='domain'))[0] | default('NOCLUSTER')}}
+              value: {{ argocd.cluster.credentials['ota-cluster'].domain | default('NOCLUSTER') }}
             - name: APPS_PRO_DOMAIN
-              value: {{ (argocd.cluster.credentials | selectattr('name', 'equalto', 'pro-cluster') | map(attribute='domain'))[0] | default('NOCLUSTER')}}
+              value: {{ argocd.cluster.credentials['pro-cluster'].domain | default('NOCLUSTER') }}
             - name: APPS_SHS_DOMAIN
-              value: {{ (argocd.cluster.credentials | selectattr('name', 'equalto', 'shs-cluster') | map(attribute='domain'))[0] | default('NOCLUSTER')}}
+              value: {{ argocd.cluster.credentials['shs-cluster'].domain | default('NOCLUSTER') }}
       syncPolicy:
         automated:
           prune: true

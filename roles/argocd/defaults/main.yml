@@ -15,11 +15,11 @@ argocd_vault_server: "http://192.168.1.72:8205"
 
 # Define the images that should be used by plugins:
 argocd_init_container_images:
-  download_tools: "registry.shs.{{ universe.domain }}/cdinnovatie/kubectl:1.24.16-0"
+  download_tools: "registry.access.redhat.com/ubi8/ubi-minimal:8.10-1086"
 
 argocd_extra_container_images:
-  k8s-frambozen_helm_avp: "registry.shs.{{ universe.domain }}/cdinnovatie/kubectl:1.24.16-0"
-  k8s-frambozen_kustomize: "registry.shs.{{ universe.domain }}/cdinnovatie/kubectl:1.24.16-0"
+  helm_avp: "quay.io/argoproj/argocd:latest"
+  kustomize: "quay.io/argoproj/argocd:latest"
 
 argocd_webhook:
   name: "ArgoCD {{ universe.environment | upper }} webhook"

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ repository.name }}-argocd-repo-creds
+  name: {{ repository.name | lower }}-argocd-repo-creds
   namespace: {{ argocd_namespace }}
   labels:
     argocd.argoproj.io/secret-type: repo-creds

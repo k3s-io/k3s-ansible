@@ -2,47 +2,57 @@
 argocd:
   oidc:
     client:
-      id: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/oidc/clients/argocd[id]') }}"
-      secret: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/oidc/clients/argocd[secret]') }}"
+      id: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/group_vars/oidc/clients/argocd', **vault_options )['secret']['id'] }}"
+      secret: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/group_vars/oidc/clients/argocd', **vault_options )['secret']['secret'] }}"
 
   github:
     projects:
       - name: k8s-deployements
-        url: "{{ git_clone_ssh_url }}/kd"
-    ssh_key: "{{ lookup('community.hashi_vault.vault_kv2_get', engine_mount_pointt='{{ vault_secrets_mountpath }}',secret='{{ universe.environment }}/group_vars/helm/argocd[github_svc_key]') }}"
-    known_hosts: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[github_known_hosts]') }}"
+        url: "{{ git_clone_https_url }}/RalphSmeets"
+    ssh_key: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_svc_key'] }}"
+    known_hosts: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_known_hosts'] }}"
     webhook:
-      secret: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[github_webhook_secret]') }}"
-    token: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[github_token]') }}"
-    username: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[github_username]') }}"
-    password: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[github_password]') }}"
-  #vault.k3s_cluster.token: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/all/vault_k3s_cluster')['token_value'] }}"
+      secret: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_webhook_secret'] }}"
+    token: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_token'] }}"
+    username: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_username'] }}"
+    password: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_password'] }}"
+  # vault.k3s_cluster.token: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/all/vault_k3s_cluster,', **vault_options )['secret']['token_value'] }}"
   avp:
-    role_id: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[avp_role_id]') }}"
-    secret_id: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[avp_secret_id]') }}"
+    role_id: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['avp_role_id'] }}"
+    secret_id: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['avp_secret_id'] }}"
 
-  server.admin_password: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/{{ universe.environment }}/group_vars/helm/argocd[default_admin_password]') }}"
-  # pki2.ca_cert: "{{ lookup('ansible.builtin.url', '{{ pki_ca_url }}/PKI2-CJIB-ROOT.pem', split_lines=true, wantlist=true ) }}"
+  server:
+    admin_password: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['default_admin_password'] }}"
+  # pki2:
+  #   ca_cert: "{{ lookup('ansible.builtin.url', '{{ pki_ca_url }}/PKI2-CJIB-ROOT.pem', split_lines=true, wantlist=true ) }}"
 
 # Argo CD needs to be able to connect to our private repositories. This is done using a repository template. This
 # template needs a name and the base of the url of the repository.
 
 # Configure each of the clusters (ota, pro).
-  cluster.credentials:
-    - name: pro-cluster
-      server: https://kubernetes.default.svc
-      domain: pro.local.{{ universe.domain }}
-      config:
-        tlsClientConfig:
-          insecure: false
-    - name: ota-cluster
-      server: https://k3s-api.ota.local.{{ universe.domain }}:6443
-      domain: ota.local.{{ universe.domain }}
-      config:
-        bearerToken: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/k8s_clusters/dev2:bearerToken') }}"
-        tlsClientConfig:
-          insecure: false
-          caData: "{{ lookup('community.hashi_vault.vault_kv2_get', secret='{{ vault_secrets_mountpath }}/k8s_clusters/dev2:caData') }}"
+  cluster:
+    credentials:
+      pro-cluster:
+        server: https://kubernetes.default.svc
+        domain: pro.local.k8s-frambozen.nl
+        config:
+          tlsClientConfig:
+            insecure: false
+      shs-cluster:
+        server: https://kubernetes.default.svc
+        domain: shs.local.k8s-frambozen.nl
+        config:
+          tlsClientConfig:
+            insecure: false
+      ota-cluster:
+        server: https://k3s-api.ota.local.k8s-frambozen.nl:6443
+        domain: ota.local.k8s-frambozen.nl
+        config:
+          tlsClientConfig:
+            insecure: false
+            caData: "{{ lookup('community.hashi_vault.vault_kv2_get', 'ota/k8s_cluster', **vault_options )['secret']['caData'] }}"
+            certData: "{{ lookup('community.hashi_vault.vault_kv2_get', 'ota/k8s_cluster', **vault_options )['secret']['certData'] }}"
+            keyData: "{{ lookup('community.hashi_vault.vault_kv2_get', 'ota/k8s_cluster', **vault_options )['secret']['keyData'] }}"
 
 # Define the AppProjects. These correspond with the different overlays in
 # customize:
@@ -62,7 +72,16 @@ argocd:
     - name: shs
       namespace: "*"  # TODO
       cluster: pro-cluster
-
+    - name: ota-provision
+      namespace: "*"
+      cluster: ota-cluster
+    - name: pro-provision
+      namespace: "*"
+      cluster: pro-cluster
+    - name: shs-provision
+      namespace: "*"  # TODO
+      cluster: pro-cluster
+    
   # Setup the different provisioning applications sets:
   # - cluster: The cluster that needs to be provisioned
   # - repo_url: The repository containing the definitions of the separate applications.
@@ -74,7 +93,7 @@ argocd:
   application_sets:
     provisioning:
       - cluster: ota-cluster
-        repo_url: "kad/ota-provision.git"
+        repo_url: "{{ git_clone_https_url }}/RalphSmeets/ota-provisioning.git"
         types:
           - type: kustomize
             git_files_path: "*/kustomize-application.yaml"
@@ -84,7 +103,7 @@ argocd:
         namespace: "-*"
 
       - cluster: pro-cluster
-        repo_url: "kad/pro-provision.git"
+        repo_url: "{{ git_clone_https_url }}/RalphSmeets/pro-provisioning.git"
         types:
           - type: kustomize
             git_files_path: "*/kustomize-application.yaml"
@@ -98,8 +117,8 @@ argocd:
     #   types:
     #     - type: kustomize or helm. Defines the type of deployement
     #       git_files_path: path(s) inside the repo for globbing the files.
-    project:
-      - github_project: KD
+    applications:
+      - github_project: RalphSmeets
         types:
           - type: kustomize
             git_files_path:
