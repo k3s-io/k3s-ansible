@@ -25,3 +25,11 @@ argocd_webhook:
   name: "ArgoCD {{ universe.environment | upper }} webhook"
   url: "https://argocd.apps.{{ universe.environment }}.{{ universe.domain }}/api/webhook"
   event: "repo:refs_changed"
+
+argocd_vault_configuration:
+  AVP_TYPE: "vault" 
+  VAULT_ADDR: "{{ argocd_vault_server }}"
+  AVP_AUTH_TYPE: "approle"
+  AVP_ROLE_ID: "{{ argocd.avp.role_id }}"
+  AVP_SECRET_ID: "{{ argocd.avp.secret_id }}"
+  AVP_KV_VERSION: "2"

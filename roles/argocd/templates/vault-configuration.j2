@@ -7,9 +7,5 @@ metadata:
 {{ platform_office_hour_support_devops_labels | to_nice_yaml(width=1337) | indent(4,true) }}
 type: Opaque
 data:
-  AVP_TYPE: {{ "vault" | b64encode }}
-  VAULT_ADDR: {{ argocd_vault_server | default(config.vault_server) | b64encode }}
-  AVP_AUTH_TYPE: {{ "approle" | b64encode }}
-  AVP_ROLE_ID: {{ argocd.avp.role_id | b64encode }}
-  AVP_SECRET_ID: {{ argocd.avp.secret_id | b64encode }}
-  AVP_KV_VERSION: {{ "12" | b64encode }}
+  vault-configuration.yaml: {{ argocd_vault_configuration | to_nice_yaml(width=1337) | b64encode }}
+    

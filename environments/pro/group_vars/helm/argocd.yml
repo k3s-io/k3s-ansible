@@ -8,8 +8,8 @@ argocd:
   github:
     projects:
       - name: k8s-deployements
-        url: "{{ git_clone_https_url }}/RalphSmeets"
-    ssh_key: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_svc_key'] }}"
+        url: "{{ git_clone_ssh_url }}:RalphSmeets"
+    ssh_key: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_private_key'] }}"
     known_hosts: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_known_hosts'] }}"
     webhook:
       secret: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_webhook_secret'] }}"
@@ -34,19 +34,19 @@ argocd:
     credentials:
       pro-cluster:
         server: https://kubernetes.default.svc
-        domain: pro.local.k8s-frambozen.nl
+        domain: pro.k8s-frambozen.nl
         config:
           tlsClientConfig:
             insecure: false
       shs-cluster:
         server: https://kubernetes.default.svc
-        domain: shs.local.k8s-frambozen.nl
+        domain: shs.k8s-frambozen.nl
         config:
           tlsClientConfig:
             insecure: false
       ota-cluster:
-        server: https://k3s-api.ota.local.k8s-frambozen.nl:6443
-        domain: ota.local.k8s-frambozen.nl
+        server: https://k3s-api.ota.k8s-frambozen.nl:6443
+        domain: ota.k8s-frambozen.nl
         config:
           tlsClientConfig:
             insecure: false
@@ -93,7 +93,7 @@ argocd:
   application_sets:
     provisioning:
       - cluster: ota-cluster
-        repo_url: "{{ git_clone_https_url }}/RalphSmeets/ota-provisioning.git"
+        repo_url: "{{ git_clone_ssh_url }}:RalphSmeets/ota-provisioning.git"
         types:
           - type: kustomize
             git_files_path: "*/kustomize-application.yaml"
@@ -103,14 +103,14 @@ argocd:
         namespace: "-*"
 
       - cluster: pro-cluster
-        repo_url: "{{ git_clone_https_url }}/RalphSmeets/pro-provisioning.git"
+        repo_url: "{{ git_clone_ssh_url }}:RalphSmeets/pro-provisioning.git"
         types:
           - type: kustomize
             git_files_path: "*/kustomize-application.yaml"
           - type: helm
             git_files_path: "*/helm-application.yaml"
         project: pro-provision
-        namespace: "*"
+        namespace: "-*"
 
     # Setup the different project applications sets:
     # - github_project: The project in github that needs to be scanned on deployments

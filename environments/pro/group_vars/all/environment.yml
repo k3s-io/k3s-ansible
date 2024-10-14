@@ -1,5 +1,5 @@
 ---
 # Environment config
 universe:
-  domain: k3s-frambozen.nl
+  domain: k8s-frambozen.nl
   environment: pro

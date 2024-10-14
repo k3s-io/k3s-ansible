@@ -96,7 +96,6 @@
       ansible.builtin.command: 'kubectl'
       register: kubectl_installed
       ignore_errors: true
-      delegate_to: 127.0.0.1
       become: false
       changed_when: false
 

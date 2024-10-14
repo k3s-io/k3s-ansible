@@ -89,4 +89,13 @@ spec:
           kind: "*"
           managedFieldsManagers:
           - vault-admission
+        - group: monitoring.coreos.com
+          kind: ServiceMonitor
+          # See: https://github.com/argoproj/argo-cd/issues/11074
+          jqPathExpressions:
+            - .spec.endpoints[]?.relabelings[]?.action
+        - group: monitoring.coreos.com
+          kind: Prometheus
+          jqPathExpressions:
+            - .spec.remoteWrite[]?.writeRelabelConfigs[]?.action
 {% endfor %}

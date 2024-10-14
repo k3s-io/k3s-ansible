@@ -38,14 +38,14 @@ Check if this policy is already added to approles in The Vault (Replace `${VAULT
 with the k3s_cluster.token used to connect to the Vault):
 
 ```bash
-curl -H "X-Vault-Token: ${VAULT_TOKEN}}" -X GET ${VAULT_ADDR}/v1/auth/approle/role/argocd/role-id | jq
+curl -H "X-Vault-Token: ${VAULT_TOKEN}" -X GET ${VAULT_ADDR}/v1/auth/approle/role/argocd/role-id | jq
 ```
 
 If the policy in the role exists, then note down the returned id. If not, add
 the pollicy to the approles in The Vault and get the id of the role again:
 
 ```bash
-cat > add_argocd_policy_to_approle.json << EOF
+cat > /tmp/add_argocd_policy_to_approle.json << EOF
 {
   "secret_id_ttl": 0,
   "k3s_cluster.token_ttl":3600,
@@ -56,19 +56,19 @@ cat > add_argocd_policy_to_approle.json << EOF
   "k3s_cluster.token_type": "default"
 }
 EOF
-curl -H "X-Vault-Token: ${VAULT_TOKEN}}" -X POST --data @add_argocd_policy_to_approle.json ${VAULT_ADDR}/v1/auth/approle/role/argocd | jq
+curl -H "X-Vault-Token: ${VAULT_TOKEN}" -X POST --data @/tmp/add_argocd_policy_to_approle.json ${VAULT_ADDR}/v1/auth/approle/role/argocd | jq
 ```
 
 The plugin also needs the secret id in order to connect. Get it by executing the
 following commands:
 
 ```bash
-cat > genereate_secret_id_for_argocd.json << EOF
+cat > /tmp/generate_secret_id_for_argocd.json << EOF
 {
-  "metadata":"{\"service\":\"argocd-dev0\"}"
+  "metadata":"{\"service\":\"argocd-frambozen\"}"
 }
 EOF
-curl -H "X-Vault-Token: ${VAULT_TOKEN}" -X POST --data @genereate_secret_id_for_argocd.json ${VAULT_ADDR}/v1/auth/approle/role/argocd | jq
+curl -H "X-Vault-Token: ${VAULT_TOKEN}" -X POST --data @/tmp/generate_secret_id_for_argocd.json ${VAULT_ADDR}/v1/auth/approle/role/argocd/secret-id | jq
 ```
 
 Note down the secret id so it can be stored in The Vault as shown in the following
@@ -80,17 +80,17 @@ Create secrets for Argo CD for the cluster (environment) on which Argo CD is to 
 installed. These should be put under the `group_vars/helm/argocd` path of the
 cluser on which Argo CD is going to be installed.
 
-| secret                  | description                                                                           |
-|-------------------------|---------------------------------------------------------------------------------------|
-| `avp_role_id`           | The role id Argo CD should use to connect to the vault                                |
-| `avp_secret_id`         | The secret id Argo CD should use to connect to the vault                              |
-| `github_known_hosts` | The known host entry that Argo CD can use to connect to the k8s-frambozen github server     |
-| `github_svc_key`     | The certificate that Argo cd can use to connect repositories on the k8s-frambozen github |
+| secret                   | description                                                                           |
+|--------------------------|---------------------------------------------------------------------------------------|
+| `avp_role_id`            | The role id Argo CD should use to connect to the vault                                |
+| `avp_secret_id`          | The secret id Argo CD should use to connect to the vault                              |
+| `github_known_hosts`     | The known host entry that Argo CD can use to connect to the k8s-frambozen github server     |
+| `github_private_key`     | The certificate that Argo cd can use to connect repositories on the k8s-frambozen github |
 | `default_admin_password` | Default administrator password                                                        |
 
 If Argo CD is setup in order to deploy to other clusters the following secrets are also needed:
 
-| secret | description |
+| secret | description | 
 |---|---|
 | `caData` | The cluster CA certificate |
 | `certData` | The cluster client certificate |

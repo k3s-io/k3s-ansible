@@ -150,6 +150,11 @@
     name: apparmor
     state: present
 
+- name: Install python3-apt
+  ansible.builtin.package:
+    name: python3-apt
+    state: present
+
 - name: Gather the package facts
   ansible.builtin.package_facts:
     manager: auto

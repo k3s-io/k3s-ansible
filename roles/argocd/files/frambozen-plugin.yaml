@@ -21,7 +21,7 @@ data:
            sed "s#{{APPS_OTA_DOMAIN}}#$ARGOCD_ENV_APPS_OTA_DOMAIN#
            s#{{APPS_PRO_DOMAIN}}#$ARGOCD_ENV_APPS_PRO_DOMAIN#
            s#{{APPS_SHS_DOMAIN}}#$ARGOCD_ENV_APPS_SHS_DOMAIN#" |
-           argocd-vault-plugin generate - -s vault-configuration
+           argocd-vault-plugin generate - -c /home/argocd/cmp-server/config/vault-configuration.yaml
       lockRepo: false
 
   kustomize-sed.yaml: |

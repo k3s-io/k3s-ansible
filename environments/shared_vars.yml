@@ -15,10 +15,10 @@ platform_office_hour_support_devops_labels:
   deployer: "devops_team"
   support-level: "8x5"
 
-git_clone_ssh_url: "ssh://git@github.com"
+git_clone_ssh_url: "git@github.com"
 git_clone_https_url: "https://github.com"
 
-oidc_client_host: vault.k8s-raspberry.nl
+oidc_client_host: sso.k8s-frambozen.nl
 oidc_client_uri: "{{ oidc_client_host }}"
 oidc_client_url: "https://{{ oidc_client_uri }}/webman/sso"
 oidc_client_auth_url: "{{ oidc_client_url }}/SDSOOauth.cgi"

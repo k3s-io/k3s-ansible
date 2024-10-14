@@ -7,7 +7,7 @@
 ##
 
 # -- Provide a name in place of `argocd`
-nameOverride: argocd
+nameOverride: "{{ argocd_alias }}"
 # -- String to fully override `"argo-cd.fullname"`
 fullnameOverride: ""
 # -- Override the Kubernetes version, which is used to evaluate certain manifests
@@ -43,6 +43,10 @@ crds:
 
 ## Globally shared configuration
 global:
+  # -- Default domain used by all components
+  ## Used for ingresses, certificates, SSO, notifications, etc.
+  domain: "{{ argocd_alias }}.{{ universe.environment }}.{{ universe.domain }}"
+
   # -- Common labels for the all resources
   additionalLabels:
 {{ platform_office_hour_support_devops_labels | to_nice_yaml(width=1337) | indent(4,true) }}
@@ -201,11 +205,11 @@ configs:
 
     # OIDC configuration as an alternative to dex (optional).
     oidc.config: |
-      name: OIDC
+      name: argocd
       issuer: {{ oidc_client_url }}
       clientID: {{ argocd.oidc.client.id }}
       clientSecret: {{ argocd.oidc.client.secret }}
-      requestedScopes: ["openid", "profile", "email", "groups"]
+      requestedScopes: ["openid", "email", "groups"]
 {% if "pki2" in argocd %}
       rootCA: |
         {{ argocd.pki2.ca_cert | join('\n        ') }}
@@ -300,8 +304,8 @@ configs:
       p, role:org-admin, repositories, create, *, allow
       p, role:org-admin, repositories, update, *, allow
       p, role:org-admin, repositories, delete, *, allow
-      g, gs-auth-Cloud_Developer, role:developers
-      g, gs-auth-Cloud_Admin, role:org-admin
+      g, users, role:developers
+      g, administrators, role:org-admin
     # -- OIDC scopes to examine during rbac enforcement (in addition to `sub` scope).
     # The scope value can be a string, or a list of strings.
     scopes: '[groups]'
@@ -350,18 +354,20 @@ configs:
 
   # Repository TLS certificates
   # Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#repositories-using-self-signed-tls-certificates-or-are-signed-by-custom-ca
+{% if "pki2" in argocd %}
   tls:
     # -- Annotations to be added to argocd-tls-certs-cm configmap
     annotations: {}
 
     # -- TLS certificates for Git repositories
     # @default -- `{}` (See [values.yaml])
-{% if "pki2" in argocd %}
     certificates:
       dockerhub.io: |
         {{ argocd.pki2.ca_cert | join('\n        ') }}
       github.shs.{{ universe.domain }}: |
         {{ argocd.pki2.ca_cert | join('\n        ') }}
+{% else %}
+  tls: {}
 {% endif %}
 
   # ConfigMap for Config Management Plugins
@@ -1455,7 +1461,7 @@ server:
   name: server
 
   # -- The number of server pods to run
-  replicas: 2
+  replicas: 1
 
   ## Argo CD server Horizontal Pod Autoscaler
   autoscaling:
@@ -1735,7 +1741,7 @@ server:
     # -- The name of the Secret that will be automatically created and managed by this Certificate resource
     secretName: argocd-server-tls
     # -- Certificate primary domain (commonName)
-    domain: argocd.example.com
+    domain: "{{ argocd_alias }}.{{ universe.environment }}.{{ universe.domain }}"
     # -- Certificate Subject Alternate Names (SANs)
     additionalHosts: []
     # -- The requested 'duration' (i.e. lifetime) of the certificate.
@@ -1879,7 +1885,7 @@ server:
     # -- Additional ingress labels
     labels: {}
     # -- Defines which ingress controller will implement the resource
-    ingressClassName: "nginx"
+    ingressClassName: "traefik"
 
     # -- List of ingress hosts
     ## Argo Ingress.
@@ -1904,10 +1910,10 @@ server:
       #         name: use-annotation
 
     # -- Ingress TLS configuration
-    tls:
+    tls: []
       # - secretName: your-certificate-name
-      - hosts:
-          - "{{ argocd_alias }}.{{ universe.environment }}.{{ universe.domain }}"
+      #- hosts:
+      #    - "{{ argocd_alias }}.{{ universe.environment }}.{{ universe.domain }}"
 
     # -- Uses `server.service.servicePortHttps` instead `server.service.servicePortHttp`
     https: false
@@ -1944,7 +1950,7 @@ server:
     ## Secrets must be manually created in the namespace
     ##
     hosts: []
-      # - argocd.example.com
+      # - "{{ argocd_alias }}.{{ universe.environment }}.{{ universe.domain }}"
 
     # -- List of ingress paths for dedicated [gRPC-ingress]
     paths:
@@ -1965,7 +1971,7 @@ server:
     tls: []
       # - secretName: your-certificate-name
       #   hosts:
-      #     - argocd.example.com
+      #     - "{{ argocd_alias }}.{{ universe.environment }}.{{ universe.domain }}"
 
     # -- Uses `server.service.servicePortHttps` instead `server.service.servicePortHttp`
     https: false
@@ -2004,7 +2010,7 @@ server:
     enabled: false
     # -- Domains for the Google Managed Certificate
     domains:
-    - argocd.example.com
+    - "{{ argocd_alias }}.{{ universe.environment }}.{{ universe.domain }}"
 
   ## Create a Google FrontendConfig Custom Resource, for use with the GKE Ingress Controller
   ## https://cloud.google.com/kubernetes-engine/docs/how-to/ingress-features#configuring_ingress_features_through_frontendconfig_parameters
@@ -2024,7 +2030,7 @@ repoServer:
   name: repo-server
 
   # -- The number of repo server pods to run
-  replicas: 2
+  replicas: 1
 
   ## Repo server Horizontal Pod Autoscaler
   autoscaling:
@@ -2130,6 +2136,10 @@ repoServer:
           name: custom-tools
         - mountPath: /.cache
           name: cache
+        - mountPath: /home/argocd/cmp-server/config/vault-configuration.yaml
+          subPath: vault-configuration.yaml
+          name: vault-config
+
     - name: frambozen-kustomize
       command: [/var/run/argocd/argocd-cmp-server]
       image: {{ argocd_extra_container_images.kustomize }}
@@ -2180,6 +2190,14 @@ repoServer:
       name: custom-tools
     - emptyDir: {}
       name: cache
+    - secret:
+        secretName: vault-configuration
+        items:
+          - key: vault-configuration.yaml
+            path: vault-configuration.yaml
+      name: vault-config
+
+
 
   # -- Toggle the usage of a ephemeral Helm working directory
   useEphemeralHelmWorkingDir: true
@@ -2399,7 +2417,7 @@ applicationSet:
   name: applicationset-controller
 
   # -- The number of ApplicationSet controller pods to run
-  replicas: 2
+  replicas: 1
 
   ## ApplicationSet controller Pod Disruption Budget
   ## Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
@@ -2699,7 +2717,7 @@ applicationSet:
     # -- The name of the Secret that will be automatically created and managed by this Certificate resource
     secretName: argocd-application-controller-tls
     # -- Certificate primary domain (commonName)
-    domain: argocd.example.com
+    domain: "{{ argocd_alias }}.{{ universe.environment }}.{{ universe.domain }}"
     # -- Certificate Subject Alternate Names (SANs)
     additionalHosts: []
     # -- The requested 'duration' (i.e. lifetime) of the certificate.
