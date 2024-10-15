@@ -18,7 +18,7 @@ spec:
           - path: "{{ application_type.git_files_path }}"
   template:
     metadata:
-      name: "{{ application_set.project}}-{% raw %}{{ base .path.path | normalize }}{% endraw %}"
+      name: "{% raw %}{{ base .path.path | normalize }}{% endraw %}"
       labels:
 {{ platform_office_hour_support_devops_labels | to_nice_yaml(width=1337) | indent(8,true) }}
     spec:
@@ -83,6 +83,7 @@ spec:
 {% if application_set.namespace.endswith('-*') %}
         syncOptions:
           - CreateNamespace=true
+          - ServerSideApply=true
 {% endif %}
       ignoreDifferences:
         - group: "*"
