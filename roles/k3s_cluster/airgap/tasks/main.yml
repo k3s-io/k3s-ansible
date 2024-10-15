@@ -9,12 +9,13 @@
         msg: "The Airgap role requires at least ansible-core 2.12"
 
     - name: Download k3s install script
+      become: false
       delegate_to: localhost
       ansible.builtin.get_url:
         url: https://get.k3s.io/
         timeout: 120
         dest: "{{ airgap_dir }}/k3s-install.sh"
-        mode: 0755
+        mode: "0755"
 
     - name: Distribute K3s install script
       ansible.builtin.copy:
@@ -22,15 +23,26 @@
         dest: /usr/local/bin/k3s-install.sh
         owner: root
         group: root
-        mode: 0755
+        mode: "0755"
 
-    - name: Distribute K3s binary
+    - name: Determine architecture and set k3s_arch
+      ansible.builtin.set_fact:
+        k3s_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'arm' if ansible_architecture == 'armv7l' else 'amd64' }}"
+
+    - name: Distribute K3s binary {{ k3s_arch }}
       ansible.builtin.copy:
-        src: "{{ airgap_dir }}/k3s"
+        src: "{{ item }}"
         dest: /usr/local/bin/k3s
         owner: root
         group: root
-        mode: 0755
+        mode: "0755"
+      with_first_found:
+        - files:
+            - "{{ airgap_dir }}/k3s-{{ k3s_arch }}"
+            - "{{ airgap_dir }}/k3s"
+          # with_first_found always runs, even inside the when block
+          # so we need to skip it if the file is not found
+          skip: true
 
     - name: Distribute K3s SELinux RPM
       ansible.builtin.copy:
@@ -38,7 +50,7 @@
         dest: /tmp/
         owner: root
         group: root
-        mode: 0755
+        mode: "0755"
       with_fileglob:
         - "{{ airgap_dir }}/k3s-selinux*.rpm"
       register: selinux_copy
@@ -48,7 +60,7 @@
       when:
         - ansible_os_family == 'RedHat'
         - selinux_copy.skipped is false
-      ansible.builtin.yum:
+      ansible.builtin.dnf:
         name: "{{ selinux_copy.results[0].dest }}"
         state: present
         disable_gpg_check: true
@@ -56,63 +68,30 @@
     - name: Make images directory
       ansible.builtin.file:
         path: "/var/lib/rancher/k3s/agent/images/"
-        mode: 0755
+        mode: "0755"
         state: directory
 
-    - name: Determine Architecture
-      ansible.builtin.set_fact:
-        k3s_arch: "{{ ansible_architecture }}"
-
-    - name: Distribute K3s amd64 images
-      when: ansible_architecture == 'x86_64'
+    - name: Distribute K3s images {{ k3s_arch }}
       ansible.builtin.copy:
         src: "{{ item }}"
-        dest: /var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar
+        dest: /var/lib/rancher/k3s/agent/images/{{ item | basename }}
         owner: root
         group: root
-        mode: 0755
+        mode: "0755"
       with_first_found:
         - files:
-            - "{{ airgap_dir }}/k3s-airgap-images-amd64.tar.zst"
-            - "{{ airgap_dir }}/k3s-airgap-images-amd64.tar.gz"
-            - "{{ airgap_dir }}/k3s-airgap-images-amd64.tar"
-          skip: true
-
-    - name: Distribute K3s arm64 images
-      when: ansible_architecture == 'aarch64'
-      ansible.builtin.copy:
-        src: "{{ item }}"
-        dest: /var/lib/rancher/k3s/agent/images/k3s-airgap-images-arm64.tar
-        owner: root
-        group: root
-        mode: 0755
-      with_first_found:
-        - files:
-            - "{{ airgap_dir }}/k3s-airgap-images-arm64.tar.zst"
-            - "{{ airgap_dir }}/k3s-airgap-images-arm64.tar.gz"
-            - "{{ airgap_dir }}/k3s-airgap-images-arm64.tar"
-          skip: true
-
-    - name: Distribute K3s arm images
-      when: ansible_architecture == 'armv7l'
-      ansible.builtin.copy:
-        src: "{{ item }}"
-        dest: /var/lib/rancher/k3s/agent/images/k3s-airgap-images-arm.tar
-        owner: root
-        group: root
-        mode: 0755
-      with_first_found:
-        - files:
-            - "{{ airgap_dir }}/k3s-airgap-images-arm.tar.zst"
-            - "{{ airgap_dir }}/k3s-airgap-images-arm.tar.gz"
-            - "{{ airgap_dir }}/k3s-airgap-images-arm.tar"
+            - "{{ airgap_dir }}/k3s-airgap-images-{{ k3s_arch }}.tar.zst"
+            - "{{ airgap_dir }}/k3s-airgap-images-{{ k3s_arch }}.tar.gz"
+            - "{{ airgap_dir }}/k3s-airgap-images-{{ k3s_arch }}.tar"
+          # with_first_found always runs, even inside the when block
+          # so we need to skip it if the file is not found
           skip: true
 
     - name: Run K3s Install [server]
       ansible.builtin.command:
         cmd: /usr/local/bin/k3s-install.sh
       environment:
-        INSTALL_K3S_SKIP_START: "true"
+        INSTALL_K3S_SKIP_ENABLE: "true"
         INSTALL_K3S_SKIP_DOWNLOAD: "true"
       changed_when: true
 
@@ -120,7 +99,7 @@
       ansible.builtin.command:
         cmd: /usr/local/bin/k3s-install.sh
       environment:
-        INSTALL_K3S_SKIP_START: "true"
+        INSTALL_K3S_SKIP_ENABLE: "true"
         INSTALL_K3S_SKIP_DOWNLOAD: "true"
         INSTALL_K3S_EXEC: "agent"
       changed_when: true

@@ -20,7 +20,7 @@ on processor architectures:
 
 ## System requirements
 
-The control node **must** have Ansible 5.0+ (ansible-core 2.12.0+)
+The control node **must** have Ansible 8.0+ (ansible-core 2.15+)
 
 All managed nodes in inventory must have:
 - Passwordless SSH access
@@ -60,15 +60,39 @@ Setting up a loadbalancer or VIP beforehand to use as the API endpoint is possib
 Start provisioning of the cluster using the following command:
 
 ```bash
-ansible-playbook playbook/site.yml -i inventory.yml
+ansible-playbook playbooks/site.yml -i inventory.yml
 ```
+
+### Using an external database
+
+If an external database is preferred, this can be achieved by passing the `--datastore-endpoint` as an extra server argument as well as setting the `use_external_database` flag to true.
+
+```bash
+k3s_cluster:
+  children:
+    server:
+      hosts:
+        192.16.35.11:
+        192.16.35.12:
+    agent:
+      hosts:
+        192.16.35.13:
+
+  vars:
+    use_external_database: true
+    extra_server_args: "--datastore-endpoint=postgres://username:password@hostname:port/database-name"
+```
+
+The `use_external_database` flag is required when more than one server is defined, as otherwise an embedded etcd cluster will be created instead.
+
+The format of the datastore-endpoint parameter is dependent upon the datastore backend, please visit the [K3s datastore endpoint format](https://docs.k3s.io/datastore#datastore-endpoint-format-and-functionality) for details on the format and supported datastores.
 
 ## Upgrading
 
 A playbook is provided to upgrade K3s on all nodes in the cluster. To use it, update `k3s_cluster.version` with the desired version in `inventory.yml` and run:
 
 ```bash
-ansible-playbook playbook/upgrade.yml -i inventory.yml
+ansible-playbook playbooks/upgrade.yml -i inventory.yml
 ```
 
 ## Airgap Install
@@ -77,14 +101,14 @@ Airgap installation is supported via the `airgap_dir` variable. This variable sh
 
 An example folder for an x86_64 cluster:
 ```bash
-$ ls ./playbook/my-airgap/
+$ ls ./playbooks/my-airgap/
 total 248M
 -rwxr-xr-x 1 $USER $USER  58M Nov 14 11:28 k3s
 -rw-r--r-- 1 $USER $USER 190M Nov 14 11:30 k3s-airgap-images-amd64.tar.gz
 
 $ cat inventory.yml
 ...
-airgap_dir: ./my-airgap # Paths are relative to the playbook directory
+airgap_dir: ./my-airgap # Paths are relative to the playbooks directory
 ```
 
 Additionally, if deploying on a OS with SELinux, you will also need to download the latest [k3s-selinux RPM](https://github.com/k3s-io/k3s-selinux/releases/latest) and place it in the airgap folder.

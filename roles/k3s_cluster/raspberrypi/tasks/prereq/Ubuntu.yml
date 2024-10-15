@@ -3,11 +3,17 @@
   ansible.builtin.command: sudo apt install -y nfs-common
 
 - name: Enable cgroup via boot commandline if not already enabled
-  ansible.builtin.lineinfile:
+  when: lookup('fileglob', '/boot/firmware/cmdline.txt', errors='warn') | length > 0
+  ansible.builtin.replace:
     path: /boot/firmware/cmdline.txt
-    backrefs: true
-    regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$'
-    line: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
+    regexp: '^([\w](?!.*\b{{ cgroup_item }}\b).*)$'
+    replace: '\1 {{ cgroup_item }}'
+  with_items:
+    - "cgroup_enable=cpuset"
+    - "cgroup_memory=1"
+    - "cgroup_enable=memory"
+  loop_control:
+    loop_var: cgroup_item
   notify: Reboot Pi
 
 - name: Install Ubuntu Raspi Extra Packages
@@ -17,4 +23,4 @@
     name: linux-modules-extra-raspi
     update_cache: true
     state: present
-  when: "ansible_distribution_version is version('20.10', '>=')"
+  when: "ansible_distribution_version is version('20.10', '>=') and ansible_distribution_version is version('24.04', '<')"

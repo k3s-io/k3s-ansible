@@ -1,2 +1,4 @@
+venv
+.venv
 .vscode
 .vagrant

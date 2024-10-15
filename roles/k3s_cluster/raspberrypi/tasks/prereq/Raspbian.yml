@@ -1,10 +1,20 @@
 ---
+- name: Check if /boot/firmware/cmdline.txt exists
+  ansible.builtin.stat:
+    path: /boot/firmware/cmdline.txt
+  register: boot_firmware_cmdline_txt
+
 - name: Enable cgroup via boot commandline if not already enabled
-  ansible.builtin.lineinfile:
-    path: /boot/cmdline.txt
-    backrefs: true
-    regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$'
-    line: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
+  ansible.builtin.replace:
+    path: "{{ (boot_firmware_cmdline_txt.stat.exists) | ternary('/boot/firmware/cmdline.txt', '/boot/cmdline.txt') }}"
+    regexp: '^([\w](?!.*\b{{ cgroup_item }}\b).*)$'
+    replace: '\1 {{ cgroup_item }}'
+  with_items:
+    - "cgroup_enable=cpuset"
+    - "cgroup_memory=1"
+    - "cgroup_enable=memory"
+  loop_control:
+    loop_var: cgroup_item
   notify: Reboot Pi
 
 - name: Gather the package facts
