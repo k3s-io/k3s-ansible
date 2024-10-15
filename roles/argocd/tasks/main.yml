@@ -25,7 +25,7 @@
     namespace: "{{ argocd_namespace }}"
     src: "{{ role_path }}/files/{{ plugin }}.yaml"
   loop:
-    -cmp-avp-plugin
+    - cmp-avp-plugin
   loop_control:
     loop_var: plugin
 
