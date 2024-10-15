@@ -2115,7 +2115,7 @@ repoServer:
   ## Ref: https://argo-cd.readthedocs.io/en/stable/user-guide/config-management-plugins/
   ## Note: Supports use of custom Helm templates
   extraContainers:
-    - name: frambozen-helm-avp
+    - name: avp-helm
       command: [/var/run/argocd/argocd-cmp-server]
       image: {{ argocd_extra_container_images.helm_avp }}
       securityContext:
@@ -2126,21 +2126,25 @@ repoServer:
           name: var-files
         - mountPath: /home/argocd/cmp-server/plugins
           name: plugins
-        - mountPath: /home/argocd/cmp-server/config/plugin.yaml # Plugin config file can either be volume mapped or baked into image
-          subPath: helm-avp.yaml
-          name: frambozen-plugin
         - mountPath: /tmp
-          name: frambozen-helm-avp-tmp
+          name: tmp
+        
+        # Register plugins into sidecar
+        - mountPath: /home/argocd/cmp-server/config/plugin.yaml
+          subPath: avp-helm.yaml
+          name: cmp-avp-plugin
+
+        # Mount tools into $PATH
         - mountPath: /usr/local/bin/argocd-vault-plugin
           subPath: argocd-vault-plugin
           name: custom-tools
-        - mountPath: /.cache
-          name: cache
+
+        # Mount vault config secret!  
         - mountPath: /home/argocd/cmp-server/config/vault-configuration.yaml
           subPath: vault-configuration.yaml
           name: vault-config
 
-    - name: frambozen-kustomize
+    - name: avp-kustomize
       command: [/var/run/argocd/argocd-cmp-server]
       image: {{ argocd_extra_container_images.kustomize }}
       securityContext:
@@ -2151,11 +2155,50 @@ repoServer:
           name: var-files
         - mountPath: /home/argocd/cmp-server/plugins
           name: plugins
-        - mountPath: /home/argocd/cmp-server/config/plugin.yaml # Plugin config file can either be volume mapped or baked into image
-          subPath: kustomize-sed.yaml
-          name: frambozen-plugin
         - mountPath: /tmp
-          name: frambozen-kustomize-tmp
+          name: avp-kustomize-tmp
+        
+        # Register plugins into sidecar
+        - mountPath: /home/argocd/cmp-server/config/plugin.yaml
+          subPath: avp-kustomize.yaml
+          name: cmp-avp-plugin
+
+        # Mount tools into $PATH
+        - mountPath: /usr/local/bin/argocd-vault-plugin
+          subPath: argocd-vault-plugin
+          name: custom-tools
+
+        # Mount vault config secret!  
+        - mountPath: /home/argocd/cmp-server/config/vault-configuration.yaml
+          subPath: vault-configuration.yaml
+          name: vault-config
+
+    - name: avp
+      command: [/var/run/argocd/argocd-cmp-server]
+      image: {{ argocd_extra_container_images.kustomize }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+      volumeMounts:
+        - mountPath: /var/run/argocd
+          name: var-files
+        - mountPath: /home/argocd/cmp-server/plugins
+          name: plugins
+
+        # Register plugins into sidecar
+        - mountPath: /home/argocd/cmp-server/config/plugin.yaml
+          subPath: avp.yaml
+          name: cmp-avp-plugin
+
+        # Mount tools into $PATH
+        - mountPath: /usr/local/bin/argocd-vault-plugin
+          subPath: argocd-vault-plugin
+          name: custom-tools
+
+        # Mount vault config secret!  
+        - mountPath: /home/argocd/cmp-server/config/vault-configuration.yaml
+          subPath: vault-configuration.yaml
+          name: vault-config
 
   # -- Init containers to add to the repo server pods
   initContainers:
@@ -2179,25 +2222,17 @@ repoServer:
 
   # -- Additional volumes to the repo server pod
   volumes:
-    - configMap:
-        name: frambozen-plugin
-      name: frambozen-plugin
-    - emptyDir: {}
-      name: frambozen-kustomize-tmp
-    - emptyDir: {}
-      name: frambozen-helm-avp-tmp
-    - emptyDir: {}
-      name: custom-tools
-    - emptyDir: {}
-      name: cache
-    - secret:
+    - name: cmp-avp-plugin
+      configMap:
+        name: cmp-avp-plugin
+    - name: custom-tools
+      emptyDir: {}
+    - name: vault-config
+      secret:
         secretName: vault-configuration
         items:
           - key: vault-configuration.yaml
             path: vault-configuration.yaml
-      name: vault-config
-
-
 
   # -- Toggle the usage of a ephemeral Helm working directory
   useEphemeralHelmWorkingDir: true
