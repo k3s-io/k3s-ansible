@@ -25,4 +25,4 @@ Restart=always
 RestartSec=5s
 ExecStartPre=-/sbin/modprobe br_netfilter
 ExecStartPre=-/sbin/modprobe overlay
-ExecStart=/usr/local/bin/k3s server --data-dir {{ k3s_server_cfg.location }} --server https://{{ k3s_server_cfg.api_endpoint }}:{{ k3s_server_cfg.api_port }} {{ k3s_server_cfg.extra_server_args }} 
+ExecStart=/usr/local/bin/k3s server --data-dir {{ k3s_cluster.server_location }} --server https://{{ k3s_cluster.api_endpoint }}:{{ k3s_cluster.api_port }} {{ k3s_cluster.extra_server_args }} 

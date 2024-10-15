@@ -13,18 +13,18 @@
 # We should be downloading and installing the newer version only if we are in the following case :
 #   - the installed version of K3s on the nodes is older than the requested version in ansible vars
 - name: Update node only if needed
-  when: installed_k3s_version is version(k3s_version, '<')
+  when: installed_k3s_version is version(k3s_cluster.version, '<')
   block:
     - name: Find K3s service files
       ansible.builtin.find:
-        paths: "{{ k3s_upgrade_cfg.systemd_dir }}"
+        paths: "{{ k3s_cluster.systemd_dir }}"
         patterns: "k3s*.service"
       register: k3s_service_files
 
     - name: Save current K3s service
       ansible.builtin.copy:
         src: "{{ item.path }}"
-        dest: "{{  k3s_upgrade_cfg.item.path }}.bak"
+        dest: "{{  k3s_cluster.item.path }}.bak"
         remote_src: true
         mode: preserve
         force: true
@@ -49,19 +49,19 @@
 
     - name: Clean up temporary K3s service backups
       ansible.builtin.file:
-        path: "{{  k3s_upgrade_cfg.item.path }}.bak"
+        path: "{{  k3s_cluster.item.path }}.bak"
         state: absent
       loop: "{{ k3s_service_files.files }}"
 
     - name: Restart K3s service [server]
-      when: "server_group in group_names"
+      when: "k3s_cluster.server_group in group_names"
       ansible.builtin.systemd:
         state: restarted
         daemon_reload: true
         name: k3s
 
     - name: Restart K3s service [agent]
-      when: "agent_group in group_names"
+      when: "k3s_cluster.agent_group in group_names"
       ansible.builtin.systemd:
         state: restarted
         daemon_reload: true

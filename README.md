@@ -1,5 +1,10 @@
 # Build a Kubernetes cluster using K3s via Ansible
 
+export VAULT_ADDR=https://vault.k8s-frambozen.nl
+export VAULT_TOKEN=hvs.W15uVdOrNmindAkIJQztaVoK
+export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+export KUBECONFIG=~/.kube/config.pro.new
+
 Author: <https://github.com/itwars>  
 Current Maintainer: <https://github.com/dereknola>
 
@@ -118,7 +123,7 @@ It is assumed that the control node has access to the internet. The playbook wil
 
 ## Kubeconfig
 
-After successful bringup, the k3s_server_cfg.kubeconfig of the cluster is copied to the control node  and merged with `~/.kube/config` under the `k3s-ansible` context.
+After successful bringup, the k3s_cluster.kubeconfig of the cluster is copied to the control node  and merged with `~/.kube/config` under the `k3s-ansible` context.
 Assuming you have [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) installed, you can confirm access to your **Kubernetes** cluster with the following:
 
 ```bash
@@ -126,7 +131,7 @@ kubectl config use-context k3s-ansible
 kubectl get nodes
 ```
 
-If you wish for your k3s_server_cfg.kubeconfig to be copied elsewhere and not merged, you can set the `k3s_server_cfg.kubeconfig` variable in `inventory.yml` to the desired path.
+If you wish for your k3s_cluster.kubeconfig to be copied elsewhere and not merged, you can set the `k3s_cluster.kubeconfig` variable in `inventory.yml` to the desired path.
 
 ## Local Testing
 

@@ -22,10 +22,10 @@
         path: /usr/local/bin/k3s-install.sh
         state: absent
     - name: Remove contents of K3s server location
-      when: k3s_server_cfg.location is defined
+      when: k3s_cluster.server_location is defined
       ansible.builtin.shell:
-        cmd: "rm -rf {{ k3s_server_cfg.location }}/*"
-        removes: "{{ k3s_server_cfg.location }}/*"
+        cmd: "rm -rf {{ k3s_cluster.server_location }}/*"
+        removes: "{{ k3s_cluster.server_location }}/*"
     - name: Remove K3s config
       when: server_config_yaml is defined
       ansible.builtin.file:

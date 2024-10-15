@@ -2,8 +2,16 @@
 # Define all the specific k3s variables
 k3s_cluster:
   version: v1.30.2+k3s1
+  token: "0/GbTTn3tz6PZtwD2NAHwCo0bzzv81OON/pkLJBIy+uLCe0oVqCnR7hWD0L012533y7g+2X06A4MycDiFctZoQ=="  
   api_endpoint: "{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}"
-  token: "mijn_k3s_token"  # Use ansible vault if you want to keep it secret
-  use_external_databases: true
-  extra_server_args: '--datastore-endpoint "mysql://k3s-pro:Ia!UeE15))LcA1q.@tcp(192.168.1.72:3306)/k3s-pro"'
+  api_port: 6443
+  use_external_database: true
+  extra_server_args: '--datastore-endpoint mysql://k3s-pro:Ia!UeE15))LcA1q.@tcp(192.168.1.72:3306)/k3s-pro'
   extra_agent_args: ""
+  server_location: "/var/lib/rancher/k3s"
+  systemd_dir: "/etc/systemd/system"
+  kubeconfig: "~/.kube/config.pro.new"
+  user_kubectl: true
+  cluster_context: k3s-ansible
+  server_group: server
+  agent_group: agent

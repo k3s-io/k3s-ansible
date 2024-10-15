@@ -15,7 +15,7 @@
 #   - we couldn't get k3s installed version in the first task of this role
 #   - the installed version of K3s on the nodes is older than the requested version in ansible vars
 - name: Download artifact only if needed
-  when: airgap_dir is undefined and ( k3s_version_output.rc != 0 or installed_k3s_version is version(k3s_version, '<') )
+  when: airgap_dir is undefined and ( k3s_version_output.rc != 0 or installed_k3s_version is version(k3s_cluster.version, '<') )
   block:
     - name: Download K3s install script
       ansible.builtin.get_url:
@@ -55,13 +55,13 @@
         mode: "0644"
 
 - name: Init first server node
-  when: inventory_hostname == groups[server_group][0]
+  when: inventory_hostname == groups[k3s_cluster.server_group][0]
   block:
     - name: Copy K3s service file [Single]
-      when: groups[server_group] | length == 1 or use_external_database
+      when: groups[k3s_cluster.server_group] | length == 1 or k3s_cluster.use_external_database
       ansible.builtin.template:
         src: "k3s-single.service.j2"
-        dest: "{{ k3s_server_cfg.systemd_dir }}/k3s.service"
+        dest: "{{ k3s_cluster.systemd_dir }}/k3s.service"
         owner: root
         group: root
         mode: "0644"
@@ -69,11 +69,11 @@
 
     - name: Copy K3s service file [HA]
       when:
-        - groups[server_group] | length > 1
-        - not use_external_database
+        - groups[k3s_cluster.server_group] | length > 1
+        - not k3s_cluster.use_external_database
       ansible.builtin.template:
         src: "k3s-cluster-init.service.j2"
-        dest: "{{ k3s_server_cfg.systemd_dir }}/k3s.service"
+        dest: "{{ k3s_cluster.systemd_dir }}/k3s.service"
         owner: root
         group: root
         mode: "0644"
@@ -82,22 +82,22 @@
     - name: Add service environment variables
       when: extra_service_envs is defined
       ansible.builtin.lineinfile:
-        path: "{{ k3s_server_cfg.systemd_dir }}/k3s.service.env"
+        path: "{{ k3s_cluster.systemd_dir }}/k3s.service.env"
         line: "{{ item }}"
       with_items: "{{ extra_service_envs }}"
 
     - name: Delete any existing token from the environment if different from the new one
       ansible.builtin.lineinfile:
         state: absent
-        path: "{{ systemd_dir }}/k3s.service.env"
-        regexp: "^K3S_TOKEN=\\s*(?!{{ token }}\\s*$)"
+        path: "{{ k3s_cluster.systemd_dir }}/k3s.service.env"
+        regexp: "^K3S_TOKEN=\\s*(?!{{ k3s_cluster.token }}\\s*$)"
 
     # Add the token to the environment.
     - name: Add token as an environment variable
       no_log: true # avoid logging the server token
       ansible.builtin.lineinfile:
-        path: "{{ systemd_dir }}/k3s.service.env"
-        line: "K3S_TOKEN={{ token }}"
+        path: "{{ k3s_cluster.systemd_dir }}/k3s.service.env"
+        line: "K3S_TOKEN={{ k3s_cluster.token }}"
 
     - name: Restart K3s service
       when:
@@ -118,7 +118,7 @@
         enabled: true
 
     - name: Pause to allow first server startup
-      when: (groups[server_group] | length) > 1
+      when: (groups[k3s_cluster.server_group] | length) > 1
       ansible.builtin.pause:
         seconds: 10
 
@@ -126,6 +126,7 @@
       ansible.builtin.command: 'kubectl'
       register: kubectl_installed
       ignore_errors: true
+      delegate_to: 127.0.0.1
       become: false
       changed_when: false
 
@@ -147,24 +148,24 @@
         - name: Copy kubeconfig to control node
           ansible.builtin.fetch:
             src: /etc/rancher/k3s/k3s.yaml
-            dest: "{{ k3s_server_cfg.kubeconfig }}"
+            dest: "{{ k3s_cluster.kubeconfig }}"
             flat: true
 
         - name: Change server address in kubeconfig on control node
           ansible.builtin.shell: |
-            KUBECONFIG={{ k3s_server_cfg.kubeconfig }} kubectl config set-cluster default --server=https://{{ api_endpoint }}:{{ api_port }}
+            KUBECONFIG={{ k3s_cluster.kubeconfig }} kubectl config set-cluster default --server=https://{{ k3s_cluster.api_endpoint }}:{{ k3s_cluster.api_port }}
           delegate_to: 127.0.0.1
           become: false
           register: csa_result
           changed_when:
             - csa_result.rc == 0
 
-        - name: Setup kubeconfig context on control node - {{ k3s_server_cfg.cluster_context }}
+        - name: Setup kubeconfig context on control node - {{ k3s_cluster.cluster_context }}
           when: kubeconfig != "~/.kube/config"
           ansible.builtin.replace:
-            path: "{{ k3s_server_cfg.kubeconfig }}"
+            path: "{{ k3s_cluster.kubeconfig }}"
             regexp: 'name: default'
-            replace: 'name: {{ k3s_server_cfg.cluster_context }}'
+            replace: 'name: {{ k3s_cluster.cluster_context }}'
           delegate_to: 127.0.0.1
           become: false
 
@@ -172,9 +173,9 @@
           when: kubeconfig != "~/.kube/config"
           ansible.builtin.shell: |
             TFILE=$(mktemp)
-            KUBECONFIG={{ k3s_server_cfg.kubeconfig }} kubectl config set-context {{ k3s_server_cfg.cluster_context }} --user={{ k3s_server_cfg.cluster_context }} --cluster={{ k3s_server_cfg.cluster_context }}
-            KUBECONFIG={{ k3s_server_cfg.kubeconfig }} kubectl config view --flatten > ${TFILE}
-            mv ${TFILE} {{ k3s_server_cfg.kubeconfig }}
+            KUBECONFIG={{ k3s_cluster.kubeconfig }} kubectl config set-context {{ k3s_cluster.cluster_context }} --user={{ k3s_cluster.cluster_context }} --cluster={{ k3s_cluster.cluster_context }}
+            KUBECONFIG={{ k3s_cluster.kubeconfig }} kubectl config view --flatten > ${TFILE}
+            mv ${TFILE} {{ k3s_cluster.kubeconfig }}
           delegate_to: 127.0.0.1
           become: false
           register: mv_result
@@ -183,24 +184,24 @@
 
 - name: Start other server if any and verify status
   when:
-    - (groups[server_group] | length) > 1
-    - inventory_hostname != groups[server_group][0]
+    - (groups[k3s_cluster.server_group] | length) > 1
+    - inventory_hostname != groups[k3s_cluster.server_group][0]
   block:
     - name: Copy K3s service file [HA]
-      when: not use_external_database
+      when: not k3s_cluster.use_external_database
       ansible.builtin.template:
         src: "k3s-ha.service.j2"
-        dest: "{{ k3s_server_cfg.systemd_dir }}/k3s.service"
+        dest: "{{ k3s_cluster.systemd_dir }}/k3s.service"
         owner: root
         group: root
         mode: "0644"
       register: service_file_ha
 
     - name: Copy K3s service file [External DB]
-      when: use_external_database
+      when: k3s_cluster.use_external_database
       ansible.builtin.template:
         src: "k3s-single.service.j2"
-        dest: "{{ kkkkkkksystemd_dir }}/k3s.service"
+        dest: "{{  k3s_cluster.systemd_dir }}/k3s.service"
         owner: root
         group: root
         mode: "0644"
@@ -225,18 +226,18 @@
         enabled: true
 
     - name: Verify that all server nodes joined
-      when: (groups[server_group] | length) > 1
+      when: (groups[k3s_cluster.server_group] | length) > 1
       ansible.builtin.command:
         cmd: >
           k3s kubectl get nodes -l "node-role.kubernetes.io/control-plane=true" -o=jsonpath="{.items[*].metadata.name}"
       register: nodes
-      until: nodes.rc == 0 and (nodes.stdout.split() | length) == (groups[server_group] | length)
+      until: nodes.rc == 0 and (nodes.stdout.split() | length) == (groups[k3s_cluster.server_group] | length)
       retries: 20
       delay: 10
       changed_when: false
 
 - name: Setup kubectl for user
-  when: k3s_server_cfg.user_kubectl
+  when: k3s_cluster.user_kubectl
   block:
 
     - name: Create kubectl symlink

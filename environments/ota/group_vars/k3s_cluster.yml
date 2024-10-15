@@ -8,9 +8,9 @@ k3s_cluster:
   extra_agent_args: ""
 
 # Optional vars
-# k3s_server_cfg.api_port: 6443
-# k3s_server_cfg.location: /var/lib/rancher/k3s
-# k3s_server_cfg.systemd_dir: /etc/systemd/system
+# k3s_cluster.api_port: 6443
+# k3s_cluster.server_location: /var/lib/rancher/k3s
+# k3s_cluster.systemd_dir: /etc/systemd/system
 # extra_service_envs: [ 'ENV_VAR1=VALUE1', 'ENV_VAR2=VALUE2' ]
 # Manifests or Airgap should be either full paths or relative to the playbook directory.
 # List of locally available manifests to apply to the cluster, useful for PVCs or Traefik modifications.

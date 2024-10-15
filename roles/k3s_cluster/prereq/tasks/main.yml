@@ -45,13 +45,13 @@
         - ufw_status['stdout'] == "Status':' active"
       community.general.ufw:
         rule: allow
-        port: "{{ k3s_server_cfg.api_port }}"
+        port: "{{ k3s_cluster.api_port }}"
         proto: tcp
 
     - name: If ufw enabled, open etcd ports
       when:
         - ufw_status['stdout'] == "Status':' active"
-        - groups[server_group] | length > 1
+        - groups[k3s_cluster.server_group] | length > 1
       community.general.ufw:
         rule: allow
         port: "2379:2381"
@@ -72,14 +72,14 @@
   block:
     - name: If firewalld enabled, open api port
       ansible.posix.firewalld:
-        port: "{{ k3s_server_cfg.api_port }}/tcp"
+        port: "{{ k3s_cluster.api_port }}/tcp"
         zone: internal
         state: enabled
         permanent: true
         immediate: true
 
     - name: If firewalld enabled, open etcd ports
-      when: groups[server_group] | length > 1
+      when: groups[k3s_cluster.server_group] | length > 1
       ansible.posix.firewalld:
         port: "2379-2381/tcp"
         zone: internal
@@ -111,8 +111,8 @@
       loop: >-
         {{
           (
-            groups[server_group] | default([])
-            + groups[agent_group] | default([])
+            groups[k3s_cluster.server_group] | default([])
+            + groups[k3s_cluster.agent_group] | default([])
           )
           | map('extract', hostvars, ['ansible_default_ipv4', 'address'])
           | flatten | unique | list
@@ -183,11 +183,6 @@
     name: apparmor
     state: present
 
-- name: Install python3-apt
-  ansible.builtin.package:
-    name: python3-apt
-    state: present
-
 - name: Gather the package facts
   ansible.builtin.package_facts:
     manager: auto
@@ -216,8 +211,8 @@
 
 - name: Setup alternative K3s directory
   when:
-    - k3s_server_cfg.location is defined
-    - k3s_server_cfg.location != "/var/lib/rancher/k3s"
+    - k3s_cluster.server_location is defined
+    - k3s_cluster.server_location != "/var/lib/rancher/k3s"
   block:
     - name: Make rancher directory
       ansible.builtin.file:
@@ -227,7 +222,7 @@
     - name: Create symlink
       ansible.builtin.file:
         dest: /var/lib/rancher/k3s
-        src: "{{ k3s_server_cfg.location }}"
+        src: "{{ k3s_cluster.server_location }}"
         force: true
         state: link
 

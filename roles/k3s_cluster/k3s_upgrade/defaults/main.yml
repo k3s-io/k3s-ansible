@@ -1,2 +1,2 @@
 ---
-k3s_upgrade_cfg.systemd_dir: /etc/systemd/system
+k3s_cluster.systemd_dir: /etc/systemd/system

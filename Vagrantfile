@@ -35,7 +35,7 @@ def provision(vm, role, node_num)
       # Optional, left as reference for ruby-ansible syntax
       # extra_service_envs: [ "NO_PROXY='localhost'" ],
       # server_config_yaml: <<~YAML
-      #   write-k3s_server_cfg.kubeconfig-mode: 644
+      #   write-k3s_cluster.kubeconfig-mode: 644
       #   kube-apiserver-arg:
       #     - advertise-port=1234
       # YAML
