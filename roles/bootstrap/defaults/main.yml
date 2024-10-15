@@ -385,8 +385,13 @@ argocd_helm_values:
                   PARAMS+=(--state-values-file /helm-values/$f)
                 done
 
-                helmfile "${PARAMS[@]}" 2>&1 | tee -a "/tmp/helmfile_$(date +'%Y%m%d%H%M').log"
+                LOG_FILE="/tmp/helmfile_${ARGOCD_APP_NAME}_$(date +'%Y%m%d%H%M').log"
 
+                echo "##########################################" >> "$LOG_FILE"
+                echo "Start helmfile for $ARGOCD_APP_NAME" >> "$LOG_FILE"
+                echo "##########################################" >> "$LOG_FILE"
+                
+                helmfile "${PARAMS[@]}" 2>&1 | tee -a "$LOG_FILE"
                 test "${PIPESTATUS[0]}" -eq 0
           lockRepo: false
     rbac:
