@@ -31,51 +31,25 @@ spec:
         namespace: "{{ application_set.namespace }}"
 {% endif %}
 {% if application_type.type == 'helm' %}
-      source:
-        path: "./"
-        repoURL: {{ application_set.repo_url }}
-        targetRevision: HEAD
 {% raw %}
-        plugin:
-          env:
-            - name: HELM_CHART_VERSION
-              value: "{{ .chart.version }}"
-            - name: HELM_REPO_URL
-              value: "{{ .chart.repo_url }}"
-            - name: HELM_CHART_NAME
-              value: "{{ .chart.name }}"
-            - name: HELM_VALUES_FILE
-              value: "{{ .path.path }}/values.yaml"
+      sources:
+        - repoURL: '{{ .chart.repo_url }}'
+          chart: '{{ .chart.name }}'
+          targetRevision: '{{ .chart.version }}'
+          helm:
+            releaseName: '{{ base .path.path }}'
+            valueFiles:
+              - '$values/{{ base .path.path }}/values.yaml'
 {% endraw %}
+        - repoURL: {{ application_set.repo_url }}
+          targetRevision: HEAD
+          ref: values  
 {% else %}
       source:
-        repoURL: "{% raw %}{{ .git.repo }}{% endraw %}"
+        repoUrl: "{% raw %}{{ .git.repo }}{% endraw %}"
         targetRevision: HEAD
         path: overlays/{{ application_set.project }}
-        plugin:
-          env:
-{% raw %}
-            - name: DOCKER_IMAGE
-              value: '{{ .image.repo }}:{{ .image.tag }}'
-            - name: TAG
-              value: '{{ .image.tag }}'
-            - name: RND
-              value: '{{ base .path.path | normalize | splitList "-" | last }}'
-{% endraw %}
 {% endif %}
-            - name: NAMESPACE
-{% if application_set.namespace.endswith('-*') %}
-              value: "{{ application_set.namespace[:-2] }}{% raw %}{{ base .path.path | normalize }}{% endraw %}"
-{% else %}
-              value: "{{ application_set.namespace }}"
-{% endif %}
-
-            - name: APPS_OTA_DOMAIN
-              value: {{ argocd.cluster.credentials['ota-cluster'].domain | default('NOCLUSTER') }}
-            - name: APPS_PRO_DOMAIN
-              value: {{ argocd.cluster.credentials['pro-cluster'].domain | default('NOCLUSTER') }}
-            - name: APPS_SHS_DOMAIN
-              value: {{ argocd.cluster.credentials['shs-cluster'].domain | default('NOCLUSTER') }}
       syncPolicy:
         automated:
           prune: true
@@ -84,12 +58,7 @@ spec:
         syncOptions:
           - CreateNamespace=true
           - ServerSideApply=true
-{% endif %}
       ignoreDifferences:
-        - group: "*"
-          kind: "*"
-          managedFieldsManagers:
-          - vault-admission
         - group: monitoring.coreos.com
           kind: ServiceMonitor
           # See: https://github.com/argoproj/argo-cd/issues/11074
@@ -99,4 +68,5 @@ spec:
           kind: Prometheus
           jqPathExpressions:
             - .spec.remoteWrite[]?.writeRelabelConfigs[]?.action
+{% endif %}
 {% endfor %}

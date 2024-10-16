@@ -2156,7 +2156,7 @@ repoServer:
         - mountPath: /home/argocd/cmp-server/plugins
           name: plugins
         - mountPath: /tmp
-          name: avp-kustomize-tmp
+          name: tmp
         
         # Register plugins into sidecar
         - mountPath: /home/argocd/cmp-server/config/plugin.yaml

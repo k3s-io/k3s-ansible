@@ -1,0 +1,11 @@
+---
+# code language=ansible
+
+- name: Install Argo CD on cluster
+  hosts: helm
+  connection: local
+  gather_facts: false
+  roles:
+    - role: argocd
+  environment:
+    KUBECONFIG: "~/.kube/config.pro.new"

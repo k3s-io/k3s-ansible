@@ -70,36 +70,13 @@ spec:
 {% endraw %}
 {% else %}
 {% raw %}
-        # path: overlays/{{ .values.overlay }}
-        path: overlays/{{ index .path.segments 1 }}
-        plugin:
-          env:
-            - name: DOCKER_IMAGE
-              value: registry.shs.{{ universe.domain }}/{{ .image.repo }}:{{ .image.tag }}
-            - name: TAG
-              value: '{{ .image.tag }}'
-            - name: RND
-              # value: '{{ .values.suffix }}'
-              value: '{{ len .path.segments | eq 2 | ternary "" ( last .path.segments ) }}'
-            - name: NAMESPACE
-              value: '{{ .values.namespace }}'
+        path: overlays/{{ .values.overlay }}
 {% endraw %}
 {% endif %}
-            - name: APPS_OTA_DOMAIN
-              value: {{ argocd.cluster.credentials['ota-cluster'].domain | default('NOCLUSTER') }}
-            - name: APPS_PRO_DOMAIN
-              value: {{ argocd.cluster.credentials['pro-cluster'].domain | default('NOCLUSTER') }}
-            - name: APPS_SHS_DOMAIN
-              value: {{ argocd.cluster.credentials['shs-cluster'].domain | default('NOCLUSTER') }}
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
         syncOptions:
-          - CreateNamespace=true
-      ignoreDifferences:
-        - group: '*'
-          kind: '*'
-          managedFieldsManagers:
-            - vault-admission      
+          - CreateNamespace=true     
 {% endfor %}
