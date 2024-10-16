@@ -1,0 +1,34 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+	"name": "vscode-k3s-ansible-dev-environment",
+	"build":{
+		"dockerfile": "Dockerfile",
+		"context": ".."
+	},
+	"runArgs": [
+		"--userns=keep-id"
+	],
+	"mounts": [
+		{
+			"source": "${localEnv:HOME}/.kube",
+			"target": "/home/vscode/.kube",
+			"type": "bind"
+		}
+	],
+	"containerEnv": {
+		"HOME": "/home/vscode",
+		"KUBECONFIG": "/home/vscode/.kube/config"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"redhat.ansible",
+				"yzhang.markdown-all-in-one",
+				"DavidAnson.vscode-markdownlint",
+				"redhat.vscode-yaml"
+			]
+		}
+	},
+	"postCreateCommand": "pip3 install --user ansible"
+}

@@ -33,6 +33,10 @@ It is also recommended that all managed nodes disable firewalls and swap. See [K
 First copy the sample inventory to `inventory.yml`.
 
 ```bash
+ansible all -b -m shell -a "echo \"\$(hostname) running and responding! \""
+```
+
+```bash
 cp inventory-sample.yml inventory.yml
 ```
 
@@ -60,7 +64,7 @@ Setting up a loadbalancer or VIP beforehand to use as the API endpoint is possib
 Start provisioning of the cluster using the following command:
 
 ```bash
-ansible-playbook playbooks/site.yml -i inventory.yml
+ansible-playbook playbooks/site.yml --ask-vault-pass -i inventory.yml
 ```
 
 ### Using an external database
