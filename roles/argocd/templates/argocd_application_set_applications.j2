@@ -14,9 +14,8 @@ spec:
     - matrix:
         generators:
           - scmProvider:
-              githubServer:
+              github:
                 allBranches: false
-                api: https://api.github.com
                 basicAuth:
                   passwordRef:
                     key: password
@@ -24,8 +23,13 @@ spec:
                   username: {{ argocd.github.username }}
                 project: '{{ application_set.github_project }}'
               filters:
+{% if application_type.type == 'helm' %}
                 - pathsExist:
-                    - base/kustomization.yml
+                    - charts
+{% else %}
+                - pathExists:
+                    - base/kustomize.yaml
+{% endif %}
           - git:
               files:
 {% for path in application_type.git_files_path %}
@@ -56,17 +60,10 @@ spec:
 {% endraw %}
 {% if application_type.type == 'helm' %}
 {% raw %}
-        path: "./"
-        plugin:
-          env:
-            - name: HELM_CHART_VERSION
-              value: "{{ .chart.version }}"
-            - name: HELM_REPO_URL
-              value: "{{ .chart.repo_url }}"
-            - name: HELM_CHART_NAME
-              value: "{{ .chart.name }}"
-            - name: HELM_VALUES_FILE
-              value: "{{ .path.path }}/values.yaml"
+        path: 'charts/{{ .chart.name }}'
+        helm:
+          valueFiles:
+            - '{{ .path.path }}/values.yaml'
 {% endraw %}
 {% else %}
 {% raw %}
