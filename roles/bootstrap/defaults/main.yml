@@ -328,6 +328,13 @@ argocd_helm_values:
       exec.enabled: true
       users.anonymous.enabled: "{{ not (security_enabled | lower == 'true') }}"
       url: "https://automation-argo-cd.{{ ingress_hostname }}"
+      resource.exclusions: |
+        - apiGroups:
+          - "velero.io"
+          kinds:
+          - "Backup"
+          clusters:
+          - "*"
       dex.config: |
         connectors:
           - type: oidc
