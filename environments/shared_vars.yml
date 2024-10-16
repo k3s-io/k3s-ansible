@@ -18,14 +18,15 @@ platform_office_hour_support_devops_labels:
 git_clone_ssh_url: "git@github.com"
 git_clone_https_url: "https://github.com"
 
-oidc_client_host: sso.k8s-frambozen.nl
-oidc_client_uri: "{{ oidc_client_host }}"
-oidc_client_url: "https://{{ oidc_client_uri }}/webman/sso"
-oidc_client_auth_url: "{{ oidc_client_url }}/SDSOOauth.cgi"
-oidc_client_token_url: "{{ oidc_client_url }}/SSOAccessToken.cgi"
-oidc_client_userinfo_url: "{{ oidc_client_url }}/SSOUserInfo.cgi"
-oidc_client_keys_url: "{{ oidc_client_url }}/openid-jwks.json"
-oidc_client_well_known_config_url: "{{ oidc_client_url }}/.well-known/openid-configuration"
+oidc_provider_name: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/group_vars/oidc/provider', **vault_options )['secret']['name'] }}"
+oidc_provider_host: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/group_vars/oidc/clients/argocd', **vault_options )['secret']['host'] }}"
+oidc_provider_uri: "{{ oidc_provider_host }}"
+oidc_provider_url: "https://{{ oidc_provider_uri }}/{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/group_vars/oidc/clients/argocd', **vault_options )['secret']['url'] }}"
+oidc_provider_auth_url: "{{ oidc_provider_url }}/{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/group_vars/oidc/clients/argocd', **vault_options )['secret']['auth_url'] }}"
+oidc_provider_token_url: "{{ oidc_provider_url }}/{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/group_vars/oidc/clients/argocd', **vault_options )['secret']['token_url'] }}"
+oidc_provider_userinfo_url: "{{ oidc_provider_url }}/{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/group_vars/oidc/clients/argocd', **vault_options )['secret']['userinfo_url'] }}"
+oidc_provider_keys_url: "{{ oidc_provider_url }}/{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/group_vars/oidc/clients/argocd', **vault_options )['secret']['keys_url'] }}"
+oidc_provider_well_known_config_url: "{{ oidc_provider_url }}/{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/group_vars/oidc/clients/argocd', **vault_options )['secret']['well_known_config_url'] }}"
 
 vault_options:
   engine_mount_point: 'k8s-provisioning'

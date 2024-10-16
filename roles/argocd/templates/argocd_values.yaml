@@ -205,8 +205,8 @@ configs:
 
     # OIDC configuration as an alternative to dex (optional).
     oidc.config: |
-      name: argocd
-      issuer: {{ oidc_client_url }}
+      name: {{ oidc_provider_name }}
+      issuer: {{ oidc_provider_url }}
       clientID: {{ argocd.oidc.client.id }}
       clientSecret: {{ argocd.oidc.client.secret }}
       requestedScopes: ["openid", "email", "groups"]
