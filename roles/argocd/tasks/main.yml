@@ -3,20 +3,19 @@
 - name: Add docker secret
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ argocd_namespace }}"
+    namespace: "pro"
     definition:
       apiVersion: v1
       kind: Secret
-      type: Opaque
       metadata:
-        name: argocd-docker-{{ docker_repo.name}}-creds
-        namespace: "{{ argocd_namespace }}"
+        name: docker-{{ docker_repo.name }}-creds
+        namespace: "pro"
       data:
-        .dockerconfigjson: "{{ docker_repo.dockerconfigjson | b64encode }}"
+        .dockerconfigjson: "{{ docker_repo.dockerconfigjson }}"
       type: kubernetes.io/dockerconfigjson
-    loop: "{{ docker }}"
-    loop_control:
-      loop_var: docker_repo
+  loop: "{{ docker_repo_configs }}"
+  loop_control:
+    loop_var: docker_repo
 
 
 - name: Add ArgoCD helm repo
