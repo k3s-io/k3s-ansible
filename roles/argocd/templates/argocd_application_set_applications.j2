@@ -1,6 +1,4 @@
 {% for application_type in application_set.types %}
-{{ $dynamic_overlays := list "ont" "itest" }}
-
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
@@ -42,7 +40,7 @@ spec:
                 application: {{ .repository }}
                 dynamic_overlays: list "ont" "itest"
                 prefix: '{{ index .path.segments 1 }}'
-                suffix: '{{ has ( index .path.segments 2 ) (list "ont" "itest") | ternary ( last . path.segments | print "-%s" ) "" }}'
+                suffix: '{{ has ( index .path.segments 2 ) (list "ont" "itest") | ternary ( last .path.segments | print "-%s" ) "" }}'
                 cluster: '{{ has .values.overlay ( list "pro") | ternary "pro-cluster" "ota-cluster" }}'
                 namespace: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary "dev-" ""}}{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary .repository .values.overlay }}{{ .values.suffix }}'
   {% endraw %}
@@ -56,20 +54,20 @@ spec:
   {% endfor %}
   {% raw %}
         values:
-          url: {% endraw %}{{ application_set.repo_url }}{% raw %}
+          repoURL: {% endraw %}{{ application_set.repo_url }}{% raw %}
           dynamic_overlays: list "ont" "itest"
           application: '{{ index .path.segments 0 }}'
           overlay: '{{ index .path.segments 2 }}'
           prefix: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary "dev-" "" }}'
-          suffix: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( index path.segments 3 | print "-%s" ) "" }}'
+          suffix: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( last .path.segments | print "-%s" ) "" }}'
           cluster: '{{ has ( index .path.segments 2 ) ( list "pro") | ternary "pro-cluster" "ota-cluster" }}'
-          namespace: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary "dev-" ""}}{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( index .path.segments 0 ) (index .path.segments 2 )) }}{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( index path.segments 3 | print "-%s" ) "" }}'
+          namespace: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary "dev-" ""}}{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( index .path.segments 0 ) (index .path.segments 2 ) }}{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( last .path.segments | print "-%s" ) "" }}'
   {% endraw %}
 {% endif %}
 {% raw %}
   template:
     metadata:
-      name: '{{ .values.prefix }}-{{ .application }}-{{ .values.suffix }}' 
+      name: '{{ .values.prefix }}{{ .values.application }}{{ .values.suffix }}' 
     spec:
       destination:
         name: '{{ .values.cluster }}'
