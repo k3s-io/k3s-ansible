@@ -76,16 +76,18 @@ spec:
 {% endraw %}
 {% if application_type.type == 'helm' %}
 {% raw %}
-      sources:
-        - repoURL: '{{ .chart.repo_url }}'
-          chart: '{{ .chart.name }}'
-          targetRevision: '{{ .chart.version }}'
-          helm:
-            valueFiles:
-              - '$values/{{ .path.path }}/values.yaml'
-        - repoURL: '{{ .values.repoURL }}'
-          targetRevision: HEAD
-          ref: values
+      source:
+        - path: "./"
+          plugin:
+            env:
+              - name: HELM_REPO_URL
+                value: '{{ .chart.repo_url }}'
+              - name: HELM_CHART_NAME
+                value: '{{ .chart.name }}'
+              - name: HELM_CHART_VERSION
+                value: '{{ .chart.version }}'
+              - name: HELM_VALUES_FILES
+                value: "{{ .path.path }}/values.yaml"
 {% endraw %}
 {% else %}
 {% raw %}
