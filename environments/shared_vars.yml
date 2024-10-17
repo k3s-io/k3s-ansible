@@ -32,3 +32,9 @@ vault_options:
   engine_mount_point: 'k8s-provisioning'
   url: 'https://vault.k8s-frambozen.nl'
   auth_method: token
+
+docker:
+  - name: ralphsmeets
+    password: "{{ oidc_provider_url }}/{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/docker', **vault_options )['secret']['password'] }}"
+    user: "{{ oidc_provider_url }}/{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/docker', **vault_options )['secret']['user'] }}"
+    dockerconfigjson: "{{ oidc_provider_url }}/{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/docker', **vault_options )['secret']['config.json'] }}"
