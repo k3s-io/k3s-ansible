@@ -40,9 +40,9 @@ spec:
                 application: {{ .repository }}
                 dynamic_overlays: list "ont" "itest"
                 prefix: '{{ index .path.segments 1 }}'
-                suffix: '{{ has .values.overlay .values.dynamic_overlays | ternary ( last . path.segments | print "-%s" ) "" }}'
+                suffix: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( last . path.segments | print "-%s" ) "" }}'
                 cluster: '{{ has .values.overlay ( list "pro") | ternary "pro-cluster" "ota-cluster" }}'
-                namespace: '{{ has .values.overlay .values.dynamic_overlays | ternary "dev-" ""}}{{ has .values.overlay .values.dynamic_overlays | ternary .repository .values.overlay }}{{ .values.suffix }}'
+                namespace: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary "dev-" ""}}{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary .repository .values.overlay }}{{ .values.suffix }}'
   {% endraw %}
 {% else %}
     - git:
@@ -58,10 +58,10 @@ spec:
           dynamic_overlays: list "ont" "itest"
           application: '{{ index .path.segments 0 }}'
           overlay: '{{ index .path.segments 2 }}'
-          prefix: '{{ has .values.overlay .values.dynamic_overlays | ternary "dev- "" }}'
-          suffix: '{{ has .values.overlay .values.dynamic_overlays | ternary ( index path.segments 3 | print "-%s" ) "" }}'
-          cluster: '{{ has .values.overlay ( list "pro") | ternary "pro-cluster" "ota-cluster" }}'
-          namespace: '{{ .values.prefix }}{{ has .values.overlay .values.dynamic_overlays | ternary .values.application .values.overlay }}{{ .values.suffix }}'
+          prefix: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary "dev-" "" }}'
+          suffix: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( index path.segments 3 | print "-%s" ) "" }}'
+          cluster: '{{ has ( index .path.segments 2 ) ( list "pro") | ternary "pro-cluster" "ota-cluster" }}'
+          namespace: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary "dev-" ""}}{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary .values.application .values.overlay }}{{ .values.suffix }}'
   {% endraw %}
 {% endif %}
 {% raw %}
