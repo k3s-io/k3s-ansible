@@ -113,18 +113,33 @@ argocd:
         namespace: "-*"
 
     # Setup the different project applications sets:
-    # - github_project: The project in github that needs to be scanned on deployments
+    # - github_organisation: The project in github that needs to be scanned on deployments
     #   types:
     #     - type: kustomize or helm. Defines the type of deployement
     #       git_files_path: path(s) inside the repo for globbing the files.
     applications:
-      - github_project: RalphSmeets
+      # - name: RalphSmeets 
+      #   github_organisation: RalphSmeets
+      #   types:
+      #     - type: kustomize
+      #       git_files_path:
+      #         - "deployments/*/kustomize-application.yml"
+      #         - "deployments/*/*/kustomize-application.yml"
+      #         - "deployments/*/kustomize-application.yaml"
+      #         - "deployments/*/*/kustomize-application.yaml"
+      #     - type: helm
+      #       git_files_path: ["deployments/*/helm-application.yaml", "deployments/*/*/helm-application.yaml"]
+      - name: deployments
+        repo_url: "{{ git_clone_ssh_url }}:RalphSmeets/application-deployments.git"
         types:
           - type: kustomize
             git_files_path:
-              - "deployments/*/kustomize-application.yml"
-              - "deployments/*/*/kustomize-application.yml"
-              - "deployments/*/kustomize-application.yaml"
-              - "deployments/*/*/kustomize-application.yaml"
+              - "*/deployments/*/kustomize-application.yml"
+              - "*/deployments/*/*/kustomize-application.yml"
+              - "*/deployments/*/kustomize-application.yaml"
+              - "*/deployments/*/*/kustomize-application.yaml"
           - type: helm
-            git_files_path: ["deployments/*/helm-application.yaml", "deployments/*/*/helm-application.yaml"]
+            git_files_path:
+              - "*/deployments/*/helm-application.yaml"
+              - "*/deployments/*/*/helm-application.yaml"
+

@@ -10,13 +10,13 @@
   loop: "{{ argocd.github.projects | map(attribute='url') | map('urlsplit') }}"
   loop_control:
     loop_var: project_url
-  register: argocd_create_webhook_github_project_repositories
+  register: argocd_create_webhook_github_organisation_repositories
 
 - name: "Create a list with repo's and projects"
   ansible.builtin.set_fact:
     argocd_create_webhook_repo_list: |-
       [
-        {% for result in argocd_create_webhook_github_project_repositories.results %}
+        {% for result in argocd_create_webhook_github_organisation_repositories.results %}
           {% for repository in result.repositories %}
             { "project": "{{ repository.project.key }}", "repository": "{{ repository.name }}" },
           {% endfor %}

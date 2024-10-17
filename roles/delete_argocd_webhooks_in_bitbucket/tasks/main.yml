@@ -11,29 +11,29 @@
 ################################################################################
 
 - name: Find all projects defined in github and store the result.
-  esp.github.github_project_info:
+  esp.github.github_organisation_info:
     url: '{{ github_url }}'
     k3s_cluster.token: '{{ argocd.github.k3s_cluster.token }}'
     project_key: "*"
-  register: argocd_delete_webhook_github_project_info_result
+  register: argocd_delete_webhook_github_organisation_info_result
 
 - name: Get all project permissions for the found projects
-  esp.github.github_project_permissions_info:
+  esp.github.github_organisation_permissions_info:
     url: '{{ github_url }}'
     k3s_cluster.token: '{{ argocd.github.k3s_cluster.token }}'
     project_key: "{{ project.key }}"
-  loop: "{{ argocd_delete_webhook_github_project_info_result.projects }}"
+  loop: "{{ argocd_delete_webhook_github_organisation_info_result.projects }}"
   loop_control:
     loop_var: project
-  register: argocd_delete_webhook_github_project_permissions_info_result
+  register: argocd_delete_webhook_github_organisation_permissions_info_result
   ignore_errors: true
   no_log: true
 
 - name: Build a list of projects from the output of the previous task
   ansible.builtin.set_fact:
-    argocd_delete_webhook_github_projects: |-
+    argocd_delete_webhook_github_organisations: |-
       [
-        {% for result in argocd_delete_webhook_github_project_permissions_info_result.results %}
+        {% for result in argocd_delete_webhook_github_organisation_permissions_info_result.results %}
           {% if not result.failed %}
             "{{ result.project.key }}",
           {% endif %}
@@ -45,16 +45,16 @@
     url: '{{ github_url }}'
     k3s_cluster.token: '{{ argocd.github.k3s_cluster.token }}'
     project_key: "{{ key }}"
-  loop: "{{ argocd_delete_webhook_github_projects }}"
+  loop: "{{ argocd_delete_webhook_github_organisations }}"
   loop_control:
     loop_var: key
-  register: argocd_delete_webhook_github_project_repo_info_result
+  register: argocd_delete_webhook_github_organisation_repo_info_result
 
 - name: Build a list of repositories from the output of the previous task
   ansible.builtin.set_fact:
     argocd_delete_webhook_repo_list: |-
       [
-        {% for result in argocd_delete_webhook_github_project_repo_info_result.results %}
+        {% for result in argocd_delete_webhook_github_organisation_repo_info_result.results %}
           {% for repository in result.repositories %}
             { "project": "{{ repository.project.key }}", "repository": "{{ repository.name }}" },
           {% endfor %}

@@ -3,7 +3,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: '{{ application_set.github_project | lower }}-{{ application_type.type }}-applications'
+  name: '{{ application_set.name | lower }}-{{ application_type.type }}-applications'
   namespace: {{ argocd_namespace }}
   labels:
 {{ platform_office_hour_support_devops_labels | to_nice_yaml(width=1337) | indent(4,true) }}
@@ -11,63 +11,87 @@ spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
+{% if "github_organisation" in application_set %}
     - matrix:
         generators:
           - scmProvider:
               github:
-                allBranches: false
-                basicAuth:
-                  passwordRef:
-                    key: password
-                    secretName: argocd-github-password
-                  username: {{ argocd.github.username }}
-                project: '{{ application_set.github_project }}'
+                allBranches: false 
+                organization: '{{ application_set.github_organisation }}'
               filters:
-{% if application_type.type == 'helm' %}
+  {% if application_type.type == 'helm' %}
                 - pathsExist:
                     - charts
-{% else %}
+  {% else %}
                 - pathExists:
                     - base/kustomize.yaml
-{% endif %}
+  {% endif %}
           - git:
               files:
-{% for path in application_type.git_files_path %}
+  {% for path in application_type.git_files_path %}
                 - path: '{{ path }}'
-{% endfor %}
-{% raw %}
+  {% endfor %}
+  {% raw %}
               repoURL: '{{ .url }}'
               revision: HEAD
               values:
+                url: '{{ .url }}'
                 overlay: '{{ index .path.segments }}'
+                application: {{ .repository }}
                 dynamic_overlays: list "ont" "itest"
                 prefix: '{{ index .path.segments 1 }}'
                 suffix: '{{ has .values.overlay .values.dynamic_overlays | ternary ( last . path.segments | print "-%s" ) "" }}'
-                overlay: '{{ index .path.segments 1 }}'
                 cluster: '{{ has .values.overlay ( list "pro") | ternary "pro-cluster" "ota-cluster" }}'
                 namespace: '{{ has .values.overlay .values.dynamic_overlays | ternary "dev-" ""}}{{ has .values.overlay .values.dynamic_overlays | ternary .repository .values.overlay }}{{ .values.suffix }}'
+  {% endraw %}
+{% else %}
+    - git:
+        repoURL: {{ application_set.repo_url }}
+        revision: HEAD
+        files:
+  {% for path in application_type.git_files_path %}
+          - path: '{{ path }}'
+  {% endfor %}
+  {% raw %}
+        values:
+          url: {% endraw %}{{ application_set.repo_url }}{% raw %}
+          dynamic_overlays: list "ont" "itest"
+          application: '{{ index .path.segments 0 }}'
+          overlay: '{{ index .path.segments 2 }}'
+          prefix: '{{ has .values.overlay .values.dynamic_overlays | ternary "dev- "" }}'
+          suffix: '{{ has .values.overlay .values.dynamic_overlays | ternary ( index path.segments 3 | print "-%s" ) "" }}'
+          cluster: '{{ has .values.overlay ( list "pro") | ternary "pro-cluster" "ota-cluster" }}'
+          namespace: '{{ .values.prefix }}{{ has .values.overlay .values.dynamic_overlays | ternary .values.application .values.overlay }}{{ .values.suffix }}'
+  {% endraw %}
+{% endif %}
+{% raw %}
   template:
     metadata:
-      name: '{{ .values.prefix }}-{{ .repository }}-{{ .values.suffix }}' 
+      name: '{{ .values.prefix }}-{{ .application }}-{{ .values.suffix }}' 
     spec:
       destination:
         name: '{{ .values.cluster }}'
         namespace: '{{ .values.namespace }}'
       project: '{{ .values.overlay }}'
-      source:
-        repoURL: "{{ .url }}"
-        targetRevision: HEAD
 {% endraw %}
 {% if application_type.type == 'helm' %}
 {% raw %}
-        path: 'charts/{{ .chart.name }}'
-        helm:
-          valueFiles:
-            - '{{ .path.path }}/values.yaml'
+      sources:
+        - repoURL: '{{ .chart.repo_url }}'
+          chart: '{{ .chart.name }}'
+          targetRevision: '{{ .chart.version }}'
+          helm:
+            valueFiles:
+              - '$values/{{ .path.path }}/values.yaml'
+        - repoURL: '{{ .values.repoURL }}'
+          targetRevision: HEAD
+          ref: values
 {% endraw %}
 {% else %}
 {% raw %}
-        path: overlays/{{ .values.overlay }}
+      source:
+        repoURL: 'blaat'
+        path: 'overlays/{{ .values.overlay }}'
 {% endraw %}
 {% endif %}
       syncPolicy:
