@@ -72,6 +72,7 @@
 
 - name: Install ArgoCD helm chart
   kubernetes.core.helm:
+    update_repo_cache: true
     name: argocd
     kubeconfig: "~/.kube/config.pro.new"
     release_namespace: "{{ argocd_namespace }}"

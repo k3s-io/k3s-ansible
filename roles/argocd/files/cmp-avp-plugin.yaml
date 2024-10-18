@@ -37,13 +37,13 @@ data:
           command: 
             - sh
             - "-c"
-            - "find . -name 'Chart.yaml' && find . -name 'values.yaml'"
+            - "find . -name 'helm-application.yaml' && find . -name 'values.yaml'"
       generate:
         command:
           - sh
           - "-c"
           - |
-            helm template $ARGOCD_APP_NAME -n $ARGOCD_APP_NAMESPACE -f $ARGOCD_ENV_HELM_VALUES_FILE . |
+            helm template $ARGOCD_APP_NAME --version $ARGOCD_ENV_HELM_CHART_VERSION --repo $ARGOCD_ENV_HELM_REPO_URL $ARGOCD_ENV_HELM_CHART_NAME -n $ARGOCD_APP_NAMESPACE -f $ARGOCD_ENV_HELM_VALUES_FILE |
             argocd-vault-plugin generate - -c /home/argocd/cmp-server/config/vault-configuration.yaml
       lockRepo: false
 

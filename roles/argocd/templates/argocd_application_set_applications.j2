@@ -35,7 +35,7 @@ spec:
               repoURL: '{{ .url }}'
               revision: HEAD
               values:
-                url: '{{ .url }}'
+                repoURL: '{{ .url }}'
                 overlay: '{{ index .path.segments }}'
                 application: {{ .repository }}
                 dynamic_overlays: list "ont" "itest"
@@ -56,7 +56,8 @@ spec:
         values:
           repoURL: {% endraw %}{{ application_set.repo_url }}{% raw %}
           dynamic_overlays: list "ont" "itest"
-          application: '{{ index .path.segments 0 }}'
+          team: '{{ index .path.segments 0 }}'
+          application: '{{ index .path.segments 1 }}'
           overlay: '{{ index .path.segments 2 }}'
           prefix: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary "dev-" "" }}'
           suffix: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( last .path.segments | print "-%s" ) "" }}'
@@ -67,7 +68,7 @@ spec:
 {% raw %}
   template:
     metadata:
-      name: '{{ .values.prefix }}{{ .values.application }}{{ .values.suffix }}' 
+      name: '{{ .values.prefix }}{{ .values.team }}-{{ .values.application }}-{{ .chart.name }}{{ .values.suffix }}' 
     spec:
       destination:
         name: '{{ .values.cluster }}'
@@ -77,17 +78,18 @@ spec:
 {% if application_type.type == 'helm' %}
 {% raw %}
       source:
-        - path: "./"
-          plugin:
-            env:
-              - name: HELM_REPO_URL
-                value: '{{ .chart.repo_url }}'
-              - name: HELM_CHART_NAME
-                value: '{{ .chart.name }}'
-              - name: HELM_CHART_VERSION
-                value: '{{ .chart.version }}'
-              - name: HELM_VALUES_FILES
-                value: "{{ .path.path }}/values.yaml"
+        repoURL: '{{ .values.repoURL }}'
+        path: "./"
+        plugin:
+          env:
+            - name: HELM_REPO_URL
+              value: '{{ .chart.repo_url }}'
+            - name: HELM_CHART_NAME
+              value: '{{ .chart.name }}'
+            - name: HELM_CHART_VERSION
+              value: '{{ .chart.version }}'
+            - name: HELM_VALUES_FILE
+              value: "{{ .path.path }}/values.yaml"
 {% endraw %}
 {% else %}
 {% raw %}

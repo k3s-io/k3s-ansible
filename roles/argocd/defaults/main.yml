@@ -2,16 +2,13 @@
 # code language=ansible
 argocd_helm_repo_name: argo
 argocd_helm_repo_chart: "https://argoproj.github.io/argo-helm"
-argocd_helm_chart_version: 7.5.2
+argocd_helm_chart_version: 7.6.11
 argocd_helm_chart: "{{ argocd_helm_repo_name }}/argo-cd"
 
 argocd_namespace: argocd
 argocd_alias: argocd
 
 argocd_helm_ingress: true
-
-# Define the Vault server that will be used by the argo cd vault plugin.
-argocd_vault_server: "http://192.168.1.72:8205"
 
 # Define the images that should be used by plugins:
 argocd_init_container_images:
@@ -28,8 +25,8 @@ argocd_webhook:
 
 argocd_vault_configuration:
   AVP_TYPE: "vault" 
-  VAULT_ADDR: "{{ argocd_vault_server }}"
+  VAULT_ADDR: "{{ vault_options.url }}"
   AVP_AUTH_TYPE: "approle"
   AVP_ROLE_ID: "{{ argocd.avp.role_id }}"
   AVP_SECRET_ID: "{{ argocd.avp.secret_id }}"
-  AVP_KV_VERSION: "2"
+  AVP_KV_VERSION: 2

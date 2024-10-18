@@ -130,16 +130,18 @@ argocd:
       #     - type: helm
       #       git_files_path: ["deployments/*/helm-application.yaml", "deployments/*/*/helm-application.yaml"]
       - name: deployments
-        repo_url: "{{ git_clone_ssh_url }}:RalphSmeets/application-deployments.git"
+        repo_url: "{{ git_clone_ssh_url }}:RalphSmeets/deployments.git"
         types:
           - type: kustomize
             git_files_path:
-              - "*/deployments/*/kustomize-application.yml"
-              - "*/deployments/*/*/kustomize-application.yml"
-              - "*/deployments/*/kustomize-application.yaml"
-              - "*/deployments/*/*/kustomize-application.yaml"
+              - "*/*/*/kustomize-application.yml"
+              - "*/*/*/*/kustomize-application.yml"
+              - "*/*/*/kustomize-application.yaml"
+              - "*/*/*/*/kustomize-application.yaml"
           - type: helm
             git_files_path:
-              - "*/deployments/*/helm-application.yaml"
-              - "*/deployments/*/*/helm-application.yaml"
+            # team/application/environment
+              - "*/*/*/helm-application.yaml"
+            # team/application/environment/suffix (for dynamic environments)
+              - "*/*/*/*/helm-application.yaml"
 

@@ -26,6 +26,60 @@ generated manifests.
 If not already done, create a new policy in The Vault for Argo CD that has read
 and list access on the path cloud-provision. The hcl for this should look like:
 
+See also: https://developer.hashicorp.com/vault/docs/auth/approle#approle-auth-method
+
+### 1. Enable the AppRole auth method:
+```bash
+curl \
+  --header "X-Vault-Token: ${VAULT_TOKEN}" \
+  --request POST \
+  --data '{"type": "approle"}' \
+  ${VAULT_ADDR}/v1/sys/auth/approle | jq
+```
+
+### 2. Create an AppRole with desired set of policies:
+```bash
+curl \
+  --header "X-Vault-Token: ${VAULT_TOKEN}" \
+  --request POST \
+  --data '{"policies": "argocd", "token_type": "batch"}' \
+  ${VAULT_ADDR}/v1/auth/approle/role/argocd | jq
+```
+
+### 3. Fetch the identifier of the role:
+```bash
+curl \
+  --header "X-Vault-Token: ${VAULT_TOKEN}" \
+  ${VAULT_ADDR}/v1/auth/approle/role/argocd/role-id | jq
+```
+
+### 4. Create a new secret identifier under the role:
+```bash
+curl \
+  --header "X-Vault-Token: ${VAULT_TOKEN}" \
+  --request POST \
+  ${VAULT_ADDR}/v1/auth/approle/role/argocd/secret-id | jq
+```
+### 5. Test approle based login:
+```json
+{
+  "role_id": "887a8d00-99af-89c0-edb1-7aea8a7cd5a0",
+  "secret_id": "360c9d9c-ea4c-1da9-4994-24e63c09ad88"
+}
+```
+```bash
+curl \
+  --request POST \
+  --data @payload.json \
+  ${VAULT_ADDR}/v1/auth/approle/login | jq
+````
+
+```bash
+curl \
+  --header "X-Vault-Token: ${APPROLE_TOKEN}" \
+  ${VAULT_ADDR}/v1/k8s-provisioning/pro/applications/mijn-kia
+```
+
 ```json
 # Read all secrets from cloud-provision/*
 path "k8s-provisioning/*"
