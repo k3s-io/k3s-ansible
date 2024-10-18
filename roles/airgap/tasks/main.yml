@@ -8,9 +8,18 @@
         that: "ansible_version.full is version_compare('2.12', '>=')"
         msg: "The Airgap role requires at least ansible-core 2.12"
 
+    - name: Check for existing install script
+      become: false
+      delegate_to: localhost
+      ansible.builtin.stat:
+        path: "{{ airgap_dir + '/k3s-install.sh' }}"
+      register: host_install_script
+
     - name: Download k3s install script
       become: false
       delegate_to: localhost
+      # Workaround for https://github.com/ansible/ansible/issues/64016
+      when: not host_install_script.stat.exists
       ansible.builtin.get_url:
         url: https://get.k3s.io/
         timeout: 120
