@@ -32,19 +32,19 @@ spec:
 {% endif %}
 {% if application_type.type == 'helm' %}
       source:
-        - repoURL: '{{ application_set.repo_url }}'
-          path: "./"
+        repoURL: '{{ application_set.repo_url }}'
+        path: "./"
 {% raw %}
-          plugin:
-            env:
-              - name: HELM_REPO_URL
-                value: '{{ .chart.repo_url }}'
-              - name: HELM_CHART_NAME
-                value: '{{ .chart.name }}'
-              - name: HELM_CHART_VERSION
-                value: '{{ .chart.version }}'
-              - name: HELM_VALUES_FILE
-                value: "{{ .path.path }}/values.yaml"
+        plugin:
+          env:
+            - name: HELM_REPO_URL
+              value: '{{ .chart.repo_url }}'
+            - name: HELM_CHART_NAME
+              value: '{{ .chart.name }}'
+            - name: HELM_CHART_VERSION
+              value: '{{ .chart.version }}'
+            - name: HELM_VALUES_FILE
+              value: "{{ .path.path }}/values.yaml"
 {% endraw %}
           
 {% else %}
