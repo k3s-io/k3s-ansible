@@ -7,5 +7,7 @@
   gather_facts: false
   roles:
     - role: cert_manager
+    - role: nfs_client
+    - role: monitoring
   environment:
     KUBECONFIG: "~/.kube/config.pro.new"

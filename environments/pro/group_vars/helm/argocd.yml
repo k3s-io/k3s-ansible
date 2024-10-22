@@ -34,7 +34,7 @@ argocd:
     credentials:
       pro-cluster:
         server: https://kubernetes.default.svc
-        domain: pro.k8s-frambozen.nl
+        domain: "{{ universe.environment }}.{{ universe.domain }}"
         config:
           tlsClientConfig:
             insecure: false

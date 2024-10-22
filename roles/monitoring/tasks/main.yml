@@ -1,0 +1,24 @@
+# code: language=ansible
+---
+
+- name: Add monitoring namespace
+  kubernetes.core.k8s:
+    state: present
+    name: "{{ monitoring_namespace }}"
+    kind: Namespace
+
+- name: Add monitoring helm repo
+  kubernetes.core.helm_repository:
+    name: "{{ monitoring_helm_repo_name }}"
+    repo_url: "{{ monitoring_helm_repo_chart }}"
+
+- name: Install monitoring helm-chart
+  kubernetes.core.helm:
+    update_repo_cache: true
+    name: monitoring
+    kubeconfig: "~/.kube/config.pro.new"
+    release_namespace: "{{ monitoring_namespace }}"
+    create_namespace: true
+    chart_ref: "{{ monitoring_helm_chart }}"
+    chart_version: "{{ monitoring_helm_chart_version }}"
+    values: "{{ lookup('template', 'helm_values.j2') | from_yaml }}"

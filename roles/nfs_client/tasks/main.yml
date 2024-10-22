@@ -1,0 +1,24 @@
+# code: language=ansible
+---
+
+- name: Add nfs-client namespace
+  kubernetes.core.k8s:
+    state: present
+    name: "{{ nfs_client_namespace }}"
+    kind: Namespace
+
+- name: Add nfs-client helm repo
+  kubernetes.core.helm_repository:
+    name: "{{ nfs_client_helm_repo_name }}"
+    repo_url: "{{ nfs_client_helm_repo_chart }}"
+
+- name: Install nfs-client helm-chart
+  kubernetes.core.helm:
+    update_repo_cache: true
+    name: nfs-client
+    kubeconfig: "~/.kube/config.pro.new"
+    release_namespace: "{{ nfs_client_namespace }}"
+    create_namespace: true
+    chart_ref: "{{ nfs_client_helm_chart }}"
+    chart_version: "{{ nfs_client_helm_chart_version }}"
+    values: "{{ lookup('template', 'helm_values.j2') | from_yaml }}"

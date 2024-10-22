@@ -1,0 +1,64 @@
+alertmanager:
+  ingress:
+    enabled: true
+    hosts:
+      - monitoring.{{ universe.environment }}.{{ universe.domain }}
+    paths:
+      - /alert-manager
+    pathType: ImplementationSpecific
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: nfs-client
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+    externalUrl: http://monitoring.{{ universe.environment }}.{{ universe.domain }}/alert-manager
+    routePrefix: /alert-manager
+    
+grafana:
+  ingress:
+    enabled: true
+    hosts:
+      - monitoring.{{ universe.environment }}.{{ universe.domain }}
+    path: /grafana
+
+  grafana.ini:
+    server:
+      domain: monitoring.{{ universe.environment }}.{{ universe.domain }}
+      root_url: http://monitoring.{{ universe.environment }}.{{ universe.domain }}/grafana
+      serve_from_sub_path: true
+      
+  sidecar:
+    dashboards:
+      enabled: true
+      label: monitoring.grafana.dashboards
+      searchNamespace: ALL
+
+kube-state-metrics:
+  replicas: 1
+
+prometheus:
+  ingress:
+    enabled: true
+    hosts:
+      - monitoring.{{ universe.environment }}.{{ universe.domain }}
+    paths:
+      - /prometheus
+    pathType: ImplementationSpecific
+
+  prometheusSpec:
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: nfs-client
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 50Gi
+    exterrnalUrl: 'http://monitoring.{{ universe.environment }}.{{ universe.domain }}/prometheus'
+    routePrefix: '/prometheus'
+
+    

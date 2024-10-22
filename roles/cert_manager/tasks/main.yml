@@ -21,7 +21,7 @@
     create_namespace: true
     chart_ref: "{{ cert_manager_helm_chart }}"
     chart_version: "{{ cert_manager_helm_chart_version }}"
-    values: "{{ lookup('template', 'cert_manager_values.j2') | from_yaml }}"
+    values: "{{ lookup('template', 'helm_values.j2') | from_yaml }}"
 
 - name: Add Cloudflare token
   kubernetes.core.k8s:
