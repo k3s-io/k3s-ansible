@@ -1,0 +1,3 @@
+cert_manager:
+  cloudflare_token: "<path:/k8s-provisioning/pro/applications/cert-manager#cloudflare-token>"
+  dns_zones: "{{ universe.domain }}"

@@ -1,0 +1,54 @@
+installCRDs: true
+
+# Create dynamic manifests via values.
+#
+# For example:
+# extraObjects:
+#   - |
+#     apiVersion: v1
+#     kind: ConfigMap
+#     metadata:
+#       name: '{{ template "cert-manager.fullname" . }}-extra-configmap'
+extraObjects:
+  - |
+    apiVersion: cert-manager.io/v1
+    kind: ClusterIssuer
+    metadata:
+      name: letsencrypt-prod
+    spec:
+      acme:
+        server: https://acme-v02.api.letsencrypt.org/directory
+        email: ralph.smeets@gmail.com
+        privateKeySecretRef:
+          name: letsencrypt-prod
+        solvers:
+          - dns01:
+              cloudflare:
+                email: ralph.smeets@gmail.com
+                apiTokenSecretRef:
+                  name: cloudflare-token-secret
+                  key: cloudflare-token
+            selector:
+              dnsZones:
+                - "k8s-frambozen.nl"
+  - |
+    apiVersion: cert-manager.io/v1
+    kind: ClusterIssuer
+    metadata:
+      name: letsencrypt-staging
+    spec:
+      acme:
+        server: https://acme-staging-v02.api.letsencrypt.org/directory
+        email: ralph.smeets@gmail.com
+        privateKeySecretRef:
+          name: letsencrypt-staging
+        solvers:
+          - dns01:
+              cloudflare:
+                email: ralph.smeets@gmail.com
+                apiTokenSecretRef:
+                  name: cloudflare-token-secret
+                  key: cloudflare-token
+            selector:
+              dnsZones:
+                - "k8s-frambozen.nl"

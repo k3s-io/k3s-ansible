@@ -1,0 +1,24 @@
+# code: language=ansible
+---
+
+- name: Add cert-manager namespace
+  kubernetes.core.k8s:
+    state: present
+    name: "{{ cert_manager_namespace }}"
+    kind: Namespace
+
+- name: Add cert-manager helm repo
+  kubernetes.core.helm_repository:
+    name: "{{ cert_manager_helm_repo_name }}"
+    repo_url: "{{ cert_manager_helm_repo_chart }}"
+
+- name: Install cert-manager helm-chart
+  kubernetes.core.helm:
+    update_repo_cache: true
+    name: cert_manager
+    kubeconfig: "~/.kube/config.pro.new"
+    release_namespace: "{{ cert_manager_namespace }}"
+    create_namespace: true
+    chart_ref: "{{ cert_manager_helm_chart }}"
+    chart_version: "{{ cert_manager_helm_chart_version }}"
+    values: "{{ lookup('template', 'cert_manager_values.yaml') | from_yaml }}"
