@@ -1,0 +1,11 @@
+---
+# code language=ansible
+
+- name: Install tooling on cluster
+  hosts: helm
+  connection: local
+  gather_facts: false
+  roles:
+    - role: cert_manager
+  environment:
+    KUBECONFIG: "~/.kube/config.pro.new"

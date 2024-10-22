@@ -1,0 +1,7 @@
+---
+cert_manager_helm_repo_name: jetstack
+cert_manager_helm_repo_chart: "https://charts.jetstack.io"
+cert_manager_helm_chart_version: v1.16.1
+cert_manager_helm_chart: "{{ cert_manager_helm_repo_name }}/cert-manager"
+
+cert_manager_namespace: cert-manager
