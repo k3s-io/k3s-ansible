@@ -49,7 +49,7 @@ spec:
           
 {% else %}
       source:
-        repoUrl: "{% raw %}{{ .git.repo }}{% endraw %}"
+        repoURL: "{% raw %}{{ .git.repo }}{% endraw %}"
         targetRevision: HEAD
         path: overlays/{{ application_set.project }}
 {% endif %}

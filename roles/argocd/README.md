@@ -204,9 +204,9 @@ argocd.app_projects:
   - name: pro
     namespace: "pro"
     cluster: pro-cluster
-  - name: shs
+  - name: tools
     namespace: "*"
-    cluster: shs-cluster
+    cluster: tools-cluster
 ```
 
 ### Application sets
@@ -227,10 +227,10 @@ argocd_application_sets:
     repo_url: "{{ git_clone_ssh_url }}/cdtool/cdtools-argocd-environments.git"
     git_files: "ont/**/service.yaml"
     cluster: ota-cluster
-  - name: shs-helm
+  - name: tools-helm
     type: helm
-    project: shs
+    project: tools
     repo_url: "{{ git_clone_ssh_url }}/cdtool/cdtools-argocd-environments.git"
-    git_files: "shs/**/application.yaml"
-    cluster: shs-cluster
+    git_files: "tools/**/application.yaml"
+    cluster: tools-cluster
 ```

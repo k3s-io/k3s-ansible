@@ -364,7 +364,7 @@ configs:
     certificates:
       dockerhub.io: |
         {{ argocd.pki2.ca_cert | join('\n        ') }}
-      github.shs.{{ universe.domain }}: |
+      github.tools.{{ universe.domain }}: |
         {{ argocd.pki2.ca_cert | join('\n        ') }}
 {% else %}
   tls: {}

@@ -38,9 +38,9 @@ argocd:
         config:
           tlsClientConfig:
             insecure: false
-      shs-cluster:
+      tools-cluster:
         server: https://kubernetes.default.svc
-        domain: shs.k8s-frambozen.nl
+        domain: tools.k8s-frambozen.nl
         config:
           tlsClientConfig:
             insecure: false
@@ -69,7 +69,7 @@ argocd:
     - name: pro
       namespace: "pro"
       cluster: pro-cluster
-    - name: shs
+    - name: tools
       namespace: "*"  # TODO
       cluster: pro-cluster
     - name: ota-provision
@@ -78,7 +78,7 @@ argocd:
     - name: pro-provision
       namespace: "*"
       cluster: pro-cluster
-    - name: shs-provision
+    - name: tools-provision
       namespace: "*"  # TODO
       cluster: pro-cluster
     
