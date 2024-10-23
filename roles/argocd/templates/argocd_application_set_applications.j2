@@ -41,7 +41,7 @@ spec:
                 dynamic_overlays: list "ont" "itest"
                 prefix: '{{ index .path.segments 1 }}'
                 suffix: '{{ has ( index .path.segments 2 ) (list "ont" "itest") | ternary ( last .path.segments | print "-%s" ) "" }}'
-                cluster: '{{ has .values.overlay ( list "pro") | ternary "pro-cluster" "ota-cluster" }}'
+                cluster: '{{ has .values.overlay ( list "pro") | ternary "pro-cluster" "dev-cluster" }}'
                 namespace: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary "dev-" ""}}{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary .repository .values.overlay }}{{ .values.suffix }}'
   {% endraw %}
 {% else %}
@@ -61,7 +61,7 @@ spec:
           overlay: '{{ index .path.segments 2 }}'
           prefix: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary "dev-" "" }}'
           suffix: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( last .path.segments | print "-%s" ) "" }}'
-          cluster: '{{ has ( index .path.segments 2 ) ( list "pro") | ternary "pro-cluster" "ota-cluster" }}'
+          cluster: '{{ has ( index .path.segments 2 ) ( list "pro") | ternary "pro-cluster" "dev-cluster" }}'
           namespace: '{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary "dev-" ""}}{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( index .path.segments 0 ) (index .path.segments 2 ) }}{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( last .path.segments | print "-%s" ) "" }}'
   {% endraw %}
 {% endif %}

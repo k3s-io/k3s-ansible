@@ -7,10 +7,12 @@
     name: "{{ cert_manager_namespace }}"
     kind: Namespace
 
-- name: Add cert-manager helm repo
-  kubernetes.core.helm_repository:
-    name: "{{ cert_manager_helm_repo_name }}"
-    repo_url: "{{ cert_manager_helm_repo_chart }}"
+- name: Add Cloudflare token
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ cert_manager_namespace }}"
+    template:
+      - path: cloudflare_token_secret.j2
 
 - name: Install cert-manager helm-chart
   kubernetes.core.helm:
@@ -18,17 +20,10 @@
     name: cert-manager
     kubeconfig: "~/.kube/config.pro.new"
     release_namespace: "{{ cert_manager_namespace }}"
-    create_namespace: true
-    chart_ref: "{{ cert_manager_helm_chart }}"
+    chart_ref: "{{ cert_manager_helm_chart_ref }}"
     chart_version: "{{ cert_manager_helm_chart_version }}"
+    chart_repo_url: "{{ cert_manager_helm_chart_repo_url }}"
     values: "{{ lookup('template', 'helm_values.j2') | from_yaml }}"
-
-- name: Add Cloudflare token
-  kubernetes.core.k8s:
-    state: present
-    namespace: "{{ cert_manager_namespace }}"
-    template:
-      - path: cloudflare_token_secret.j2
 
 - name: Add ClusterIssuer(s)
   kubernetes.core.k8s:

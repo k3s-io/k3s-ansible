@@ -1,7 +1,16 @@
 ---
-monitoring_helm_repo_name: monitoring
-monitoring_helm_repo_chart: "https://prometheus-community.github.io/helm-charts"
-monitoring_helm_chart_version: 65.1.1
-monitoring_helm_chart: "{{ monitoring_helm_repo_name }}/kube-prometheus-stack"
+monitoring_helm:
+  chart_repo_url: "https://prometheus-community.github.io/helm-charts"
+  chart_version: 65.1.1
+  chart_ref: "kube-prometheus-stack"
 
 monitoring_namespace: monitoring
+
+monitoring_ingress:
+  host: monitoring.{{ universe.environment }}.{{ universe.domain }}
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    kubernetes.io/ingress.class: "traefik"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  tls_secretname: monitoring-tls-prod-cert

@@ -7,11 +7,6 @@
     name: "{{ monitoring_namespace }}"
     kind: Namespace
 
-- name: Add monitoring helm repo
-  kubernetes.core.helm_repository:
-    name: "{{ monitoring_helm_repo_name }}"
-    repo_url: "{{ monitoring_helm_repo_chart }}"
-
 - name: Install monitoring helm-chart
   kubernetes.core.helm:
     update_repo_cache: true
@@ -19,6 +14,7 @@
     kubeconfig: "~/.kube/config.pro.new"
     release_namespace: "{{ monitoring_namespace }}"
     create_namespace: true
-    chart_ref: "{{ monitoring_helm_chart }}"
-    chart_version: "{{ monitoring_helm_chart_version }}"
+    chart_repo_url: "{{ monitoring_helm.chart_repo_url }}"
+    chart_ref: "{{ monitoring_helm.chart_ref }}"
+    chart_version: "{{ monitoring_helm.chart_version }}"
     values: "{{ lookup('template', 'helm_values.j2') | from_yaml }}"

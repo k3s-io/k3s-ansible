@@ -1,11 +1,25 @@
 alertmanager:
   ingress:
     enabled: true
+
+    ingresssClassName: traefik
+
+    annotations: 
+{{ monitoring_ingress.annotations | to_nice_yaml(width=1337) | indent(6,true) }}
+
     hosts:
-      - monitoring.{{ universe.environment }}.{{ universe.domain }}
+      - {{ monitoring_ingress.host }}
+
     paths:
       - /alert-manager
+
     pathType: ImplementationSpecific
+
+    tls:
+      - secretName: alertmanager-{{ monitoring_ingress.tls_secretname }}
+        hosts:
+        - {{ monitoring_ingress.host }}
+
   alertmanagerSpec:
     storage:
       volumeClaimTemplate:
@@ -15,20 +29,21 @@ alertmanager:
           resources:
             requests:
               storage: 10Gi
-    externalUrl: http://monitoring.{{ universe.environment }}.{{ universe.domain }}/alert-manager
+
+    externalUrl: https://{{ monitoring_ingress.host }}/alert-manager
     routePrefix: /alert-manager
     
 grafana:
   ingress:
     enabled: true
     hosts:
-      - monitoring.{{ universe.environment }}.{{ universe.domain }}
+      - {{ monitoring_ingress.host }}
     path: /grafana
 
   grafana.ini:
     server:
-      domain: monitoring.{{ universe.environment }}.{{ universe.domain }}
-      root_url: http://monitoring.{{ universe.environment }}.{{ universe.domain }}/grafana
+      domain: {{ monitoring_ingress.host }}
+      root_url: http://{{ monitoring_ingress.host }}/grafana
       serve_from_sub_path: true
       
   sidecar:
@@ -44,7 +59,7 @@ prometheus:
   ingress:
     enabled: true
     hosts:
-      - monitoring.{{ universe.environment }}.{{ universe.domain }}
+      - {{ monitoring_ingress.host }}
     paths:
       - /prometheus
     pathType: ImplementationSpecific
@@ -58,7 +73,7 @@ prometheus:
           resources:
             requests:
               storage: 50Gi
-    exterrnalUrl: 'http://monitoring.{{ universe.environment }}.{{ universe.domain }}/prometheus'
+    exterrnalUrl: 'http://{{ monitoring_ingress.host }}/prometheus'
     routePrefix: '/prometheus'
 
     

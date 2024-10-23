@@ -29,7 +29,7 @@ argocd:
 # Argo CD needs to be able to connect to our private repositories. This is done using a repository template. This
 # template needs a name and the base of the url of the repository.
 
-# Configure each of the clusters (ota, pro).
+# Configure each of the clusters (dev, pro).
   cluster:
     credentials:
       pro-cluster:
@@ -44,37 +44,37 @@ argocd:
         config:
           tlsClientConfig:
             insecure: false
-      ota-cluster:
-        server: https://k3s-api.ota.k8s-frambozen.nl:6443
-        domain: ota.k8s-frambozen.nl
+      dev-cluster:
+        server: https://k3s-api.dev.k8s-frambozen.nl:6443
+        domain: dev.k8s-frambozen.nl
         config:
           tlsClientConfig:
             insecure: false
-            caData: "{{ lookup('community.hashi_vault.vault_kv2_get', 'ota/k8s_cluster', **vault_options )['secret']['caData'] }}"
-            certData: "{{ lookup('community.hashi_vault.vault_kv2_get', 'ota/k8s_cluster', **vault_options )['secret']['certData'] }}"
-            keyData: "{{ lookup('community.hashi_vault.vault_kv2_get', 'ota/k8s_cluster', **vault_options )['secret']['keyData'] }}"
+            caData: "{{ lookup('community.hashi_vault.vault_kv2_get', 'dev/k8s_cluster', **vault_options )['secret']['caData'] }}"
+            certData: "{{ lookup('community.hashi_vault.vault_kv2_get', 'dev/k8s_cluster', **vault_options )['secret']['certData'] }}"
+            keyData: "{{ lookup('community.hashi_vault.vault_kv2_get', 'dev/k8s_cluster', **vault_options )['secret']['keyData'] }}"
 
 # Define the AppProjects. These correspond with the different overlays in
 # customize:
   app_projects:
     - name: dev
       namespace: "dev-*"  # This is a namespace prefix
-      cluster: ota-cluster
+      cluster: dev-cluster
     - name: test
       namespace: "test"
-      cluster: ota-cluster
+      cluster: dev-cluster
     - name: acc
       namespace: "acc"
-      cluster: ota-cluster
+      cluster: dev-cluster
     - name: pro
       namespace: "pro"
       cluster: pro-cluster
     - name: tools
       namespace: "*"  # TODO
       cluster: pro-cluster
-    - name: ota-provision
+    - name: dev-provision
       namespace: "*"
-      cluster: ota-cluster
+      cluster: dev-cluster
     - name: pro-provision
       namespace: "*"
       cluster: pro-cluster
@@ -92,14 +92,14 @@ argocd:
   # - namespace: the namespace to deploy the applications to
   application_sets:
     provisioning:
-      - cluster: ota-cluster
-        repo_url: "{{ git_clone_ssh_url }}:RalphSmeets/ota-provisioning.git"
+      - cluster: dev-cluster
+        repo_url: "{{ git_clone_ssh_url }}:RalphSmeets/dev-provisioning.git"
         types:
           - type: kustomize
             git_files_path: "*/kustomize-application.yaml"
           - type: helm
             git_files_path: "*/helm-application.yaml"
-        project: ota-provision
+        project: dev-provision
         namespace: "-*"
 
       - cluster: pro-cluster

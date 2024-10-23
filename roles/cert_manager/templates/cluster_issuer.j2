@@ -21,7 +21,7 @@ spec:
             email: "{{ cert_manager.owner.email }}"
             apiTokenSecretRef:
               name: cloudflare-token-secret
-              key: "{{ cert_manager.cloudflare_token }}"
+              key: cloudflare-token
         selector:
           dnsZones:
           - "{{ cert_manager.dns_zones }}"

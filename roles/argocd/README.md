@@ -24,7 +24,7 @@ generated manifests.
 #### Setup
 
 If not already done, create a new policy in The Vault for Argo CD that has read
-and list access on the path cloud-provision. The hcl for this should look like:
+and list access on the path k8s-provisioning. The hcl for this should look like:
 
 See also: https://developer.hashicorp.com/vault/docs/auth/approle#approle-auth-method
 
@@ -81,7 +81,7 @@ curl \
 ```
 
 ```json
-# Read all secrets from cloud-provision/*
+# Read all secrets from k8s-provisioning
 path "k8s-provisioning/*"
 {
   capabilities = ["read","list"]
@@ -138,8 +138,8 @@ cluser on which Argo CD is going to be installed.
 |--------------------------|---------------------------------------------------------------------------------------|
 | `avp_role_id`            | The role id Argo CD should use to connect to the vault                                |
 | `avp_secret_id`          | The secret id Argo CD should use to connect to the vault                              |
-| `github_known_hosts`     | The known host entry that Argo CD can use to connect to the k8s-frambozen github server     |
-| `github_private_key`     | The certificate that Argo cd can use to connect repositories on the k8s-frambozen github |
+| `github_known_hosts`     | The known host entry that Argo CD can use to connect to the github server     |
+| `github_private_key`     | The certificate that Argo cd can use to connect repositories on the github |
 | `default_admin_password` | Default administrator password                                                        |
 
 If Argo CD is setup in order to deploy to other clusters the following secrets are also needed:
@@ -186,9 +186,9 @@ Gather `bearerToken` and `caData` from the target cluster default `cd` namespace
 
 1. Lookup the k3s_cluster.token used with the service account with. `kubectl describe serviceaccount default -n cd`.
 1. Print the k3s_cluster.token with: `kubectl describe secret default-k3s_cluster.token-<TOKEN> -n cd`
-and save it as `bearerToken` in Vault `cloud-provision/show/k8s_clusters/<TARGETCLUSTER>`.
+and save it as `bearerToken` in Vault `k8s-provisioning/show/k8s_clusters/<TARGETCLUSTER>`.
 1. Print the certificate with: `kubectl get -o yaml secret default-k3s_cluster.token-<TOKEN> -n cd`
-and save it as `caData` in Vault `cloud-provision/show/k8s_clusters/<TARGETCLUSTER>`.
+and save it as `caData` in Vault `k8s-provisioning/show/k8s_clusters/<TARGETCLUSTER>`.
 
 ### Environments AppProject
 
@@ -200,7 +200,7 @@ on which they run. This is defined using the variable `argocd.app_projects` in t
 argocd.app_projects:
   - name: ont
     namespace: "dev-*" # This is a namespace prefix
-    cluster: ota-cluster
+    cluster: dev-cluster
   - name: pro
     namespace: "pro"
     cluster: pro-cluster
@@ -226,7 +226,7 @@ argocd_application_sets:
     project: ont
     repo_url: "{{ git_clone_ssh_url }}/cdtool/cdtools-argocd-environments.git"
     git_files: "ont/**/service.yaml"
-    cluster: ota-cluster
+    cluster: dev-cluster
   - name: tools-helm
     type: helm
     project: tools

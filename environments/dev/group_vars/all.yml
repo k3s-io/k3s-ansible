@@ -1,4 +1,4 @@
 ---
 universe:
   domain: k8s-frambozen.nl
-  environment: ota
+  environment: dev
