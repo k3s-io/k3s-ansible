@@ -16,7 +16,7 @@ alertmanager:
     pathType: ImplementationSpecific
 
     tls:
-      - secretName: alertmanager-{{ monitoring_ingress.tls_secretname }}
+      - secretName: {{ monitoring_ingress.tls_secretname }}
         hosts:
         - {{ monitoring_ingress.host }}
 
@@ -36,14 +36,25 @@ alertmanager:
 grafana:
   ingress:
     enabled: true
+
+    ingresssClassName: traefik
+
+    annotations: 
+{{ monitoring_ingress.annotations | to_nice_yaml(width=1337) | indent(6,true) }}
+
     hosts:
       - {{ monitoring_ingress.host }}
     path: /grafana
 
+    tls:
+      - secretName: {{ monitoring_ingress.tls_secretname }}
+        hosts:
+        - {{ monitoring_ingress.host }}
+
   grafana.ini:
     server:
       domain: {{ monitoring_ingress.host }}
-      root_url: http://{{ monitoring_ingress.host }}/grafana
+      root_url: https://{{ monitoring_ingress.host }}/grafana
       serve_from_sub_path: true
       
   sidecar:
@@ -58,11 +69,21 @@ kube-state-metrics:
 prometheus:
   ingress:
     enabled: true
+    ingresssClassName: traefik
+
+    annotations: 
+{{ monitoring_ingress.annotations | to_nice_yaml(width=1337) | indent(6,true) }}
+
     hosts:
       - {{ monitoring_ingress.host }}
     paths:
       - /prometheus
     pathType: ImplementationSpecific
+
+    tls:
+      - secretName: {{ monitoring_ingress.tls_secretname }}
+        hosts:
+        - {{ monitoring_ingress.host }}
 
   prometheusSpec:
     storageSpec:
@@ -73,7 +94,7 @@ prometheus:
           resources:
             requests:
               storage: 50Gi
-    exterrnalUrl: 'http://{{ monitoring_ingress.host }}/prometheus'
+    exterrnalUrl: 'https://{{ monitoring_ingress.host }}/prometheus'
     routePrefix: '/prometheus'
 
     
