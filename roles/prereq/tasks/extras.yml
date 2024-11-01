@@ -157,3 +157,19 @@
         enabled: true
   when: ansible_os_family == 'Debian'
   ignore_errors: true
+
+- name: Ensure Volumes
+  block:
+    - ansible.builtin.template:
+        src: "ensure-volumes.sh.j2"
+        dest: "/usr/local/bin/ensure-volumes"
+        owner: root
+        group: root
+        mode: "u=rwx,g=rx,o=rx"
+    - ansible.builtin.cron:
+        name: "ensure-volumes"
+        minute: "*/5"
+        job: "/usr/local/bin/ensure-volumes > /var/log/ensure-volumes.log 2>&1"
+  when: "extra_volumes"
+
+- fail:

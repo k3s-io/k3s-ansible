@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Function to log messages with date
+log_message() {
+    local MESSAGE=$1
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $MESSAGE"
+}
+
+# Define the volumes/partitions to check
+VOLUMES=({% for item in extra_volumes | dict2items %} "{{ item.value.path }}" {% endfor %})
+
+# Flag to track if any volume is missing
+MISSING_VOLUME=false
+
+# Loop through each volume to check if it exists
+for VOLUME in "${VOLUMES[@]}"; do
+    if lsblk | grep -q "$VOLUME"; then
+        log_message "Volume $VOLUME found. No action required."
+    else
+        log_message "Volume $VOLUME not found. Rebooting the system."
+        MISSING_VOLUME=true
+    fi
+done
+
+# Reboot the machine if any volume is missing
+if [ "$MISSING_VOLUME" = true ]; then
+  log_message "Rebooting the system..."
+  /sbin/reboot
+else
+  log_message "Mount volumes just in case..."
+  mount -a
+fi
