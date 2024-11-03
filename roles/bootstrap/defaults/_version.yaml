@@ -20,7 +20,7 @@ helm_chart_version:
   ingress-nginx/ingress-nginx: 4.11.2
   jetstack/cert-manager: v1.16.1
   longhorn/longhorn: 1.7.2
-  nvidia-k8s-device-plugin/nvidia-device-plugin: 0.16.2
+  nvidia-k8s-device-plugin/nvidia-device-plugin: 0.17.0
   oauth2-proxy/oauth2-proxy: 7.7.28
-  piraeus-charts/snapshot-controller: 2.0.4 # SKIP: Set to that current version of Longhorn require v6.3.3
+  piraeus-charts/snapshot-controller: 3.0.6
   stakater/reloader: 1.1.0
