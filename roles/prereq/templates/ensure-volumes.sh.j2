@@ -6,6 +6,25 @@ log_message() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $MESSAGE"
 }
 
+custom_reboot(){
+  log_message "Attempting a normal reboot..."
+  /sbin/reboot
+
+  # Wait for 60 seconds to allow the system to reboot
+  log_message "Waiting for 60 seconds for the reboot to occur..."
+  sleep 60
+
+  # Check if the system is still running by checking a simple process like 'uptime'
+  if uptime >/dev/null 2>&1; then
+    log_message "System has not rebooted within 60 seconds. Forcing a reboot..."
+    
+    # Perform a forced reboot
+    /sbin/reboot -f
+  else
+    log_message "System has successfully started rebooting."
+  fi
+}
+
 # Define the volumes/partitions to check
 VOLUMES=({% for item in extra_volumes | dict2items %} "{{ item.value.path }}" {% endfor %})
 
@@ -25,7 +44,7 @@ done
 # Reboot the machine if any volume is missing
 if [ "$MISSING_VOLUME" = true ]; then
   log_message "Rebooting the system..."
-  /sbin/reboot
+  custom_reboot
 else
   log_message "Mount volumes just in case..."
   mount -a
