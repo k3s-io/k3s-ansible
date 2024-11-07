@@ -166,10 +166,14 @@
         owner: root
         group: root
         mode: "u=rwx,g=rx,o=rx"
+    - ansible.builtin.file:
+        path: "/var/log/ensure-volumes/"
+        mode: 0755
+        state: directory
     - ansible.builtin.cron:
         name: "ensure-volumes"
         minute: "*/5"
-        job: "/usr/local/bin/ensure-volumes > /var/log/ensure-volumes.log 2>&1"
+        job: "/usr/local/bin/ensure-volumes | multilog t s1048576 n5 '!tai64nlocal' /var/log/ensure-volumes/ 2>&1"
   when: "extra_volumes"
 
-- fail:
+# - fail:

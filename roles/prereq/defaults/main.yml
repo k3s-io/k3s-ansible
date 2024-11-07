@@ -1,6 +1,7 @@
 ---
 base_packages:
   - curl
+  - daemontools
   - net-tools
   - ntp
   - open-iscsi
