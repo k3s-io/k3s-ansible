@@ -254,13 +254,6 @@
   when: user_kubectl
   block:
 
-    - name: Create kubectl symlink
-      when: lookup('fileglob', '/usr/local/bin/kubectl', errors='warn') | length == 0
-      ansible.builtin.file:
-        src: /usr/local/bin/k3s
-        dest: /usr/local/bin/kubectl
-        state: link
-
     - name: Create directory .kube
       ansible.builtin.file:
         path: ~{{ ansible_user }}/.kube
