@@ -19,6 +19,7 @@ k3s_cluster:
     # - openssl rand -base64 64
     # - pwgen -s 64 1
     # You can use ansible-vault to encrypt this value / keep it secret.
+    # Or you can omit it if not using Vagrant and let the first server automatically generate one.
     token: "changeme!"
     api_endpoint: "{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}"
     extra_server_args: ""
