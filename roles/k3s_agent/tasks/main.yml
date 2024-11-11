@@ -35,6 +35,10 @@
         INSTALL_K3S_EXEC: "agent"
       changed_when: true
 
+- name: Get the token from the first server
+  ansible.builtin.set_fact:
+    token: "{{ hostvars[groups[server_group][0]].token }}"
+
 - name: Delete any existing token from the environment if different from the new one
   ansible.builtin.lineinfile:
     state: absent

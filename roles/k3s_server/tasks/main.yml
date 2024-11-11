@@ -90,14 +90,16 @@
       ansible.builtin.lineinfile:
         state: absent
         path: "{{ systemd_dir }}/k3s.service.env"
-        regexp: "^K3S_TOKEN=\\s*(?!{{ token }}\\s*$)"
+        regexp: "^K3S_TOKEN=\\s*(?!{{ token | default('') }}\\s*$)"
 
-    # Add the token to the environment.
+    # Add the token to the environment if it has been provided.
+    # Otherwise, let the first server create one on the first run.
     - name: Add token as an environment variable
       no_log: true # avoid logging the server token
       ansible.builtin.lineinfile:
         path: "{{ systemd_dir }}/k3s.service.env"
         line: "K3S_TOKEN={{ token }}"
+      when: token is defined
 
     - name: Restart K3s service
       when:
@@ -182,11 +184,31 @@
           changed_when:
             - mv_result.rc == 0
 
+    - name: Get the token if randomly generated
+      when: token is not defined
+      block:
+        - name: Wait for token
+          ansible.builtin.wait_for:
+            path: /var/lib/rancher/k3s/server/token
+
+        - name: Read node-token from master
+          ansible.builtin.slurp:
+            src: /var/lib/rancher/k3s/server/token
+          register: node_token
+
+        - name: Store Master node-token
+          ansible.builtin.set_fact:
+            token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
+
 - name: Start other server if any and verify status
   when:
     - (groups[server_group] | length) > 1
     - inventory_hostname != groups[server_group][0]
   block:
+    - name: Get the token from the first server
+      ansible.builtin.set_fact:
+        token: "{{ hostvars[groups[server_group][0]].token }}"
+
     - name: Delete any existing token from the environment if different from the new one
       ansible.builtin.lineinfile:
         state: absent

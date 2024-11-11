@@ -28,6 +28,7 @@ def provision(vm, role, node_num)
     ansible.extra_vars = {
       k3s_version: "v1.28.14+k3s1",
       api_endpoint: "#{NETWORK_PREFIX}.100",
+      # Required for vagrant ansible provisioner
       token: "myvagrant",
       # Required to use the private network configured above
       extra_server_args: "--node-external-ip #{node_ip} --flannel-iface eth1", 
