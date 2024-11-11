@@ -21,11 +21,10 @@ k3s_cluster:
     # You can use ansible-vault to encrypt this value / keep it secret.
     token: "changeme!"
     api_endpoint: "{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}"
-    extra_server_args: ""
-    extra_agent_args: ""
 
     # Optional vars
-
+    # extra_server_args: ""
+    # extra_agent_args: ""
     # cluster_context: k3s-ansible
     # api_port: 6443
     # k3s_server_location: /var/lib/rancher/k3s
