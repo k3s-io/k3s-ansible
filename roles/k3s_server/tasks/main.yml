@@ -188,16 +188,16 @@
       when: token is not defined
       block:
         - name: Wait for token
-          wait_for:
+          ansible.builtin.wait_for:
             path: /var/lib/rancher/k3s/server/token
 
         - name: Read node-token from master
-          slurp:
+          ansible.builtin.slurp:
             src: /var/lib/rancher/k3s/server/token
           register: node_token
 
         - name: Store Master node-token
-          set_fact:
+          ansible.builtin.set_fact:
             token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
 
 - name: Start other server if any and verify status
@@ -206,7 +206,7 @@
     - inventory_hostname != groups[server_group][0]
   block:
     - name: Get the token from the first server
-      set_fact:
+      ansible.builtin.set_fact:
         token: "{{ hostvars[groups[server_group][0]].token }}"
 
     - name: Delete any existing token from the environment if different from the new one
