@@ -99,7 +99,7 @@
       ansible.builtin.lineinfile:
         path: "{{ systemd_dir }}/k3s.service.env"
         line: "K3S_TOKEN={{ token }}"
-      when: token is defined 
+      when: token is defined
 
     - name: Restart K3s service
       when:
