@@ -12,8 +12,8 @@ helm_chart_repository:
   piraeus-charts: https://piraeus.io/helm-charts/
   stakater: https://stakater.github.io/stakater-charts
 helm_chart_version:
-  argo/argo-cd: 7.6.12
-  bitnami-labs/sealed-secrets: 2.16.1
+  argo/argo-cd: 7.7.3
+  bitnami-labs/sealed-secrets: 2.16.2
   dex/dex: 0.19.1
   emberstack/reflector: 7.1.288
   external-dns/external-dns: 1.15.0
@@ -21,6 +21,6 @@ helm_chart_version:
   jetstack/cert-manager: v1.16.1
   longhorn/longhorn: 1.7.2
   nvidia-k8s-device-plugin/nvidia-device-plugin: 0.17.0
-  oauth2-proxy/oauth2-proxy: 7.7.28
+  oauth2-proxy/oauth2-proxy: 7.7.29
   piraeus-charts/snapshot-controller: 3.0.6
   stakater/reloader: 1.1.0
