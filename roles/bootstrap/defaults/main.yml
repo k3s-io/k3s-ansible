@@ -23,8 +23,7 @@ ingress_nginx_helm_config:
     watchIngressWithoutClass: true
 
     allowSnippetAnnotations: true
-    config:
-      custom-http-errors: 404,408,500,501,502,503,504,50
+    configs:
       use-forwarded-headers: "true"
       proxy-body-size: 100m
     extraArgs:
@@ -69,16 +68,6 @@ ingress_nginx_helm_config:
             annotations:
               description: Too many 4XXs
               summary: More than 5% of all requests returned 4XX, this requires your attention
-  defaultBackend:
-    enabled: true
-    image:
-      repository: ghcr.io/tarampampam/error-pages
-      tag: 3.3.0
-    extraEnvs:
-      - name: TEMPLATE_NAME
-        value: ghost
-      - name: SHOW_DETAILS
-        value: "false"
 
 cert_manager_cluster_issuer_spec:
   selfSigned: {}
