@@ -2,5 +2,4 @@ venv
 .venv
 .vscode
 .vagrant
-inventory.yml
 playbook/debug.yml
