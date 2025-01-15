@@ -152,3 +152,4 @@ See these other projects:
 - https://github.com/techno-tim/k3s-ansible
 - https://github.com/jon-stumpf/k3s-ansible
 - https://github.com/alexellis/k3sup
+- https://github.com/axivo/k3s-cluster
