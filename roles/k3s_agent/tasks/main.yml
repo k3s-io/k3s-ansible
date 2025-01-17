@@ -6,7 +6,7 @@
   ignore_errors: true
 
 - name: Set k3s installed version
-  when: k3s_version_output.rc == 0
+  when: not ansible_check_mode and k3s_version_output.rc == 0
   ansible.builtin.set_fact:
     installed_k3s_version: "{{ k3s_version_output.stdout_lines[0].split(' ')[2] }}"
 
@@ -15,7 +15,7 @@
 #   - we couldn't get k3s installed version in the first task of this role
 #   - the installed version of K3s on the nodes is older than the requested version in ansible vars
 - name: Download artifact only if needed
-  when: airgap_dir is undefined and ( k3s_version_output.rc != 0 or installed_k3s_version is version(k3s_version, '<') )
+  when: not ansible_check_mode and airgap_dir is undefined and ( k3s_version_output.rc != 0 or installed_k3s_version is version(k3s_version, '<') )
   block:
     - name: Download K3s install script
       ansible.builtin.get_url:
@@ -34,6 +34,21 @@
         INSTALL_K3S_VERSION: "{{ k3s_version }}"
         INSTALL_K3S_EXEC: "agent"
       changed_when: true
+
+- name: Setup optional config file
+  when: agent_config_yaml is defined
+  block:
+    - name: Make config directory
+      ansible.builtin.file:
+        path: "/etc/rancher/k3s"
+        mode: "0755"
+        state: directory
+    - name: Copy config values
+      ansible.builtin.copy:
+        content: "{{ agent_config_yaml }}"
+        dest: "/etc/rancher/k3s/config.yaml"
+        mode: "0644"
+      register: _agent_config_result
 
 - name: Get the token from the first server
   ansible.builtin.set_fact:
@@ -66,5 +81,5 @@
   ansible.builtin.systemd:
     name: k3s-agent
     daemon_reload: "{{ true if k3s_agent_service.changed else false }}"
-    state: "{{ 'restarted' if k3s_agent_service.changed else 'started' }}"
+    state: "{{ 'restarted' if (k3s_agent_service.changed or _agent_config_result.changed) else 'started' }}"
     enabled: true
