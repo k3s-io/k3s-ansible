@@ -99,6 +99,7 @@
       ansible.builtin.lineinfile:
         path: "{{ systemd_dir }}/k3s.service.env"
         line: "K3S_TOKEN={{ token }}"
+        create: yes
       when: token is defined
 
     - name: Restart K3s service
@@ -220,6 +221,7 @@
       ansible.builtin.lineinfile:
         path: "{{ systemd_dir }}/k3s.service.env"
         line: "{{ item }}"
+        create: yes
       with_items:
         - "K3S_TOKEN={{ token }}"
 
