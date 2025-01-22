@@ -482,7 +482,7 @@ argocd_helm_values:
         gethomepage.dev/pod-selector: "app.kubernetes.io/name=argocd-server"
         gethomepage.dev/description: "Declarative Continuous Deployment for Kubernetes"
         gethomepage.dev/group: "Automation"
-        gethomepage.dev/icon: "argocd.png"
+        gethomepage.dev/icon: "si-argo"
   extraObjects:
     - apiVersion: v1
       kind: Secret
