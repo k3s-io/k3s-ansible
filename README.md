@@ -49,7 +49,7 @@ k3s_cluster:
         192.16.35.13:
 ```
 
-If needed, you can also edit `vars` section at the bottom to match your environment.
+If needed, you can also edit `vars` section at the bottom to match your environment (the `ansible_user` probably needs to be changed).
 
 If multiple hosts are in the server group the playbook will automatically setup k3s in HA mode with embedded etcd.
 An odd number of server nodes is required (3,5,7). Read the [official documentation](https://docs.k3s.io/datastore/ha-embedded) for more information.
@@ -127,6 +127,29 @@ kubectl get nodes
 ```
 
 If you wish for your kubeconfig to be copied elsewhere and not merged, you can set the `kubeconfig` variable in `inventory.yml` to the desired path.
+
+### Testing your cluster
+
+```bash
+kubectl get nodes # Getting nodes
+
+kubectl create deployment nginx --image=nginx:latest # Deploying a simple nginx workload
+kubectl describe deployment nginx # Check to be sure it was deployed
+
+kubectl expose deployment nginx --name=nginx-service --type=NodePort --port=80 --target-port=80 # Deploying a sample nginx service with a NodePort
+kubectl describe service nginx-service # Check service and be sure it has an IP from metal lb as defined in all.yml
+
+# Verify deployment and services
+kubectl get deployments
+kubectl get pods
+kubectl get services
+kubectl get pods -o wide # Check which node each pod is running on
+
+curl http://<master-node-ip>:<service-node-port> # Visit that url or curl, should see the nginx welcome page.
+
+# Scale replicas
+kubectl scale deployment nginx --replicas=2
+```
 
 ## Local Testing
 
