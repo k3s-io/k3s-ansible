@@ -148,7 +148,7 @@
             - csa_result.rc == 0
 
         - name: Setup kubeconfig context on control node - {{ cluster_context }}
-          when: kubeconfig != "~/.kube/config"
+          when: kubeconfig == "~/.kube/config.new"
           ansible.builtin.replace:
             path: "{{ kubeconfig }}"
             regexp: 'default'
