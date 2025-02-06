@@ -157,12 +157,12 @@
           become: false
 
         - name: Merge with any existing kubeconfig on control node
-          when: kubeconfig != "~/.kube/config"
+          when: kubeconfig == "~/.kube/config.new"
           ansible.builtin.shell: |
             TFILE=$(mktemp)
             KUBECONFIG={{ kubeconfig }}:~/.kube/config kubectl config set-context {{ cluster_context }} --user={{ cluster_context }} --cluster={{ cluster_context }}
             KUBECONFIG={{ kubeconfig }}:~/.kube/config kubectl config view --flatten > ${TFILE}
-            mv ${TFILE} {{ kubeconfig }}
+            mv ${TFILE} ~/.kube/config
           delegate_to: 127.0.0.1
           become: false
           register: mv_result
