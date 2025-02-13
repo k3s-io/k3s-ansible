@@ -3,17 +3,17 @@ k3s_cluster:
   children:
     server:
       hosts:
-        10.92.1.84:
+        10.92.1.139:
           ansible_python_interpreter: /usr/bin/python3
     agent:
       hosts:
-        10.92.1.195:
+        10.92.1.244:
           ansible_python_interpreter: /usr/bin/python3
-        10.92.1.44:
+        10.92.1.142:
           ansible_python_interpreter: /usr/bin/python3
-        10.92.1.146:
+        10.92.1.155:
           ansible_python_interpreter: /usr/bin/python3
-        10.92.1.22:
+        10.92.1.166:
           ansible_python_interpreter: /usr/bin/python3
 
   # Required Vars
@@ -29,6 +29,15 @@ k3s_cluster:
     # Or you can omit it if not using Vagrant and let the first server automatically generate one.
     token: "bGB6nfxtODef8Y0J4hrLF1XbGoQZA89B1LYVwta+pcIA2FxzGJgzRJWVvrjGnubk"
     api_endpoint: "{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}"
+    yaml:
+      - autoscaler-deployment.yml
+      - autoscaler-service.yml
+      - mysql-pv.yml
+      - mysql-pvc.yml
+      - mysql-deployment.yml
+      - mysql-service.yml
+      - stregsystemet-deployment.yml
+      - stregsystemet-service.yml
 
     # Optional vars
     # extra_server_args: ""

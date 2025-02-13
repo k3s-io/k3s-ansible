@@ -303,3 +303,47 @@
         path: ~{{ ansible_user }}/.bashrc
         regexp: '\.\s+<\(kubectl completion bash\)'
         line: ". <(kubectl completion bash)  # Added by k3s-ansible"
+
+    - name: Copy kubernetes yaml
+      ansible.builtin.copy:
+        src: ../../../kubernetes
+        dest: "/home/{{ ansible_user }}"
+
+    - name: Deploy kubernetes yaml
+      shell: kubectl apply -f /home/{{ ansible_user }}/kubernetes/{{ item }}
+      ignore_errors: true
+      loop: "{{ yaml }}"
+
+    - name: Install Helm
+      shell: sudo pacman -S helm --noconfirm
+
+    - name: Add helm prometheus repo
+      shell:
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+    - name: Add helm grafana repo
+      shell:  
+        helm repo add grafana https://grafana.github.io/helm-charts 
+
+    - name: Update helm repos
+      shell: helm repo update
+
+    - name: Install prometheus Helm Chart
+      shell:
+        helm install prometheus prometheus-community/prometheus
+      ignore_errors: true
+
+    - name: Install grafana Helm Chart
+      shell:
+        helm install grafana grafana/grafana
+      ignore_errors: true
+
+    - name: expose prometheus service
+      shell:
+        kubectl expose service prometheus-server --type=NodePort --target-port=9090 --name=prometheus-server-ext
+      ignore_errors: true
+
+    - name: expose grafana service
+      shell:
+        kubectl expose service grafana --type=NodePort --target-port=3000 --name=grafana-ext
+      ignore_errors: true

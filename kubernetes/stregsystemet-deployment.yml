@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stregsystemet-deployment
+spec:
+  selector:
+    matchLabels:
+      app: stregsystemet
+  template:
+    metadata:
+      labels:
+        app: stregsystemet
+    spec:
+      containers:
+      - name: stregsystemet
+        image: ghcr.io/aau-p9s/stregsystemet:latest
+        ports:
+        - containerPort: 8000
+
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1024Mi"
+            cpu: "2000m"
+

@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autoscaler-deployment
+spec:
+  selector:
+    matchLabels:
+      app: autoscaler
+  template:
+    metadata:
+      labels:
+        app: autoscaler
+    spec:
+      containers:
+      - name: autoscaler
+        image: ghcr.io/aau-p9s/autoscaler-frontend:latest
+        command: ["dotnet"]
+        args: ["Autoscaler.dll", "--kube-api", "https://kubernetes", "--prometheus-addr", "http://prometheus-server", "--scaler", "./predict.py", "--re-trainer", "./train.py"]
+        ports:
+        - containerPort: 8080
+
+        resources:
+          requests:
+            memory: "2048Mi"
+            cpu: "500m"
+          limits:
+            memory: "32Gi"
+            cpu: "2000m"
+
