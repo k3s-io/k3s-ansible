@@ -91,7 +91,7 @@
       ansible.builtin.lineinfile:
         state: absent
         path: "{{ systemd_dir }}/k3s.service.env"
-        regexp: "^K3S_TOKEN=\\s*(?!{{ token | default('') }}\\s*$)"
+        regexp: "^K3S_TOKEN=\\s*(?!{{ token | default('') | regex_escape }}\\s*$)"
 
     # Add the token to the environment if it has been provided.
     # Otherwise, let the first server create one on the first run.
