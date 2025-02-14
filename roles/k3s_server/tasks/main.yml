@@ -91,7 +91,7 @@
       ansible.builtin.lineinfile:
         state: absent
         path: "{{ systemd_dir }}/k3s.service.env"
-        regexp: "^K3S_TOKEN=\\s*(?!{{ token | default('') }}\\s*$)"
+        regexp: "^K3S_TOKEN=\\s*(?!{{ token | default('') | regex_escape }}\\s*$)"
 
     # Add the token to the environment if it has been provided.
     # Otherwise, let the first server create one on the first run.
@@ -164,21 +164,21 @@
             - csa_result.rc == 0
 
         - name: Setup kubeconfig context on control node - {{ cluster_context }}
-          when: kubeconfig != "~/.kube/config"
+          when: kubeconfig == "~/.kube/config.new"
           ansible.builtin.replace:
             path: "{{ kubeconfig }}"
-            regexp: 'name: default'
-            replace: 'name: {{ cluster_context }}'
+            regexp: 'default'
+            replace: '{{ cluster_context }}'
           delegate_to: 127.0.0.1
           become: false
 
         - name: Merge with any existing kubeconfig on control node
-          when: kubeconfig != "~/.kube/config"
+          when: kubeconfig == "~/.kube/config.new"
           ansible.builtin.shell: |
             TFILE=$(mktemp)
-            KUBECONFIG={{ kubeconfig }} kubectl config set-context {{ cluster_context }} --user={{ cluster_context }} --cluster={{ cluster_context }}
-            KUBECONFIG={{ kubeconfig }} kubectl config view --flatten > ${TFILE}
-            mv ${TFILE} {{ kubeconfig }}
+            KUBECONFIG={{ kubeconfig }}:~/.kube/config kubectl config set-context {{ cluster_context }} --user={{ cluster_context }} --cluster={{ cluster_context }}
+            KUBECONFIG={{ kubeconfig }}:~/.kube/config kubectl config view --flatten > ${TFILE}
+            mv ${TFILE} ~/.kube/config
           delegate_to: 127.0.0.1
           become: false
           register: mv_result
