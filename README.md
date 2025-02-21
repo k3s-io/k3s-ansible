@@ -28,6 +28,25 @@ All managed nodes in inventory must have:
 
 It is also recommended that all managed nodes disable firewalls and swap. See [K3s Requirements](https://docs.k3s.io/installation/requirements) for more information.
 
+## Installation
+
+### With ansible-galaxy
+
+`k3s-ansible` is a Ansible collection and can be installed with the `ansible-galaxy` command:
+
+```console
+$ ansible-galaxy collection install git+https://github.com/k3s-io/k3s-ansible.git
+```
+
+### From source
+
+Alternatively to an installation with `ansible-galaxy`, the `k3s-ansible` repository can simply be cloned from github:
+
+```console
+$ git clone https://github.com/k3s-io/k3s-ansible.git
+$ cd k3s-ansible
+```
+
 ## Usage
 
 First copy the sample inventory to `inventory.yml`.
@@ -35,6 +54,8 @@ First copy the sample inventory to `inventory.yml`.
 ```bash
 cp inventory-sample.yml inventory.yml
 ```
+
+If you have installed `k3s-ansible` with ansible-galaxy, you can grab the [inventory-sample.yml](./inventory-sample.yml) from github.
 
 Second edit the inventory file to match your cluster setup. For example:
 ```bash
@@ -57,7 +78,15 @@ An odd number of server nodes is required (3,5,7). Read the [official documentat
 Setting up a loadbalancer or VIP beforehand to use as the API endpoint is possible but not covered here.
 
 
-Start provisioning of the cluster using the following command:
+Start provisioning of the cluster using one of the following commands. The command to be used depends on whether you installed `k3s-ansible` with `ansible-galaxy` or if you run the playbook from within the cloned git repository:
+
+*Installed with ansible-galaxy*
+
+```bash
+ansible-playbook k3s.orchestration.site -i inventory.yml
+```
+
+*Running the playbook from inside the repository*
 
 ```bash
 ansible-playbook playbooks/site.yml -i inventory.yml
@@ -89,7 +118,16 @@ The format of the datastore-endpoint parameter is dependent upon the datastore b
 
 ## Upgrading
 
-A playbook is provided to upgrade K3s on all nodes in the cluster. To use it, update `k3s_version` with the desired version in `inventory.yml` and run:
+A playbook is provided to upgrade K3s on all nodes in the cluster. To use it, update `k3s_version` with the desired version in `inventory.yml` and run one of the following commands. Again, the syntax is slightly different depending on whether you installed `k3s-ansible` with `ansible-galaxy` or if you run the playbook from within the cloned git repository:
+
+
+*Installed with ansible-galaxy*
+
+```bash
+ansible-playbook k3s.orchestration.upgrade -i inventory.yml
+```
+
+*Running the playbook from inside the repository*
 
 ```bash
 ansible-playbook playbooks/upgrade.yml -i inventory.yml
