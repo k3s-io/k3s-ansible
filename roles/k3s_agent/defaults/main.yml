@@ -1,4 +1,6 @@
 ---
+server_group: server  # noqa var-naming[no-role-prefix]
 k3s_server_location: "/var/lib/rancher/k3s"  # noqa var-naming[no-role-prefix]
 systemd_dir: "/etc/systemd/system"  # noqa var-naming[no-role-prefix]
 api_port: 6443  # noqa var-naming[no-role-prefix]
+extra_agent_args: "" # noqa var-naming[no-role-prefix]

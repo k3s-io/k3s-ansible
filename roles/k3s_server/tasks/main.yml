@@ -6,7 +6,7 @@
   ignore_errors: true
 
 - name: Set k3s installed version
-  when: k3s_version_output.rc == 0
+  when: not ansible_check_mode and k3s_version_output.rc == 0
   ansible.builtin.set_fact:
     installed_k3s_version: "{{ k3s_version_output.stdout_lines[0].split(' ')[2] }}"
 
@@ -15,7 +15,7 @@
 #   - we couldn't get k3s installed version in the first task of this role
 #   - the installed version of K3s on the nodes is older than the requested version in ansible vars
 - name: Download artifact only if needed
-  when: airgap_dir is undefined and ( k3s_version_output.rc != 0 or installed_k3s_version is version(k3s_version, '<') )
+  when: not ansible_check_mode and airgap_dir is undefined and ( k3s_version_output.rc != 0 or installed_k3s_version is version(k3s_version, '<') )
   block:
     - name: Download K3s install script
       ansible.builtin.get_url:
@@ -53,6 +53,7 @@
         content: "{{ server_config_yaml }}"
         dest: "/etc/rancher/k3s/config.yaml"
         mode: "0644"
+      register: _server_config_result
 
 - name: Init first server node
   when: inventory_hostname == groups[server_group][0]
@@ -90,20 +91,22 @@
       ansible.builtin.lineinfile:
         state: absent
         path: "{{ systemd_dir }}/k3s.service.env"
-        regexp: "^K3S_TOKEN=\\s*(?!{{ token }}\\s*$)"
+        regexp: "^K3S_TOKEN=\\s*(?!{{ token | default('') | regex_escape }}\\s*$)"
 
-    # Add the token to the environment.
+    # Add the token to the environment if it has been provided.
+    # Otherwise, let the first server create one on the first run.
     - name: Add token as an environment variable
       no_log: true # avoid logging the server token
       ansible.builtin.lineinfile:
         path: "{{ systemd_dir }}/k3s.service.env"
         line: "K3S_TOKEN={{ token }}"
+      when: token is defined
 
     - name: Restart K3s service
       when:
         - ansible_facts.services['k3s.service'] is defined
         - ansible_facts.services['k3s.service'].state == 'running'
-        - service_file_single.changed or service_file_ha.changed
+        - service_file_single.changed or service_file_ha.changed or _server_config_result.changed
       ansible.builtin.systemd:
         name: k3s
         daemon_reload: true
@@ -161,32 +164,52 @@
             - csa_result.rc == 0
 
         - name: Setup kubeconfig context on control node - {{ cluster_context }}
-          when: kubeconfig != "~/.kube/config"
+          when: kubeconfig == "~/.kube/config.new"
           ansible.builtin.replace:
             path: "{{ kubeconfig }}"
-            regexp: 'name: default'
-            replace: 'name: {{ cluster_context }}'
+            regexp: 'default'
+            replace: '{{ cluster_context }}'
           delegate_to: 127.0.0.1
           become: false
 
         - name: Merge with any existing kubeconfig on control node
-          when: kubeconfig != "~/.kube/config"
+          when: kubeconfig == "~/.kube/config.new"
           ansible.builtin.shell: |
             TFILE=$(mktemp)
-            KUBECONFIG={{ kubeconfig }} kubectl config set-context {{ cluster_context }} --user={{ cluster_context }} --cluster={{ cluster_context }}
-            KUBECONFIG={{ kubeconfig }} kubectl config view --flatten > ${TFILE}
-            mv ${TFILE} {{ kubeconfig }}
+            KUBECONFIG={{ kubeconfig }}:~/.kube/config kubectl config set-context {{ cluster_context }} --user={{ cluster_context }} --cluster={{ cluster_context }}
+            KUBECONFIG={{ kubeconfig }}:~/.kube/config kubectl config view --flatten > ${TFILE}
+            mv ${TFILE} ~/.kube/config
           delegate_to: 127.0.0.1
           become: false
           register: mv_result
           changed_when:
             - mv_result.rc == 0
 
+    - name: Get the token if randomly generated
+      when: token is not defined
+      block:
+        - name: Wait for token
+          ansible.builtin.wait_for:
+            path: /var/lib/rancher/k3s/server/token
+
+        - name: Read node-token from master
+          ansible.builtin.slurp:
+            src: /var/lib/rancher/k3s/server/token
+          register: node_token
+
+        - name: Store Master node-token
+          ansible.builtin.set_fact:
+            token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
+
 - name: Start other server if any and verify status
   when:
     - (groups[server_group] | length) > 1
     - inventory_hostname != groups[server_group][0]
   block:
+    - name: Get the token from the first server
+      ansible.builtin.set_fact:
+        token: "{{ hostvars[groups[server_group][0]].token }}"
+
     - name: Delete any existing token from the environment if different from the new one
       ansible.builtin.lineinfile:
         state: absent
@@ -225,7 +248,7 @@
       when:
         - ansible_facts.services['k3s.service'] is defined
         - ansible_facts.services['k3s.service'].state == 'running'
-        - service_file_ha.changed or service_file_external_db.changed
+        - service_file_ha.changed or service_file_external_db.changed or _server_config_result.changed
       ansible.builtin.systemd:
         name: k3s
         daemon_reload: true
@@ -240,7 +263,7 @@
         enabled: true
 
     - name: Verify that all server nodes joined
-      when: (groups[server_group] | length) > 1
+      when: not ansible_check_mode and (groups[server_group] | length) > 1
       ansible.builtin.command:
         cmd: >
           k3s kubectl get nodes -l "node-role.kubernetes.io/control-plane=true" -o=jsonpath="{.items[*].metadata.name}"
@@ -253,13 +276,6 @@
 - name: Setup kubectl for user
   when: user_kubectl
   block:
-
-    - name: Create kubectl symlink
-      when: lookup('fileglob', '/usr/local/bin/kubectl', errors='warn') | length == 0
-      ansible.builtin.file:
-        src: /usr/local/bin/k3s
-        dest: /usr/local/bin/kubectl
-        state: link
 
     - name: Create directory .kube
       ansible.builtin.file:
