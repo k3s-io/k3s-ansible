@@ -56,7 +56,7 @@
       register: _server_config_result
 
 - name: Init first server node
-  when: inventory_hostname == groups[server_group][0]
+  when: inventory_hostname == groups[server_group][0] or ansible_host == groups[server_group][0]
   block:
     - name: Copy K3s service file [Single]
       when: groups[server_group] | length == 1 or use_external_database
@@ -204,7 +204,7 @@
 - name: Start other server if any and verify status
   when:
     - (groups[server_group] | length) > 1
-    - inventory_hostname != groups[server_group][0]
+    - inventory_hostname != groups[server_group][0] and ansible_host != groups[server_group][0]
   block:
     - name: Get the token from the first server
       ansible.builtin.set_fact:
