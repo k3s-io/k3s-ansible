@@ -35,6 +35,7 @@
       changed_when: true
 
 - name: Add K3s autocomplete to user bashrc
+  when: ansible_user is defined
   ansible.builtin.lineinfile:
     path: "~{{ ansible_user }}/.bashrc"
     regexp: '\.\s+<\(k3s completion bash\)'
