@@ -130,6 +130,9 @@ A playbook is provided to bootstrap the K8s cluster with base services ([cert-ma
 
 ```bash
 ansible-playbook playbook/bootstrap.yml -i inventory.yml
+
+# Update specific service
+ansible-playbook playbook/bootstrap.yml -i inventory.yml --tags only-argocd
 ```
 
 ## Other commands

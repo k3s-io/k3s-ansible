@@ -7,15 +7,18 @@
 # - fail:
 
 - name: K8s - Set context
+  tags: always
   ansible.builtin.shell: |
     kubectl config use-context {{ k3s_context_name }}
   changed_when: true
 
 - name: Include _version.yaml
+  tags: always
   ansible.builtin.include_vars:
     file: defaults/_version.yaml
 
 - name: Install Helm charts
+  tags: always
   kubernetes.core.helm_repository:
     name: "{{ item.key }}"
     repo_url: "{{ item.value }}"
@@ -23,6 +26,7 @@
   with_items: "{{ helm_chart_repository | dict2items }}"
 
 - name: cert-manager
+  tags: only-cert-manager
   block:
     - name: cert-manager - Install chart
       kubernetes.core.helm:
@@ -46,6 +50,7 @@
         state: present
 
 - name: external-dns
+  tags: only-external-dns
   block:
     - name: external-dns - Create DNS Secret
       kubernetes.core.k8s:
@@ -64,6 +69,7 @@
         context: "{{ k3s_context_name }}"
 
 - name: kubernetes-reflector
+  tags: only-kubernetes-reflector
   block:
     - name: kubernetes-reflector - Install chart
       kubernetes.core.helm:
@@ -77,6 +83,7 @@
         context: "{{ k3s_context_name }}"
 
 - name: kubernetes-reloader
+  tags: only-kubernetes-reloader
   block:
     - name: kubernetes-reloader - Install chart
       kubernetes.core.helm:
@@ -90,6 +97,7 @@
         context: "{{ k3s_context_name }}"
 
 - name: ingress-nginx
+  tags: only-ingress-nginx
   block:
     - name: ingress-nginx - Install chart
       kubernetes.core.helm:
@@ -104,7 +112,8 @@
     - ansible.builtin.wait_for:
         timeout: "120"
 
-- name: Security
+- name: security
+  tags: only-security
   block:
     - name: Security - Authentication
       block:
@@ -130,7 +139,8 @@
             context: "{{ k3s_context_name }}"
       when: "security_enabled"
 
-- name: Longhorn
+- name: longhorn
+  tags: only-longhorn
   block:
     - name: Longhorn - Install chart
       kubernetes.core.helm:
@@ -182,7 +192,8 @@
         context: "{{ k3s_context_name }}"
   when: "longhorn_enabled"
 
-- name: Sealed Secrets
+- name: sealed-secrets
+  tags: only-sealed-secrets
   block:
     - name: Sealed Secrets - Check if exists sealed-secrets-key
       stat:
@@ -225,7 +236,8 @@
         done
   when: "sealed_secrets_enabled"
 
-- name: ArgoCD
+- name: argocd
+  tags: only-argocd
   block:
     - name: ArgoCD - Install chart
       kubernetes.core.helm:
@@ -248,7 +260,8 @@
       with_items: "{{ argocd_namespaces }}"
   when: "argocd_enabled"
 
-- name: NVIDIA k8s Device Plugin
+- name: nvidia-k8s-device-plugin
+  tags: only-nvidia-k8s-device-plugin
   block:
     - name: NVIDIA k8s Device Plugin - Install chart
       kubernetes.core.helm:

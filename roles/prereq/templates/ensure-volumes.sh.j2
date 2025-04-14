@@ -1,9 +1,11 @@
 #!/bin/bash
 
 # Function to log messages with date
+HOSTNAME=$(hostname)
+
 log_message() {
     local MESSAGE=$1
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $MESSAGE"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $HOSTNAME - $MESSAGE"
 }
 
 custom_reboot(){
