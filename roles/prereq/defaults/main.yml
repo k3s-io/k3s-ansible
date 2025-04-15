@@ -3,6 +3,7 @@ base_packages:
   - curl
   - daemontools
   - net-tools
+  - nfs-common
   - ntp
   - open-iscsi
   - openssh-client
