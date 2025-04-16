@@ -284,7 +284,7 @@ longhorn_helm_values:
       gethomepage.dev/pod-selector: "app=longhorn-ui"
       gethomepage.dev/description: "Cloud-Native distributed storage built on and for Kubernetes"
       gethomepage.dev/group: "System"
-      gethomepage.dev/icon: "longhorn.png"
+      gethomepage.dev/icon: "sh-rancher-longhorn"
 
 snapshot_controller: {}
 
@@ -457,7 +457,7 @@ argocd_helm_values:
         gethomepage.dev/pod-selector: "app.kubernetes.io/name=argocd-server"
         gethomepage.dev/description: "Declarative Continuous Deployment for Kubernetes"
         gethomepage.dev/group: "Automation"
-        gethomepage.dev/icon: "si-argo"
+        gethomepage.dev/icon: "sh-argo-cd"
   extraObjects:
     - apiVersion: v1
       kind: Secret
