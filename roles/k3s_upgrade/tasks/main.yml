@@ -5,10 +5,12 @@
   ansible.builtin.command: k3s --version
   register: k3s_version_output
   changed_when: false
+  check_mode: false
 
 - name: Set k3s installed version
   ansible.builtin.set_fact:
     installed_k3s_version: "{{ k3s_version_output.stdout_lines[0].split(' ')[2] }}"
+  check_mode: false
 
 # We should be downloading and installing the newer version only if we are in the following case :
 #   - the installed version of K3s on the nodes is older than the requested version in ansible vars
