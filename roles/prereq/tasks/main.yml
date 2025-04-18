@@ -24,7 +24,7 @@
     value: "1"
     state: present
     reload: true
-  when: ansible_all_ipv6_addresses
+  when: ansible_all_ipv6_addresses | length > 0
 
 - name: Populate service facts
   ansible.builtin.service_facts:
