@@ -212,6 +212,11 @@
     - k3s_server_location is defined
     - k3s_server_location != "/var/lib/rancher/k3s"
   block:
+    - name: Make k3s server directory
+      ansible.builtin.file:
+        path: "{{ k3s_server_location }}"
+        mode: "0755"
+        state: directory
     - name: Make rancher directory
       ansible.builtin.file:
         path: "/var/lib/rancher"
