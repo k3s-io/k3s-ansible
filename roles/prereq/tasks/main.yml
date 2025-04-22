@@ -29,6 +29,19 @@
 - name: Populate service facts
   ansible.builtin.service_facts:
 
+# Set ufw_internal_sources IPs
+- name: Set UFW sources IPs
+  ansible.builtin.set_fact:
+    ufw_internal_sources: >-
+      {{
+        (
+          groups[server_group] | default([])
+          + groups[agent_group] | default([])
+        )
+        | map('extract', hostvars, ['ansible_default_ipv4', 'address'])
+        | flatten | unique | list
+      }}
+
 - name: Allow UFW Exceptions
   when:
     - ansible_facts.services['ufw'] is defined
@@ -40,22 +53,7 @@
       changed_when: false
       register: ufw_status
 
-      # Set ufw_internal_sources IPs
-    - name: Set UFW sources IPs
-      ansible.builtin.set_fact:
-        ufw_internal_sources: >-
-          {{
-            (
-              groups[server_group] | default([])
-              + groups[agent_group] | default([])
-            )
-            | map('extract', hostvars, ['ansible_default_ipv4', 'address'])
-            | flatten | unique | list
-          }}
-
     - name: If ufw enabled, open api port
-      when:
-        - "'Status: active' in ufw_status['stdout']"
       community.general.ufw:
         rule: allow
         port: "{{ api_port }}"
@@ -65,7 +63,6 @@
 
     - name: If ufw enabled, open etcd ports
       when:
-        - "'Status: active' in ufw_status['stdout']"
         - groups[server_group] | length > 1
       community.general.ufw:
         rule: allow
@@ -75,31 +72,24 @@
       loop: "{{ ufw_internal_sources }}"
 
     - name: If ufw enabled, allow default CIDRs
-      when:
-        - "'Status: active' in ufw_status['stdout']"
       community.general.ufw:
         rule: allow
         src: '{{ item }}'
       loop: "{{ (cluster_cidr + ',' + service_cidr) | split(',') }}"
     
     - name: If ufw enabled, allow default ports
-      when:
-        - ufw_status['stdout_lines'][0] == "Status: active"
-      block:
-        - name: Open inter-node ports
-          community.general.ufw:
-            rule: allow
-            port: "{{ item.1.port }}"
-            proto: "{{ item.1.proto }}"
-            src: "{{ item.0 }}"
-          loop: "{{ ufw_internal_sources | product(port_list) | list }}"
-          vars:
-            port_list:
-              - { port: "5001", proto: "tcp" }  # Spegel (Embedded distributed registry)
-              - { port: "8472", proto: "udp" }  # Flannel VXLAN
-              - { port: "51820", proto: "udp" } # Flannel Wireguard (IPv4)
-              - { port: "51821", proto: "udp" } # Flannel Wireguard (IPv6)
-              - { port: "10250", porto: "tcp" }  # Kubelet metrics
+      community.general.ufw:
+        rule: allow
+        port: "{{ item.1.port }}"
+        proto: "{{ item.1.proto }}"
+        src: "{{ item.0 }}"
+      loop: "{{ ufw_internal_sources | product(port_list) | list }}"
+      vars:
+        port_list:
+          - { port: "5001", proto: "tcp" }  # Spegel (Embedded distributed registry)
+          - { port: "8472", proto: "udp" }  # Flannel VXLAN
+          - { port: "51820", proto: "udp" } # Flannel Wireguard (IPv4)
+          - { port: "51821", proto: "udp" } # Flannel Wireguard (IPv6)
 
 - name: Allow Firewalld Exceptions
   when:
