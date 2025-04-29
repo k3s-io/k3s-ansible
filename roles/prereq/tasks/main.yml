@@ -12,13 +12,21 @@
     state: present
     reload: true
 
-- name: Enable IPv6 forwarding
-  ansible.posix.sysctl:
-    name: net.ipv6.conf.all.forwarding
-    value: "1"
-    state: present
-    reload: true
-  when: ansible_all_ipv6_addresses
+- name: Disable IPv6
+  block:
+    - ansible.posix.sysctl:
+        name: net.ipv6.conf.all.disable_ipv6
+        value: "1"
+        state: present
+    - ansible.posix.sysctl:
+        name: net.ipv6.conf.default.disable_ipv6
+        value: "1"
+        state: present
+    - ansible.posix.sysctl:
+        name: net.ipv6.conf.lo.disable_ipv6
+        value: "1"
+        state: present
+        reload: true
 
 - name: Populate service facts
   ansible.builtin.service_facts:
