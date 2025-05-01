@@ -384,6 +384,8 @@ argocd_helm_values:
     enable: "{{ security_enabled }}"
     livenessProbe:
       enabled: true
+    readinessProbe:
+      enabled: true
     metrics:
       enabled: "{{ enable_service_monitors }}"
       serviceMonitor:
