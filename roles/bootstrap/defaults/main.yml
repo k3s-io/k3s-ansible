@@ -136,11 +136,11 @@ security_dex_helm_values: # https://github.com/dexidp/helm-charts/blob/master/ch
     web:
       allowedOrigins:
         - "*"
-    
+
     staticClients: "{{ (security_dex_helm_values_default_clients | from_yaml) + (security_dex_extra_clients | from_yaml) }}"
-    
+
     staticPasswords: "{{ security_static_users | from_yaml }}"
-    
+
     enablePasswordDB: true
 
     oauth2:
@@ -206,8 +206,8 @@ security_oauth2_proxy_helm_values:
     ssl-upstream-insecure-skip-verify: true
 
     skip-jwt-bearer-tokens: true
-    oidc-extra-audience: 'dex-static-clients'
-    
+    oidc-extra-audience: "dex-static-clients"
+
     display-htpasswd-form: false
   ingress:
     enabled: true
@@ -358,7 +358,7 @@ argocd_helm_values:
             command:
               - bash
               - /helmfile-scripts/argo-cd-helmfile.sh
-                
+
           lockRepo: false
     rbac:
       policy.default: "role:admin"
@@ -382,6 +382,8 @@ argocd_helm_values:
         enabled: "{{ enable_service_monitors }}"
   dex:
     enable: "{{ security_enabled }}"
+    livenessProbe:
+      enabled: true
     metrics:
       enabled: "{{ enable_service_monitors }}"
       serviceMonitor:
@@ -497,7 +499,7 @@ argocd_helm_values:
           echo "##########################################" >> "$LOG_FILE"
           echo "Start helmfile for $ARGOCD_APP_NAME" >> "$LOG_FILE"
           echo "##########################################" >> "$LOG_FILE"
-          
+
           helmfile "${PARAMS[@]}" | tee -a "$LOG_FILE"
           test "${PIPESTATUS[0]}" -eq 0
 
