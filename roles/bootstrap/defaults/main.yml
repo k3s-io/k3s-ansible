@@ -222,6 +222,7 @@ security_oauth2_proxy_helm_values:
 security_oauth2_annotations: &security_oauth2_annotations
   nginx.ingress.kubernetes.io/auth-signin: https://security-oauth2.{{ ingress_hostname }}/oauth2/start?rd=https://$host$escaped_request_uri
   nginx.ingress.kubernetes.io/auth-url: https://security-oauth2.{{ ingress_hostname }}/oauth2/auth
+  nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User, X-Auth-Request-Email, X-Auth-Request-Access-Token, Set-Cookie, Authorization
   nginx.ingress.kubernetes.io/auth-snippet: |
     if ( $request_uri ~* "^SOME_REGEX_TO_SKIP" ) {
         return 200;
@@ -239,6 +240,7 @@ security_oauth2_annotations: &security_oauth2_annotations
     auth_request_set $name_upstream_1 $upstream_cookie__oauth2_proxy;
 
     # rewrite ^(/auth-basic/[^/]+)/(.*)$ /$2 break;
+    
 
     access_by_lua_block {
       if ngx.var.name_upstream_1 ~= "" then
