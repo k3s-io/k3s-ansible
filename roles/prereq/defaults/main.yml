@@ -4,10 +4,9 @@ base_packages:
   - daemontools
   - net-tools
   - nfs-common
-  - ntp
   - open-iscsi
   - openssh-client
-  - vim
+extra_packages: []
 etc_hosts_file: /etc/hosts
 extra_volumes: {}
 os_upgrade: false

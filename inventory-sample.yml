@@ -50,6 +50,10 @@ k3s_cluster:
     api_endpoint: "{{ groups['server'][0]] }}"
     extra_server_args: ""
     extra_agent_args: ""
+    
+    extra_packages: # Install extra packages
+      - ntp
+      - vim
 
     ###############################
     # Optional vars

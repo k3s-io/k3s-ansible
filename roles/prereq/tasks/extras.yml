@@ -3,22 +3,25 @@
   apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
   when: ansible_os_family == 'Debian'
 
+- ansible.builtin.set_fact:
+    required_packages: "{{ base_packages + extra_packages }}"
+
 - name: Install base packages
   block:
-    - name: Upgrade all packages on debian servers
+    - name: Install base packages on debian servers
       apt: name={{ item }} state=latest
       when: ansible_os_family == 'Debian'
-      with_items: "{{ base_packages }}"
+      with_items: "{{ required_packages }}"
 
-    - name: Upgrade all packages on arch servers
+    - name: Install base packages on arch servers
       pacman: name={{ item }} state=latest
       when: ansible_os_family == 'Archlinux'
-      with_items: "{{ base_packages }}"
+      with_items: "{{ required_packages }}"
 
-    - name: Upgrade all packages on redhat servers
+    - name: Install base packages on redhat servers
       yum: name={{ item }} state=latest
       when: ansible_os_family == 'RedHat'
-      with_items: "{{ base_packages }}"
+      with_items: "{{ required_packages }}"
 
 - name: Update packages
   block:
