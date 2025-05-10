@@ -140,6 +140,10 @@ bootstrap:
     # longhorn_replica_count: 2 # num of replicas that Longhorn will use. More replicas, more space required
     # longhorn_data_dir: /var/lib/longhorn/ # Default path for storing data on a host.
 
+    # nfs_external_provisioner_enabled: true # false if we want to disable NFS External Provisioner installation.
+    # nfs_external_provisioner_server: some_server # NFS server IP or hostname
+    # nfs_external_provisioner_path: /some_path # NFS server path
+
     # sealed_secrets_enabled: true # false if we want to disable Sealed Secrets installation.
     # sealed_secrets_restore: "true" # false if we want to reuse an existing sealed_secrets_key.
     # sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json # full paths or relative to an existing sealed_secrets_key.
@@ -155,3 +159,5 @@ bootstrap:
     #       -----BEGIN OPENSSH PRIVATE KEY-----
     #       ...
     #       -----END OPENSSH PRIVATE KEY-----
+
+    # k8s_device_plugin_enabled: true # false if we want to disable NVIDIA device plugin installation.

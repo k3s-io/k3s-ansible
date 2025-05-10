@@ -240,14 +240,15 @@ security_oauth2_annotations: &security_oauth2_annotations
     auth_request_set $name_upstream_1 $upstream_cookie__oauth2_proxy;
 
     # rewrite ^(/auth-basic/[^/]+)/(.*)$ /$2 break;
-    
+
 
     access_by_lua_block {
       if ngx.var.name_upstream_1 ~= "" then
         ngx.header["Set-Cookie"] = "_oauth2_proxy=" .. ngx.var.name_upstream_1 .. ngx.var.auth_cookie:match("(; .*)")
       end
     }
-longhorn_enabled: true
+
+longhorn_enabled: false
 longhorn_enabled_only_agent: false
 longhorn_replica_count: 2
 longhorn_data_dir: /var/lib/longhorn/
@@ -290,11 +291,21 @@ longhorn_helm_values:
 
 snapshot_controller: {}
 
-sealed_secrets_enabled: true
+nfs_external_provisioner_enabled: false
+nfs_external_provisioner_path: "/"
+nfs_external_provisioner_helm_values:
+  storageClass:
+    name: nfs
+  nfs:
+    server: "{{ nfs_external_provisioner_server }}"
+    path: "{{ nfs_external_provisioner_path }}"
+    mountOptions: ["vers=4"]
+
+sealed_secrets_enabled: false
 sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json
 sealed_secrets_restore: true
 
-argocd_enabled: true
+argocd_enabled: false
 argocd_namespaces:
   - default
 argocd_helm_secrets:
@@ -507,6 +518,6 @@ argocd_helm_values:
           helmfile "${PARAMS[@]}" | tee -a "$LOG_FILE"
           test "${PIPESTATUS[0]}" -eq 0
 
-k8s_device_plugin_enabled: true
+k8s_device_plugin_enabled: false
 k8s_device_plugin_helm_values:
   runtimeClassName: nvidia

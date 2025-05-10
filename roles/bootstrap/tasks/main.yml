@@ -26,7 +26,6 @@
   with_items: "{{ helm_chart_repository | dict2items }}"
 
 - name: cert-manager
-  tags: only-cert-manager
   block:
     - name: cert-manager - Install chart
       kubernetes.core.helm:
@@ -48,9 +47,9 @@
         namespace: security
         definition: "{{ lookup('ansible.builtin.template', 'cert_manager_resources.yaml.j2', template_vars = {}) | from_yaml_all }}"
         state: present
+  tags: only-cert-manager
 
 - name: external-dns
-  tags: only-external-dns
   block:
     - name: external-dns - Create DNS Secret
       kubernetes.core.k8s:
@@ -67,9 +66,9 @@
         release_namespace: kube-system
         values: "{{ external_dns_helm_values }}"
         context: "{{ k3s_context_name }}"
+  tags: only-external-dns
 
 - name: kubernetes-reflector
-  tags: only-kubernetes-reflector
   block:
     - name: kubernetes-reflector - Install chart
       kubernetes.core.helm:
@@ -81,6 +80,7 @@
         release_namespace: kube-system
         values: "{{ kubernetes_reflector_helm_values }}"
         context: "{{ k3s_context_name }}"
+  tags: only-kubernetes-reflector
 
 - name: kubernetes-reloader
   tags: only-kubernetes-reloader
@@ -97,7 +97,6 @@
         context: "{{ k3s_context_name }}"
 
 - name: ingress-nginx
-  tags: only-ingress-nginx
   block:
     - name: ingress-nginx - Install chart
       kubernetes.core.helm:
@@ -111,9 +110,9 @@
         context: "{{ k3s_context_name }}"
     - ansible.builtin.wait_for:
         timeout: "120"
+  tags: only-ingress-nginx
 
 - name: security
-  tags: only-security
   block:
     - name: Security - Authentication
       block:
@@ -137,10 +136,10 @@
             release_namespace: security
             values: "{{ security_oauth2_proxy_helm_values }}"
             context: "{{ k3s_context_name }}"
-      when: "security_enabled"
+  tags: only-security
+  when: "security_enabled"
 
 - name: longhorn
-  tags: only-longhorn
   block:
     - name: Longhorn - Install chart
       kubernetes.core.helm:
@@ -152,15 +151,15 @@
         release_namespace: kube-system
         values: "{{ longhorn_helm_values }}"
         context: "{{ k3s_context_name }}"
-    - name: Longhorn - Tag server nodes
-      ansible.builtin.shell: |
-        kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["SERVER_NODE"]}]' -n kube-system
-      retries: 10
-      delay: 30
-      register: result
-      until: result.rc == 0
-      when: "hostvars[item].k3s_agent_longhorn_enabled"
-      with_items: "{{ groups['server'] }}"
+    # - name: Longhorn - Tag server nodes
+    #   ansible.builtin.shell: |
+    #     kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["SERVER_NODE"]}]' -n kube-system
+    #   retries: 10
+    #   delay: 30
+    #   register: result
+    #   until: result.rc == 0
+    #   when: "hostvars[item].k3s_agent_longhorn_enabled"
+    #   with_items: "{{ groups['server'] }}"
     - name: Longhorn - Tag agent nodes
       ansible.builtin.shell: |
         kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["AGENT_NODE"]}]' -n kube-system
@@ -170,11 +169,11 @@
       until: result.rc == 0
       when: "hostvars[item].k3s_agent_longhorn_enabled"
       with_items: "{{ groups['agent'] }}"
-    - name: Longhorn - Tag create-default-disk in master nodes
-      ansible.builtin.shell: |
-        kubectl label node {{ item }} 'node.longhorn.io/create-default-disk=true'
-      when: "not longhorn_enabled_only_agent and hostvars[item].k3s_server_longhorn_enabled"
-      with_items: "{{ groups['server'] }}"
+    # - name: Longhorn - Tag create-default-disk in server nodes
+    #   ansible.builtin.shell: |
+    #     kubectl label node {{ item }} 'node.longhorn.io/create-default-disk=true'
+    #   when: "not longhorn_enabled_only_agent and hostvars[item].k3s_server_longhorn_enabled"
+    #   with_items: "{{ groups['server'] }}"
     - name: Longhorn - Tag create-default-disk in agent nodes
       ansible.builtin.shell: |
         kubectl label node {{ item }} 'node.longhorn.io/create-default-disk=true'
@@ -190,10 +189,25 @@
         release_namespace: kube-system
         values: "{{ snapshot_controller }}"
         context: "{{ k3s_context_name }}"
+  tags: only-longhorn
   when: "longhorn_enabled"
 
+- name: nfs-external-provisioner
+  block:
+    - name: NFS Subdir External Provisioner - Install chart
+      kubernetes.core.helm:
+        name: nfs-subdir-external-provisioner
+        chart_ref: nfs-subdir-external-provisioner/nfs-subdir-external-provisioner
+        chart_version: "{{ helm_chart_version['nfs-subdir-external-provisioner/nfs-subdir-external-provisioner'] }}"
+        create_namespace: true
+        force: true
+        release_namespace: kube-system
+        values: "{{ nfs_external_provisioner_helm_values }}"
+        context: "{{ k3s_context_name }}"
+  tags: only-nfs-subdir-external-provisioner
+  when: "nfs_external_provisioner_enabled"
+
 - name: sealed-secrets
-  tags: only-sealed-secrets
   block:
     - name: Sealed Secrets - Check if exists sealed-secrets-key
       stat:
@@ -217,7 +231,7 @@
     - name: Sealed Secrets - Save sealed-secrets-key
       ansible.builtin.shell: |
         mkdir -p $(dirname {{ sealed_secrets_key }})
-        
+
         while true; do
             count=$(kubectl -n security get secret -l "sealedsecrets.bitnami.com/sealed-secrets-key" | tail -n +2 | wc -l)
 
@@ -234,10 +248,10 @@
                 sleep 1
             fi
         done
+  tags: only-sealed-secrets
   when: "sealed_secrets_enabled"
 
 - name: argocd
-  tags: only-argocd
   block:
     - name: ArgoCD - Install chart
       kubernetes.core.helm:
@@ -258,10 +272,10 @@
         namespace: automation
         definition: "{{ lookup('ansible.builtin.template', 'argocd_project.yaml.j2', template_vars = {'namespace': item}) | from_yaml_all }}"
       with_items: "{{ argocd_namespaces }}"
+  tags: only-argocd
   when: "argocd_enabled"
 
 - name: nvidia-k8s-device-plugin
-  tags: only-nvidia-k8s-device-plugin
   block:
     - name: NVIDIA k8s Device Plugin - Install chart
       kubernetes.core.helm:
@@ -273,4 +287,5 @@
         release_namespace: kube-system
         values: "{{ k8s_device_plugin_helm_values }}"
         context: "{{ k3s_context_name }}"
+  tags: only-nvidia-k8s-device-plugin
   when: "k8s_device_plugin_enabled"
