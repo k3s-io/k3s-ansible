@@ -1,4 +1,6 @@
 ---
+helm_force_update: false
+
 ingress_hostname: ""
 
 ingress_nginx_helm_config:

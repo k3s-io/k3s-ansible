@@ -33,7 +33,7 @@
         chart_ref: jetstack/cert-manager
         chart_version: "{{ helm_chart_version['jetstack/cert-manager'] }}"
         create_namespace: true
-        force: true
+        force: "{{ helm_force_update }}"
         release_namespace: security
         values:
           ingressShim:
@@ -62,7 +62,7 @@
         chart_ref: external-dns/external-dns
         chart_version: "{{ helm_chart_version['external-dns/external-dns'] }}"
         create_namespace: true
-        force: true
+        force: "{{ helm_force_update }}"
         release_namespace: kube-system
         values: "{{ external_dns_helm_values }}"
         context: "{{ k3s_context_name }}"
@@ -76,7 +76,7 @@
         chart_ref: emberstack/reflector
         chart_version: "{{ helm_chart_version['emberstack/reflector'] }}"
         create_namespace: true
-        force: true
+        force: "{{ helm_force_update }}"
         release_namespace: kube-system
         values: "{{ kubernetes_reflector_helm_values }}"
         context: "{{ k3s_context_name }}"
@@ -91,7 +91,7 @@
         chart_ref: stakater/reloader
         chart_version: "{{ helm_chart_version['stakater/reloader'] }}"
         create_namespace: true
-        force: true
+        force: "{{ helm_force_update }}"
         release_namespace: kube-system
         values: "{{ kubernetes_reloader_helm_values }}"
         context: "{{ k3s_context_name }}"
@@ -104,7 +104,7 @@
         chart_ref: ingress-nginx/ingress-nginx
         chart_version: "{{ helm_chart_version['ingress-nginx/ingress-nginx'] }}"
         create_namespace: true
-        force: true
+        force: "{{ helm_force_update }}"
         release_namespace: kube-system
         values: "{{ ingress_nginx_helm_config }}"
         context: "{{ k3s_context_name }}"
@@ -122,7 +122,7 @@
             chart_ref: dex/dex
             chart_version: "{{ helm_chart_version['dex/dex'] }}"
             create_namespace: true
-            force: true
+            force: "{{ helm_force_update }}"
             release_namespace: security
             values: "{{ security_dex_helm_values }}"
             context: "{{ k3s_context_name }}"
@@ -132,7 +132,7 @@
             chart_ref: oauth2-proxy/oauth2-proxy
             chart_version: "{{ helm_chart_version['oauth2-proxy/oauth2-proxy'] }}"
             create_namespace: true
-            force: true
+            force: "{{ helm_force_update }}"
             release_namespace: security
             values: "{{ security_oauth2_proxy_helm_values }}"
             context: "{{ k3s_context_name }}"
@@ -147,7 +147,7 @@
         chart_ref: longhorn/longhorn
         chart_version: "{{ helm_chart_version['longhorn/longhorn'] }}"
         create_namespace: true
-        force: true
+        force: "{{ helm_force_update }}"
         release_namespace: kube-system
         values: "{{ longhorn_helm_values }}"
         context: "{{ k3s_context_name }}"
@@ -185,7 +185,7 @@
         chart_ref: piraeus-charts/snapshot-controller
         chart_version: "{{ helm_chart_version['piraeus-charts/snapshot-controller'] }}"
         create_namespace: true
-        force: true
+        force: "{{ helm_force_update }}"
         release_namespace: kube-system
         values: "{{ snapshot_controller }}"
         context: "{{ k3s_context_name }}"
@@ -200,7 +200,7 @@
         chart_ref: nfs-subdir-external-provisioner/nfs-subdir-external-provisioner
         chart_version: "{{ helm_chart_version['nfs-subdir-external-provisioner/nfs-subdir-external-provisioner'] }}"
         create_namespace: true
-        force: true
+        force: "{{ helm_force_update }}"
         release_namespace: kube-system
         values: "{{ nfs_external_provisioner_helm_values }}"
         context: "{{ k3s_context_name }}"
@@ -225,7 +225,7 @@
         chart_ref: bitnami-labs/sealed-secrets
         chart_version: "{{ helm_chart_version['bitnami-labs/sealed-secrets'] }}"
         create_namespace: true
-        force: true
+        force: "{{ helm_force_update }}"
         release_namespace: security
         context: "{{ k3s_context_name }}"
     - name: Sealed Secrets - Save sealed-secrets-key
@@ -259,7 +259,7 @@
         chart_ref: argo/argo-cd
         chart_version: "{{ helm_chart_version['argo/argo-cd'] }}"
         create_namespace: true
-        force: true
+        force: "{{ helm_force_update }}"
         release_namespace: automation
         values: "{{ argocd_helm_values }}"
         context: "{{ k3s_context_name }}"
@@ -283,7 +283,7 @@
         chart_ref: nvidia-k8s-device-plugin/nvidia-device-plugin
         chart_version: "{{ helm_chart_version['nvidia-k8s-device-plugin/nvidia-device-plugin'] }}"
         create_namespace: true
-        force: true
+        force: "{{ helm_force_update }}"
         release_namespace: kube-system
         values: "{{ k8s_device_plugin_helm_values }}"
         context: "{{ k3s_context_name }}"
