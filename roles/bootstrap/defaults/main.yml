@@ -3,6 +3,9 @@ helm_force_update: false
 
 ingress_hostname: ""
 
+_ingress_cors_annotations: &ingress_cors_annotations
+  nginx.ingress.kubernetes.io/enable-cors: "true"
+
 ingress_nginx_helm_config:
   # custom values from https://github.com/kubernetes/ingress-nginx/blob/main/charts/ingress-nginx/values.yaml
   controller:
@@ -163,6 +166,9 @@ security_dex_helm_values: # https://github.com/dexidp/helm-charts/blob/master/ch
     enabled: "{{ enable_service_monitors }}"
 
   ingress:
+    annotations:
+      <<: *ingress_cors_annotations
+
     enabled: true
     className: nginx
     hosts:
@@ -171,7 +177,7 @@ security_dex_helm_values: # https://github.com/dexidp/helm-charts/blob/master/ch
           - path: /
             pathType: Prefix
 
-security_oauth2_proxy_helm_values:
+security_oauth2_proxy_helm_values: # https://github.com/oauth2-proxy/manifests/blob/main/helm/oauth2-proxy/values.yaml
   fullnameOverride: oauth2-proxy
 
   config:
@@ -213,6 +219,8 @@ security_oauth2_proxy_helm_values:
     display-htpasswd-form: false
   ingress:
     enabled: true
+    annotations:
+      <<: *ingress_cors_annotations
     className: nginx
     path: /oauth2
     pathType: Prefix
@@ -222,6 +230,7 @@ security_oauth2_proxy_helm_values:
       - "security-oauth2.{{ ingress_hostname }}"
 
 security_oauth2_annotations: &security_oauth2_annotations
+  <<: *ingress_cors_annotations
   nginx.ingress.kubernetes.io/auth-signin: https://security-oauth2.{{ ingress_hostname }}/oauth2/start?rd=https://$host$escaped_request_uri
   nginx.ingress.kubernetes.io/auth-url: https://security-oauth2.{{ ingress_hostname }}/oauth2/auth
   nginx.ingress.kubernetes.io/auth-response-headers: X-Auth-Request-User, X-Auth-Request-Email, X-Auth-Request-Access-Token, Set-Cookie, Authorization
