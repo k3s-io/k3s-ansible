@@ -24,7 +24,7 @@
     value: "1"
     state: present
     reload: true
-  when: ansible_all_ipv6_addresses
+  when: ansible_all_ipv6_addresses | length > 0
 
 - name: Populate service facts
   ansible.builtin.service_facts:
@@ -42,7 +42,7 @@
 
     - name: If ufw enabled, open api port
       when:
-        - ufw_status['stdout'] == "Status':' active"
+        - "'Status: active' in ufw_status['stdout']"
       community.general.ufw:
         rule: allow
         port: "{{ api_port }}"
@@ -50,7 +50,7 @@
 
     - name: If ufw enabled, open etcd ports
       when:
-        - ufw_status['stdout'] == "Status':' active"
+        - "'Status: active' in ufw_status['stdout']"
         - groups[server_group] | length > 1
       community.general.ufw:
         rule: allow
@@ -59,7 +59,7 @@
 
     - name: If ufw enabled, allow default CIDRs
       when:
-        - ufw_status['stdout'] == "Status':' active"
+        - "'Status: active' in ufw_status['stdout']"
       community.general.ufw:
         rule: allow
         src: '{{ item }}'
