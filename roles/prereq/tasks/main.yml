@@ -258,4 +258,4 @@
     name:
       - wget
       - curl
-    state: latest
+    state: present
