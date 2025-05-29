@@ -73,6 +73,7 @@
         name: "{{ selinux_copy.results[0].dest }}"
         state: present
         disable_gpg_check: true
+        disablerepo: "*"
 
     - name: Make images directory
       ansible.builtin.file:
