@@ -10,13 +10,6 @@
   ansible.builtin.set_fact:
     installed_k3s_version: "{{ k3s_version_output.stdout_lines[0].split(' ')[2] }}"
 
-- name: Install wget and curl required for downloading the k3s server
-  ansible.builtin.package:
-    name:
-      - wget
-      - curl
-    state: latest
-
 # If airgapped, all K3s artifacts are already on the node.
 # We should be downloading and installing the newer version only if we are in one of the following cases :
 #   - we couldn't get k3s installed version in the first task of this role

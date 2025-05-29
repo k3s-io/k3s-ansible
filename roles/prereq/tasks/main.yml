@@ -252,3 +252,10 @@
         content: "{{ registries_config_yaml }}"
         dest: "/etc/rancher/k3s/registries.yaml"
         mode: "0644"
+
+- name: Install wget and curl required for downloading the k3s binary
+  ansible.builtin.package:
+    name:
+      - wget
+      - curl
+    state: latest
