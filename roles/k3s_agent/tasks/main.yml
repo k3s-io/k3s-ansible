@@ -54,6 +54,13 @@
   ansible.builtin.set_fact:
     token: "{{ hostvars[groups[server_group][0]].token }}"
 
+- name: Add service environment variables
+  when: extra_service_envs is defined
+  ansible.builtin.lineinfile:
+    path: "{{ systemd_dir }}/k3s.service.env"
+    line: "{{ item }}"
+  with_items: "{{ extra_service_envs }}"
+
 - name: Delete any existing token from the environment if different from the new one
   ansible.builtin.lineinfile:
     state: absent
