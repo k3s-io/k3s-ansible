@@ -13,10 +13,10 @@ helm_chart_repository:
   piraeus-charts: https://piraeus.io/helm-charts/
   stakater: https://stakater.github.io/stakater-charts
 helm_chart_version:
-  argo/argo-cd: 8.0.14
+  argo/argo-cd: 8.0.15
   bitnami-labs/sealed-secrets: 2.17.2
   dex/dex: 0.23.0
-  emberstack/reflector: 9.1.7
+  emberstack/reflector: 9.1.10
   external-dns/external-dns: 1.16.1
   ingress-nginx/ingress-nginx: 4.11.2
   jetstack/cert-manager: v1.17.2
