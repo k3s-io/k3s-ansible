@@ -25,7 +25,7 @@ Restart=always
 RestartSec=5s
 ExecStartPre=-/sbin/modprobe br_netfilter
 ExecStartPre=-/sbin/modprobe overlay
-ExecStart=/usr/local/bin/k3s server --data-dir {{ k3s_server_location }} --server https://{{ api_endpoint }}:{{ api_port }} --token '{{ token }}' \
+ExecStart={{ bin_dir }}/k3s server --data-dir {{ k3s_location }} --server https://{{ api_endpoint }}:{{ api_port }} --token '{{ token }}' \
               --disable=traefik --disable=servicelb
               {%- if kubelet_config_enabled %} --kubelet-arg="config=/etc/rancher/k3s/kubelet.config"{% endif %}
               {%- if k3s_server_longhorn_enabled %} --node-label 'longhorn.io/enabled=true'{% endif %}

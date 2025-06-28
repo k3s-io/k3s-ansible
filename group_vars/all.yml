@@ -1,12 +1,15 @@
 ---
 k3s_context_name: k3s-ansible
-k3s_server_location: "/var/lib/rancher/k3s"
 
 kubelet_config_enabled: true
 kubelet_config_shutdown_grace_period: "30s"
 kubelet_config_shutdown_grace_period_critical_pods: "10s"
 
-systemd_dir: "/etc/systemd/system"
+path_prefix: ""
+k3s_location: "{{ path_prefix }}/var/lib/rancher/k3s"
+bin_dir: "{{ path_prefix }}/usr/local/bin"
+systemd_dir: "{{ path_prefix }}/etc/systemd/system"
+
 api_port: 6443
 
 k3s_agent_role_name: compute

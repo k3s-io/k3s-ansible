@@ -1,4 +1,9 @@
 ---
+- name: Set facts
+  hosts: all
+  gather_facts: false
+  roles:
+    - role: facts
 
 - ansible.builtin.import_playbook: stop_cluster.yml
 

@@ -165,7 +165,7 @@
   block:
     - ansible.builtin.template:
         src: "ensure-volumes.sh.j2"
-        dest: "/usr/local/bin/ensure-volumes"
+        dest: "{{ bin_dir }}/ensure-volumes"
         owner: root
         group: root
         mode: "u=rwx,g=rx,o=rx"
@@ -176,7 +176,6 @@
     - ansible.builtin.cron:
         name: "ensure-volumes"
         minute: "*/5"
-        job: "/usr/local/bin/ensure-volumes | multilog t s1048576 n5 '!tai64nlocal' /var/log/ensure-volumes/ 2>&1"
+        job: "{{ bin_dir }}/ensure-volumes | multilog t s1048576 n5 '!tai64nlocal' /var/log/ensure-volumes/ 2>&1"
   when: "extra_volumes"
-
 # - fail:

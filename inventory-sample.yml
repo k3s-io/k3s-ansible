@@ -40,6 +40,11 @@ k3s_cluster:
           #   - /var/lib/k3s
           # k3s_gpu_nvidia_enabled: false # Enable GPU NVIDIA in the agent
           # k3s_agent_longhorn_enabled: true # Enable Longhorn in the agent
+    agent_droid:
+      hosts:
+        k3s-agent_droid-1:
+          ansible_host: 192.0.2.53
+          ansible_user: u0_1234 # Example Android user
 
   # Required Vars
   vars:
@@ -50,7 +55,7 @@ k3s_cluster:
     api_endpoint: "{{ groups['server'][0]] }}"
     extra_server_args: ""
     extra_agent_args: ""
-    
+
     extra_packages: # Install extra packages
       - ntp
       - vim
@@ -61,7 +66,7 @@ k3s_cluster:
     # os_upgrade: false # Upgrade the OS before installing K3s
     # k3s_context_name: k3s-ansible
     # api_port: 6443
-    # k3s_server_location: /var/lib/rancher/k3s
+    # k3s_location: /var/lib/rancher/k3s
     # k3s_server_no_schedule: true # No schedule pods by default in the server nodes
     # systemd_dir: /etc/systemd/system
     # extra_service_envs: [ 'ENV_VAR1=VALUE1', 'ENV_VAR2=VALUE2' ]
@@ -98,7 +103,7 @@ bootstrap:
     #     hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
     #     username: "admin"
     #     userID: "08a8684b-db88-4b73-90a9-3cd1661f5466"
-    
+
     #  - "user1:$2y$05$/sZYJOk8.3Etg4V6fV7puuXfCJLmV5Q7u3xvKpjBSJUka.t2YtmmG" # admin:Adm1n1str$t0r
     # security_dex_extra_clients: | # List extra clients to create in DEX.
     #   - id: some-app

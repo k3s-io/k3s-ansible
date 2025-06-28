@@ -1,11 +1,16 @@
 ---
+- name: Fail if running on Android
+  fail:
+    msg: "This playbook cannot be run on Android systems."
+  when: is_android | default(false)
+
 # If airgapped, all K3s artifacts are already on the node.
 - name: Download K3s install script
   when: airgap_dir is undefined
   ansible.builtin.get_url:
     url: https://get.k3s.io/
     timeout: 120
-    dest: /usr/local/bin/k3s-install.sh
+    dest: "{{ bin_dir }}/k3s-install.sh"
     owner: root
     group: root
     mode: 0755
@@ -13,7 +18,7 @@
 - name: Download K3s binary
   when: airgap_dir is undefined
   ansible.builtin.command:
-    cmd: /usr/local/bin/k3s-install.sh
+    cmd: "{{ bin_dir }}/k3s-install.sh"
   environment:
     INSTALL_K3S_SKIP_START: "true"
     INSTALL_K3S_VERSION: "{{ k3s_version }}"
@@ -88,7 +93,7 @@
 
     - name: Change server to API endpoint instead of localhost
       ansible.builtin.command: >-
-        /usr/local/bin/k3s kubectl config set-cluster default
+        {{ bin_dir }}/k3s kubectl config set-cluster default
          --server=https://{{ api_endpoint }}:{{ api_port }}
          --kubeconfig /etc/rancher/k3s/k3s.yaml
       changed_when: true
@@ -100,7 +105,7 @@
         flat: true
 
     - name: Check whether kubectl is installed on control node
-      ansible.builtin.shell: "/usr/local/bin/kubectl"
+      ansible.builtin.shell: "{{ bin_dir }}/kubectl"
       register: kubectl_installed
       ignore_errors: true
       delegate_to: 127.0.0.1
@@ -120,9 +125,9 @@
       when: kubectl_installed.rc == 0
       ansible.builtin.shell: |
         TFILE=$(mktemp)
-        KUBECONFIG={{ kubeconfig_new }} /usr/local/bin/kubectl config rename-context default {{ k3s_context_name }}
-        KUBECONFIG={{ kubeconfig_new }} /usr/local/bin/kubectl config set-context {{ k3s_context_name }} --user=k3s-ansible --cluster=k3s-ansible
-        KUBECONFIG={{ kubeconfig_new }}:{{ kubeconfig }} /usr/local/bin/kubectl config view --flatten > ${TFILE}
+        KUBECONFIG={{ kubeconfig_new }} {{ bin_dir }}/kubectl config rename-context default {{ k3s_context_name }}
+        KUBECONFIG={{ kubeconfig_new }} {{ bin_dir }}/kubectl config set-context {{ k3s_context_name }} --user=k3s-ansible --cluster=k3s-ansible
+        KUBECONFIG={{ kubeconfig_new }}:{{ kubeconfig }} {{ bin_dir }}/kubectl config view --flatten > ${TFILE}
         mv ${TFILE} {{ kubeconfig }}
         rm {{ kubeconfig_new }}
       delegate_to: 127.0.0.1
@@ -167,10 +172,10 @@
   when: user_kubectl
   block:
     - name: Create kubectl symlink
-      when: lookup('fileglob', '/usr/local/bin/kubectl', errors='warn') | length == 0
+      when: lookup('fileglob', '{{ bin_dir }}/kubectl', errors='warn') | length == 0
       ansible.builtin.file:
-        src: /usr/local/bin/k3s
-        dest: /usr/local/bin/kubectl
+        src: "{{ bin_dir }}/k3s"
+        dest: "{{ bin_dir }}/kubectl"
         state: link
 
     - name: Create directory .kube

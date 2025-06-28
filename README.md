@@ -152,7 +152,7 @@ Furthermore, there are other playbook that helps you to manage the cluster:
 - Execute shell command:
 
   ```bash
-  ansible -i inventory.yml k3s_cluster -m shell -a 'dietpi-update 1'
+  ansible -i inventory.yml k3s_cluster -m shell -a 'hostname' --limit 'datahublocal-xiaomi12'
   ```
 - Seal a secret:
 
@@ -188,5 +188,5 @@ kubectl run -it --rm --image=curlimages/curl curly -- sh # Run a pod with curl
 Finally, when there are error in Ansible and you want to retrieve the variables:
 
 ```bash
-ansible -i inventory.yml -m debug -a 'msg={{hostvars}}' all | grep k3s_server_location
+ansible -i inventory.yml -m debug -a 'msg={{hostvars}}' all | grep k3s_location
 ```

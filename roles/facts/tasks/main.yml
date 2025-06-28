@@ -1,0 +1,14 @@
+---
+- name: Check if target is running Android
+  shell: uname -a
+  register: uname_output
+
+- name: Check if target is Linux and Android
+  set_fact:
+    is_android: "{{ 'Linux' in uname_output.stdout and 'Android' in uname_output.stdout }}"
+
+- name: Set vars for Android hosts
+  when: is_android
+  set_fact:
+    k3s_agent_longhorn_enabled: false
+    k3s_server_install_skip_enable: true

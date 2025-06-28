@@ -1,37 +1,72 @@
 ---
-# If airgapped, all K3s artifacts are already on the node.
-- name: Download K3s install script
-  when: airgap_dir is undefined
-  ansible.builtin.get_url:
-    url: https://get.k3s.io/
-    timeout: 120
-    dest: /usr/local/bin/k3s-install.sh
-    owner: root
-    group: root
-    mode: 0755
+- block:
+    # If airgapped, all K3s artifacts are already on the node.
+    - name: Download K3s install script
+      when: airgap_dir is undefined
+      ansible.builtin.get_url:
+        url: https://get.k3s.io/
+        timeout: 120
+        dest: "{{ bin_dir }}/k3s-install.sh"
+        owner: root
+        group: root
+        mode: 0755
 
-- name: Download K3s binary
-  when: airgap_dir is undefined
-  ansible.builtin.command:
-    cmd: /usr/local/bin/k3s-install.sh
-  environment:
-    INSTALL_K3S_SKIP_START: "true"
-    INSTALL_K3S_VERSION: "{{ k3s_version }}"
-    INSTALL_K3S_EXEC: "agent"
-  changed_when: true
+    - name: Download K3s binary
+      when: airgap_dir is undefined
+      ansible.builtin.command:
+        cmd: "{{ bin_dir }}/k3s-install.sh"
+      environment:
+        INSTALL_K3S_VERSION: "{{ k3s_version }}"
+        INSTALL_K3S_BIN_DIR: "{{ bin_dir }}"
+        INSTALL_K3S_SKIP_START: "true"
+      changed_when: true
 
-- name: Copy K3s service file
-  register: k3s_agent_service
-  ansible.builtin.template:
-    src: "k3s-agent.service.j2"
-    dest: "{{ systemd_dir }}/k3s-agent.service"
-    owner: root
-    group: root
-    mode: "u=rw,g=r,o=r"
+    - name: Copy K3s service file
+      register: k3s_agent_service
+      ansible.builtin.template:
+        src: "k3s-agent.service.j2"
+        dest: "{{ systemd_dir }}/k3s-agent.service"
+        owner: root
+        group: root
+        mode: "u=rw,g=r,o=r"
+  when: "not is_android"
+
+- block:
+    - name: Download k3s binary
+      when: "airgap_dir is undefined and is_android"
+      ansible.builtin.get_url:
+        url: "https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-arm64"
+        dest: "{{ bin_dir }}/k3s"
+        mode: "0755"
+        owner: root
+        group: root
+
+    - name: Ensure termux service directory exists
+      ansible.builtin.file:
+        path: "{{ termux_services_dir }}/k3s-agent/log"
+        state: directory
+        owner: root
+        group: root
+        mode: "u=rwx,g=rx,o=rx"
+
+    - name: Copy K3s termux-service file
+      ansible.builtin.template:
+        src: "k3s-agent.run.j2"
+        dest: "{{ termux_services_dir }}/k3s-agent/run"
+        owner: root
+        group: root
+        mode: "u=rwx,g=rx,o=rx"
+    - name: Link svlogger for k3s-agent log
+      ansible.builtin.file:
+        src: "{{ path_prefix }}/usr/share/termux-services/svlogger"
+        dest: "{{ termux_services_dir }}/k3s-agent/log/run"
+        state: link
+        force: true
+  when: "is_android"
 
 - name: Make config directory
   ansible.builtin.file:
-    path: "/etc/rancher/k3s"
+    path: "{{ path_prefix }}/etc/rancher/k3s"
     mode: 0755
     state: directory
 
@@ -39,7 +74,7 @@
   when: kubelet_config_enabled
   ansible.builtin.template:
     src: "kubelet.config.j2"
-    dest: "/etc/rancher/k3s/kubelet.config"
+    dest: "{{ path_prefix }}/etc/rancher/k3s/kubelet.config"
     owner: root
     group: root
     mode: "u=rw,g=r,o=r"
@@ -50,5 +85,13 @@
     daemon_reload: "{{ true if k3s_agent_service.changed else false }}"
     state: "{{ 'restarted' if k3s_agent_service.changed else 'started' }}"
     enabled: true
+  when: "not is_android"
 
-  
+- name: Enable and check K3s termux-service
+  ansible.builtin.shell:
+    cmd: "sv-enable k3s-agent && sv up k3s-agent"
+    executable: /bin/sh
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"
+  become: true
+  when: is_android

@@ -1,0 +1,8 @@
+ansible_become_method: su
+ansible_port: 8022
+
+path_prefix: /data/data/com.termux/files
+
+ansible_python_interpreter: "{{ path_prefix }}/usr/bin/python3"
+bin_dir: "{{ path_prefix }}/usr/bin"
+termux_services_dir: "{{ path_prefix }}/usr/var/service"

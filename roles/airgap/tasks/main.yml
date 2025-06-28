@@ -19,7 +19,7 @@
     - name: Distribute K3s install script
       ansible.builtin.copy:
         src: "{{ airgap_dir }}/k3s-install.sh"
-        dest: /usr/local/bin/k3s-install.sh
+        dest: "{{ bin_dir }}/k3s-install.sh"
         owner: root
         group: root
         mode: 0755
@@ -27,7 +27,7 @@
     - name: Distribute K3s binary
       ansible.builtin.copy:
         src: "{{ airgap_dir }}/k3s"
-        dest: /usr/local/bin/k3s
+        dest: "{{ bin_dir }}/k3s"
         owner: root
         group: root
         mode: 0755
@@ -35,7 +35,7 @@
     - name: Distribute K3s SELinux RPM
       ansible.builtin.copy:
         src: "{{ item }}"
-        dest: /tmp/
+        dest: "{{ path_prefix }}/tmp/"
         owner: root
         group: root
         mode: 0755
@@ -55,7 +55,7 @@
 
     - name: Make images directory
       ansible.builtin.file:
-        path: "/var/lib/rancher/k3s/agent/images/"
+        path: "{{ path_prefix }}/var/lib/rancher/k3s/agent/images/"
         mode: 0755
         state: directory
 
@@ -67,7 +67,7 @@
       when: ansible_architecture == 'x86_64'
       ansible.builtin.copy:
         src: "{{ item }}"
-        dest: /var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar
+        dest: "{{ path_prefix }}/var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar"
         owner: root
         group: root
         mode: 0755
@@ -82,7 +82,7 @@
       when: ansible_architecture == 'aarch64'
       ansible.builtin.copy:
         src: "{{ item }}"
-        dest: /var/lib/rancher/k3s/agent/images/k3s-airgap-images-arm64.tar
+        dest: "{{ path_prefix }}/var/lib/rancher/k3s/agent/images/k3s-airgap-images-arm64.tar"
         owner: root
         group: root
         mode: 0755
@@ -97,7 +97,7 @@
       when: ansible_architecture == 'armv7l'
       ansible.builtin.copy:
         src: "{{ item }}"
-        dest: /var/lib/rancher/k3s/agent/images/k3s-airgap-images-arm.tar
+        dest: "{{ path_prefix }}/var/lib/rancher/k3s/agent/images/k3s-airgap-images-arm.tar"
         owner: root
         group: root
         mode: 0755
@@ -110,7 +110,7 @@
 
     - name: Run K3s Install [server]
       ansible.builtin.command:
-        cmd: /usr/local/bin/k3s-install.sh
+        cmd: "{{ bin_dir }}/k3s-install.sh"
       environment:
         INSTALL_K3S_SKIP_START: "true"
         INSTALL_K3S_SKIP_DOWNLOAD: "true"
@@ -118,7 +118,7 @@
 
     - name: Run K3s Install [agent]
       ansible.builtin.command:
-        cmd: /usr/local/bin/k3s-install.sh
+        cmd: "{{ bin_dir }}/k3s-install.sh"
       environment:
         INSTALL_K3S_SKIP_START: "true"
         INSTALL_K3S_SKIP_DOWNLOAD: "true"

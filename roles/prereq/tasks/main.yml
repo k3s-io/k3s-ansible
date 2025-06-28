@@ -172,9 +172,9 @@
       - "Add '--prefer-bundled-bin' to extra_server_args variable to use the bundled iptables binary."
   ignore_errors: true
 
-- name: Add /usr/local/bin to sudo secure_path
+- name: Add {{ bin_dir }} to sudo secure_path
   ansible.builtin.lineinfile:
-    line: "Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin"
+    line: "Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:{{ bin_dir }}"
     regexp: "Defaults(\\s)*secure_path(\\s)*="
     state: present
     insertafter: EOF
@@ -184,8 +184,8 @@
 
 - name: Setup alternative K3s directory
   when:
-    - k3s_server_location is defined
-    - k3s_server_location != "/var/lib/rancher/k3s"
+    - k3s_location is defined
+    - k3s_location != "/var/lib/rancher/k3s"
   block:
     - name: Make rancher directory
       ansible.builtin.file:
@@ -195,7 +195,7 @@
     - name: Create symlink
       ansible.builtin.file:
         dest: /var/lib/rancher/k3s
-        src: "{{ k3s_server_location }}"
+        src: "{{ k3s_location }}"
         force: true
         state: link
 

@@ -1,4 +1,9 @@
 ---
+- name: Set facts
+  hosts: all
+  gather_facts: false
+  roles:
+    - role: facts
 
 # Servers should be restarted sequientally to avoid etcd learner issues
 # Agents have no such limitation
@@ -10,7 +15,9 @@
     - role: k3s_upgrade
 
 - name: Upgrade K3s Agents
-  hosts: agent
+  hosts:
+    - agent
+    - agent_droid
   become: true
   roles:
     - role: k3s_upgrade
