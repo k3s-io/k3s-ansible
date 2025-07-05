@@ -28,9 +28,9 @@ ingress_nginx_helm_config:
     watchIngressWithoutClass: true
 
     allowSnippetAnnotations: true
-    configs:
+    config:
       use-forwarded-headers: "true"
-      proxy-body-size: 100m
+      proxy-body-size: 0
     extraArgs:
       default-ssl-certificate: "kube-system/{{ ingress_hostname }}-cert"
 
