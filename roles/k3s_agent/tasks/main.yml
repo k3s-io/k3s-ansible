@@ -70,6 +70,7 @@
 - name: Add the token for joining the cluster to the environment
   no_log: true # avoid logging the server token
   ansible.builtin.lineinfile:
+    create: true
     path: "{{ systemd_dir }}/k3s-agent.service.env"
     line: "{{ item }}"
   with_items:
