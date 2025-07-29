@@ -312,10 +312,6 @@ nfs_external_provisioner_helm_values:
     path: "{{ nfs_external_provisioner_path }}"
     mountOptions: ["vers=4"]
 
-sealed_secrets_enabled: false
-sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json
-sealed_secrets_restore: true
-
 argocd_enabled: false
 argocd_namespaces:
   - default

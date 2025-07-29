@@ -126,7 +126,7 @@ If you wish for your kubeconfig to be copied elsewhere and not merged, you can s
 
 ## Bootstrapping
 
-A playbook is provided to bootstrap the K8s cluster with base services ([cert-manager](https://cert-manager.io/), [Longhorn](https://longhorn.io/), [Sealed Secrets](https://sealed-secrets.netlify.app/) and [ArgoCD](argo-cd.readthedocs.io)). To use it, update `Bootstrap` vars with the desired configuration of the services and run:
+A playbook is provided to bootstrap the K8s cluster with base services ([cert-manager](https://cert-manager.io/), [Longhorn](https://longhorn.io/) and [ArgoCD](argo-cd.readthedocs.io)). To use it, update `Bootstrap` vars with the desired configuration of the services and run:
 
 ```bash
 ansible-playbook playbook/bootstrap.yml -i inventory.yml
@@ -153,18 +153,6 @@ Furthermore, there are other playbook that helps you to manage the cluster:
 
   ```bash
   ansible -i inventory.yml k3s_cluster -m shell -a 'hostname' --limit 'datahublocal-xiaomi12'
-  ```
-- Seal a secret:
-
-  ```bash
-  CREDENTIAL_KEY="password"
-  CREDENTIAL_VALUE="strong_password"
-  SECRET_NAMESPACE="default"
-  SECRET_NAME="some-secret"
-
-  echo -n "$CREDENTIAL_VALUE" \
-     | kubectl create secret generic $SECRET_NAME -n $SECRET_NAMESPACE --dry-run=client --from-file=$CREDENTIAL_KEY=/dev/stdin -o json \
-     | kubeseal --controller-namespace security --controller-name sealed-secrets -o yaml
   ```
 
 ### Debugging

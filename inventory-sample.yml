@@ -149,10 +149,6 @@ bootstrap:
     # nfs_external_provisioner_server: some_server # NFS server IP or hostname
     # nfs_external_provisioner_path: /some_path # NFS server path
 
-    # sealed_secrets_enabled: true # false if we want to disable Sealed Secrets installation.
-    # sealed_secrets_restore: "true" # false if we want to reuse an existing sealed_secrets_key.
-    # sealed_secrets_key: ~/.sealed_secrets/sealed-secrets-key.json # full paths or relative to an existing sealed_secrets_key.
-
     # argocd_enabled: true # false if we want to disable ArgoCD installation.
     # argocd_namespaces: # namespaces where argo-cd will look for apps
     #   - default
