@@ -1,0 +1,194 @@
+---
+argocd:
+  oidc:
+    client:
+      id: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/group_vars/oidc/clients/argocd', **vault_options )['secret']['id'] }}"
+      secret: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/group_vars/oidc/clients/argocd', **vault_options )['secret']['secret'] }}"
+
+  github:
+    projects:
+      - name: k8s-deployements
+        url: "{{ git_clone_ssh_url }}:RalphSmeets"
+    ssh_key: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_private_key'] }}"
+    known_hosts: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_known_hosts'] }}"
+    webhook:
+      secret: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_webhook_secret'] }}"
+    token: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_token'] }}"
+    username: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_username'] }}"
+    password: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['github_password'] }}"
+  # vault.k3s_cluster.token: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/all/vault_k3s_cluster,', **vault_options )['secret']['token_value'] }}"
+  avp:
+    role_id: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['avp_role_id'] }}"
+    secret_id: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['avp_secret_id'] }}"
+
+  server:
+    admin_password: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{ universe.environment }}/group_vars/helm/argocd', **vault_options )['secret']['default_admin_password'] }}"
+  # pki2:
+  #   ca_cert: "{{ lookup('ansible.builtin.url', '{{ pki_ca_url }}/PKI2-CJIB-ROOT.pem', split_lines=true, wantlist=true ) }}"
+
+# Argo CD needs to be able to connect to our private repositories. This is done using a repository template. This
+# template needs a name and the base of the url of the repository.
+
+# Configure each of the clusters (dev, pro).
+  cluster:
+    credentials:
+      pro-cluster:
+        server: https://kubernetes.default.svc
+        domain: "{{ universe.environment }}.{{ universe.domain }}"
+        config:
+          tlsClientConfig:
+            insecure: false
+      tools-cluster:
+        server: https://kubernetes.default.svc
+        domain: tools.k8s-frambozen.nl
+        config:
+          tlsClientConfig:
+            insecure: false
+      dev-cluster:
+        server: https://k3s-api.dev.k8s-frambozen.nl:6443
+        domain: dev.k8s-frambozen.nl
+        config:
+          tlsClientConfig:
+            insecure: false
+            caData: "{{ lookup('community.hashi_vault.vault_kv2_get', 'dev/k8s_cluster', **vault_options )['secret']['caData'] }}"
+            certData: "{{ lookup('community.hashi_vault.vault_kv2_get', 'dev/k8s_cluster', **vault_options )['secret']['certData'] }}"
+            keyData: "{{ lookup('community.hashi_vault.vault_kv2_get', 'dev/k8s_cluster', **vault_options )['secret']['keyData'] }}"
+
+# Define the AppProjects. These correspond with the different enironments. E.g. staging for development and testing applications and
+# production for production. Every project has a name, a namespace (wildcard allowed) to run on/in and a cluster to run on. 
+# Please be aware that these are Argo CD projects and not projects of the organisation:
+  app_projects:
+    - name: development
+      namespace: "*-dev-*"  
+      cluster: dev-cluster
+    - name: testing
+      namespace: "*-test"
+      cluster: dev-cluster
+    - name: acceptatie
+      namespace: "*-acc"
+      cluster: dev-cluster
+    - name: production
+      namespace: "*"
+      cluster: pro-cluster
+    - name: dev-tooling
+      namespace: "*-tool"
+      cluster: dev-cluster
+    - name: pro-tooling
+      namespace: "*-tool"
+      cluster: pro-cluster 
+    
+  # Setup the different provisioning applications sets:
+  # - cluster: The cluster that needs to be provisioned
+  # - repo_url: The repository containing the definitions of the separate applications.
+  # - types: A list with types to provision
+  #     - type: can be either helm or kustomize
+  #     - git_files: path mask for detecting the files for provisioning.
+  # - project: one of the defined argocd-projects, this is also the name of the overlay that will be chosen
+  # - namespace: the namespace to deploy the applications to
+  application_sets:
+    provisioning:
+      - cluster: dev-cluster
+        repo_url: "{{ git_clone_ssh_url }}:RalphSmeets/dev-provisioning.git"
+        types:
+          - type: kustomize
+            git_files_path: "*/kustomize-application.yaml"
+          - type: helm
+            git_files_path: "*/helm-application.yaml"
+        project: dev-tooling
+        namespace: "-*"
+
+      - cluster: pro-cluster
+        repo_url: "{{ git_clone_ssh_url }}:RalphSmeets/pro-provisioning.git"
+        types:
+          - type: kustomize
+            git_files_path: "*/kustomize-application.yaml"
+          - type: helm
+            git_files_path: "*/helm-application.yaml"
+        project: pro-tooling
+        namespace: "-*"
+
+    # Setup the different project applications sets:
+    # - github_organisation: The project in github that needs to be scanned on deployments
+    #   types:
+    #     - type: kustomize or helm. Defines the type of deployement
+    #       git_files_path: path(s) inside the repo for globbing the files.
+    applications:
+      # - name: RalphSmeets 
+      #   github_organisation: RalphSmeets
+      #   types:
+      #     - type: kustomize
+      #       git_files_path:
+      #         - "deployments/*/kustomize-application.yml"
+      #         - "deployments/*/*/kustomize-application.yml"
+      #         - "deployments/*/kustomize-application.yaml"
+      #         - "deployments/*/*/kustomize-application.yaml"
+      #     - type: helm
+      #       git_files_path: ["deployments/*/helm-application.yaml", "deployments/*/*/helm-application.yaml"]
+      - name: deployments
+        repo_url: "{{ git_clone_ssh_url }}:RalphSmeets/deployments.git"
+        types:
+          - type: kustomize
+            git_files_path:
+              - "*/*/*/kustomize-application.yml"
+              - "*/*/*/*/kustomize-application.yml"
+              - "*/*/*/kustomize-application.yaml"
+              - "*/*/*/*/kustomize-application.yaml"
+          - type: helm
+            git_files_path:
+            # team/application/environment
+              - "*/*/*/helm-application.yaml"
+            # team/application/environment/suffix (for dynamic environments)
+              - "*/*/*/*/helm-application.yaml"
+              
+  application_sources:
+    - name: deployments
+      is_organisation: false
+      repo_url: "{{ git_clone_ssh_url }}:RalphSmeets/deployments.git"
+      types:
+        - name: helm
+          git_files_path:
+            - "*/*/*/helm-application.yaml"
+            - "*/*/*/*/helm-application.yaml"
+        - name: kustomize
+          git_files_path:
+            - "*/*/*/kustomize-application.yaml"
+            - "*/*/*/*/kustomize-application.yaml"
+
+      mapping:
+        # Define how all path elements are dealt with:
+        team: '{% raw %}{{ index .path.segments 0 }}{% endraw %}'
+        application: '{% raw %}{{ index .path.segments 1 }}{% endraw %}'
+        overlay: '{% raw %}{{ index .path.segments 2 }}{% endraw %}'
+        prefix: ''
+        suffix: '{% raw %}{{ has ( index .path.segments 2 ) (list "development" ) | ternary ( last .path.segments | print "-%s" ) "" }}{% endraw %}'
+        cluster: '{% raw %}{{ has ( index .path.segments 2 ) ( list "production") | ternary "pro-cluster" "dev-cluster" }}{% endraw %}'
+        namespace: '{% raw %}{{ has ( index .path.segments 2 ) (list "dev" ) | ternary "dev-" ""}}{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( index .path.segments 0 ) (index .path.segments 2 ) }}{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( last .path.segments | print "-%s" ) "" }}{% endraw %}'
+    
+    - name: k8s-frambozen
+      is_organisation: true
+      organisation: "K8S-Frambozen"
+      repo_url: "{{ git_clone_ssh_url }}:K8S-Frambozen"
+      types:
+        - name: helm
+          git_files_path:
+            - "deployments/*/helm-application.yaml"
+            - "deployments/*/*/helm-application.yaml"
+        - name: kustomize
+          git_files_path:
+            - "deployments/*/kustomize-application.yaml"
+            - "deployments/*/*/kustomize-application.yaml"
+
+      mapping:
+        # Define how all path elements are dealt with:
+        team: '{% raw %}{{ index .path.segments 0 }}{% endraw %}'
+        application: '{% raw %}{{ index .path.segments 1 }}{% endraw %}'
+        overlay: '{% raw %}{{ index .path.segments 2 }}{% endraw %}'
+        prefix: ''
+        suffix: '{% raw %}{{ has ( index .path.segments 2 ) (list "development" ) | ternary ( last .path.segments | print "-%s" ) "" }}{% endraw %}'
+        cluster: '{% raw %}{{ has ( index .path.segments 2 ) ( list "production") | ternary "pro-cluster" "dev-cluster" }}{% endraw %}'
+        namespace: '{% raw %}{{ has ( index .path.segments 2 ) (list "dev" ) | ternary "dev-" ""}}{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( index .path.segments 0 ) (index .path.segments 2 ) }}{{ has ( index .path.segments 2 ) (list "ont" "test") | ternary ( last .path.segments | print "-%s" ) "" }}{% endraw %}'
+
+ 
+
+ 
+

@@ -1,0 +1,5 @@
+cert_manager:
+  cloudflare_token: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/group_vars/helm/cert-manager', **vault_options )['secret']['cloudflare-token'] }}"
+  dns_zones: "{{ universe.domain }}"
+  owner:
+    email: "{{ lookup('community.hashi_vault.vault_kv2_get', '{{universe.environment }}/group_vars/helm/cert-manager', **vault_options )['secret']['owner-email'] }}"
