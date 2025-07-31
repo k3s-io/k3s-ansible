@@ -8,9 +8,4 @@ monitoring_namespace: monitoring
 
 monitoring_ingress:
   host: monitoring.{{ universe.environment }}.{{ universe.domain }}
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    kubernetes.io/ingress.class: "traefik"
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-  tls_secretname: monitoring-tls-prod-cert
+  tls_secretname: monitoring-{{ ingress_tls.prod.tls_secretname_postfix }}

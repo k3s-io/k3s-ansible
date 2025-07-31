@@ -1,5 +1,11 @@
 # code: language=ansible
 ---
+- name: Add ArgoCD namespace
+  kubernetes.core.k8s:
+    state: present
+    name: "{{ argocd_namespace }}"
+    kind: Namespace
+
 - name: Add docker secret
   kubernetes.core.k8s:
     state: present
@@ -9,7 +15,7 @@
       kind: Secret
       metadata:
         name: docker-{{ docker_repo.name }}-creds
-        namespace: "pro"
+        namespace: "{{ argocd_namespace }}"
       data:
         .dockerconfigjson: "{{ docker_repo.dockerconfigjson }}"
       type: kubernetes.io/dockerconfigjson
@@ -17,17 +23,10 @@
   loop_control:
     loop_var: docker_repo
 
-
 - name: Add ArgoCD helm repo
   kubernetes.core.helm_repository:
     name: "{{ argocd_helm_repo_name }}"
     repo_url: "{{ argocd_helm_repo_chart }}"
-
-- name: Add ArgoCD namespace
-  kubernetes.core.k8s:
-    state: present
-    name: "{{ argocd_namespace }}"
-    kind: Namespace
 
 - name: Add ArgoCD vault configuration
   kubernetes.core.k8s:
@@ -100,6 +99,27 @@
   loop: "{{ argocd.app_projects }}"
   loop_control:
     loop_var: argocd_app_project
+
+- name: Set ArgoCD ApplicationSet fact on organisation
+  set_fact:
+    k8s_application_set_yaml: '{{ lookup("template", "argocd_application_set.j2") }}'
+  loop: "{{ argocd.application_sources }}"
+  loop_control:
+    loop_var: application_source
+
+- name: echo template
+  ansible.builtin.debug:
+    msg: "{{ k8s_application_set_yaml }}"
+    
+- name: Add ArgoCD ApplicationSet on organisation
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ argocd_namespace }}"
+    template:
+      - path: argocd_application_set.j2
+  loop: "{{ argocd.application_sources }}"
+  loop_control:
+    loop_var: application_source
 
 - name: Add ArgoCD ApplicationSet for provisioning different environments
   kubernetes.core.k8s:

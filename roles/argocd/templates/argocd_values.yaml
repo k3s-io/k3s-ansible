@@ -1881,7 +1881,9 @@ server:
     # -- Enable an ingress resource for the Argo CD server
     enabled: {{ argocd_helm_ingress }}
     # -- Additional ingress annotations
-    annotations: {}
+    annotations:
+{{ ingress_tls.prod.annotations | to_nice_yaml(width=1337) | indent(6,true) }}
+
     # -- Additional ingress labels
     labels: {}
     # -- Defines which ingress controller will implement the resource
@@ -1910,10 +1912,10 @@ server:
       #         name: use-annotation
 
     # -- Ingress TLS configuration
-    tls: []
-      # - secretName: your-certificate-name
-      #- hosts:
-      #    - "{{ argocd_alias }}.{{ universe.environment }}.{{ universe.domain }}"
+    tls: 
+      - secretName: argocd-{{ ingress_tls.prod.tls_secretname_postfix }}
+        hosts:
+        - "{{ argocd_alias }}.{{ universe.environment }}.{{ universe.domain }}"
 
     # -- Uses `server.service.servicePortHttps` instead `server.service.servicePortHttp`
     https: false

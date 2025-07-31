@@ -1,6 +1,6 @@
 ---
 #ansible_port: 22
-ansible_user: root
+ansible_user: ubuntu
 
 ## devops labels
 platform_daily_support_devops_labels:
@@ -38,3 +38,19 @@ docker_repo_configs:
     password: "{{ lookup('community.hashi_vault.vault_kv2_get', 'docker/ralphsmeets', **vault_options )['secret']['password'] }}"
     user: "{{ lookup('community.hashi_vault.vault_kv2_get', 'docker/ralphsmeets', **vault_options )['secret']['user'] }}"
     dockerconfigjson: "{{ lookup('community.hashi_vault.vault_kv2_get', 'docker/ralphsmeets', **vault_options )['secret']['configjson'] | b64encode }}"
+
+ingress_tls:
+  prod:
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.tls: "true"
+      kubernetes.io/ingress.class: "traefik"
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    tls_secretname_postfix: -tls-prod-cert
+  staging:
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.tls: "true"
+      kubernetes.io/ingress.class: "traefik"
+      cert-manager.io/cluster-issuer: "letsencrypt-staging"
+    tls_secretname_postfix: tls-staging-cert

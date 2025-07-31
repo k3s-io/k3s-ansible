@@ -1,0 +1,104 @@
+{% for application_source_type in application_source.types %}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: '{{ application_source.name | lower }}-{{ application_source_type.name }}'
+  namespace: {{ argocd_namespace }}
+  labels:
+{{ platform_office_hour_support_devops_labels | to_nice_yaml(width=1337) | indent(4,true) }}
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+{% if application_source.is_organisation %}
+    - matrix:
+        generators:
+          - scmProvider:
+              github:
+                allBranches: false 
+                organization: '{{ application_source.organisation }}'
+              filters:
+{% if application_source_type.name == 'helm' %}
+                - pathsExist:
+                    - charts
+{% else %}
+                - pathExists:
+                    - base/kustomize.yaml
+{% endif %}
+          - git:
+              files:
+{% for path in application_source_type.git_files_path %}
+                - path: '{{ path }}'
+{% endfor %}
+{% raw %}
+              repoURL: '{{ .url }}'
+{% endraw %}
+              revision: HEAD
+              values:
+                team: '{{ application_source.mapping.team }}'
+                repoURL: '{% raw %}{{ .url }}{% endraw %}}'
+                overlay: '{{ application_source.mapping.overlay }}'
+                application: '{{ application_source.mapping.application }}'
+                prefix: '{{ application_source.mapping.prefix }}'
+                suffix: '{{ application_source.mapping.suffix}}'
+                cluster: '{{ application_source.mapping.cluster }}'
+                namespace: '{{ application_source.mapping.namespace }}'
+{% else %}
+    - git:
+        repoURL: {{ application_source.repo_url }}
+        revision: HEAD
+        files:
+{% for path in application_source_type.git_files_path %}
+          - path: '{{ path }}'
+{% endfor %}
+        values:
+          team: '{{ application_source.mapping.team }}'
+          repoURL: '{{ application_source.repo_url }}'
+          overlay: '{{ application_source.mapping.overlay }}'
+          application: '{{ application_source.mapping.application }}'
+          prefix: '{{ application_source.mapping.prefix }}'
+          suffix: '{{ application_source.mapping.suffix}}'
+          cluster: '{{ application_source.mapping.cluster }}'
+          namespace: '{{ application_source.mapping.namespace }}'
+{% endif %}
+{% raw %}
+  template:
+    metadata:
+      name: '{{ .values.prefix }}{{ .values.team }}-{{ .values.application }}-{{ .chart.name }}{{ .values.suffix }}' 
+    spec:
+      destination:
+        name: '{{ .values.cluster }}'
+        namespace: '{{ .values.namespace }}'
+      project: '{{ .values.overlay }}'
+{% endraw %}
+{% if application_source_type.name == 'helm' %}
+      source:
+{% raw %}
+        repoURL: '{{ .values.repoURL }}'
+        path: "./"
+        plugin:
+          env:
+            - name: HELM_REPO_URL
+              value: '{{ .chart.repo_url }}'
+            - name: HELM_CHART_NAME
+              value: '{{ .chart.name }}'
+            - name: HELM_CHART_VERSION
+              value: '{{ .chart.version }}'
+            - name: HELM_VALUES_FILE
+              value: "{{ .path.path }}/values.yaml"
+{% endraw %}
+{% else %}
+      source:
+{% raw %}
+        repoURL: '{{ .values.repoURL }}'
+        path: 'overlays/{{ .values.overlay }}'
+{% endraw %}
+{% endif %}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+{% endfor %}

@@ -5,7 +5,7 @@ alertmanager:
     ingresssClassName: traefik
 
     annotations: 
-{{ monitoring_ingress.annotations | to_nice_yaml(width=1337) | indent(6,true) }}
+{{ ingress_tls.prod.annotations | to_nice_yaml(width=1337) | indent(6,true) }}
 
     hosts:
       - {{ monitoring_ingress.host }}
@@ -40,7 +40,7 @@ grafana:
     ingresssClassName: traefik
 
     annotations: 
-{{ monitoring_ingress.annotations | to_nice_yaml(width=1337) | indent(6,true) }}
+{{ ingress_tls.prod.annotations | to_nice_yaml(width=1337) | indent(6,true) }}
 
     hosts:
       - {{ monitoring_ingress.host }}
@@ -72,7 +72,7 @@ prometheus:
     ingresssClassName: traefik
 
     annotations: 
-{{ monitoring_ingress.annotations | to_nice_yaml(width=1337) | indent(6,true) }}
+{{ ingress_tls.prod.annotations | to_nice_yaml(width=1337) | indent(6,true) }}
 
     hosts:
       - {{ monitoring_ingress.host }}

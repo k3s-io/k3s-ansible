@@ -187,6 +187,24 @@
     - (groups[k3s_cluster.server_group] | length) > 1
     - inventory_hostname != groups[k3s_cluster.server_group][0]
   block:
+    - name: Get the token from the first server
+      ansible.builtin.set_fact:
+        token: "{{ k3s_cluster.token }}"
+
+    - name: Delete any existing token from the environment if different from the new one
+      ansible.builtin.lineinfile:
+        state: absent
+        path: "{{ k3s_cluster.systemd_dir }}/k3s.service.env"
+        regexp: "^K3S_TOKEN=\\s*(?!{{ token }}\\s*$)"
+
+    - name: Add the token for joining the cluster to the environment
+      no_log: true # avoid logging the server token
+      ansible.builtin.lineinfile:
+        path: "{{ k3s_cluster.systemd_dir }}/k3s.service.env"
+        line: "{{ item }}"
+      with_items:
+        - "K3S_TOKEN={{ token }}"
+
     - name: Copy K3s service file [HA]
       when: not k3s_cluster.use_external_database
       ansible.builtin.template:
@@ -249,17 +267,17 @@
 
     - name: Create directory .kube
       ansible.builtin.file:
-        path: ~{{ ansible_user }}/.kube
+        path: ~/.kube
         state: directory
-        owner: "{{ ansible_user }}"
+        # owner: "{{ ansible_user }}"
         mode: "u=rwx,g=rx,o="
 
     - name: Copy config file to user home directory
       ansible.builtin.copy:
         src: /etc/rancher/k3s/k3s.yaml
-        dest: ~{{ ansible_user }}/.kube/config
+        dest: ~/.kube/config
         remote_src: true
-        owner: "{{ ansible_user }}"
+        # owner: "{{ ansible_user }}"
         mode: "u=rw,g=,o="
 
     - name: Configure default KUBECONFIG for user
