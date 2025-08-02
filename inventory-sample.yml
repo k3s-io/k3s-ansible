@@ -143,6 +143,8 @@ bootstrap:
     # longhorn_enabled: true # false if we want to disable Longhorn installation.
     # longhorn_enabled_only_agent: false # true if we want to enable Longhorn only in agents.
     # longhorn_replica_count: 2 # num of replicas that Longhorn will use. More replicas, more space required
+    # longhorn_storage_minimal_available_percentage: 25 # Minimal available percentage of storage that Longhorn will use. Default is 25%.
+    # longhorn_storage_reserved_percentage_for_default_disk: 30 # Minimal available percentage of storage that Longhorn will use. Default is 30%.
     # longhorn_data_dir: /var/lib/longhorn/ # Default path for storing data on a host.
 
     # nfs_external_provisioner_enabled: true # false if we want to disable NFS External Provisioner installation.

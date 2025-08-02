@@ -274,6 +274,8 @@ longhorn_helm_values:
         effect: NoSchedule
   defaultSettings:
     defaultDataPath: "{{ longhorn_data_dir }}"
+    storageMinimalAvailablePercentage: "{{ longhorn_storage_minimal_available_percentage | default(25) }}"
+    storageReservedPercentageForDefaultDisk: "{{ longhorn_storage_reserved_percentage_for_default_disk | default(30) }}"
   persistence:
     defaultClassReplicaCount: "{{ longhorn_replica_count }}"
     defaultNodeSelector:
