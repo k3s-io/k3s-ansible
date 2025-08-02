@@ -1,5 +1,0 @@
----
-# Environment config
-universe:
-  domain: k8s-frambozen.nl
-  environment: dev

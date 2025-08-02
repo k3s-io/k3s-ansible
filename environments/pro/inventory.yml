@@ -10,10 +10,7 @@ k3s_cluster:
       hosts:
         192.168.185.168:
   
-helm:
+    helm:
   hosts:
     localhost:
-    
-all:
-  vars:
     

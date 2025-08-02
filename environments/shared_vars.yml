@@ -1,7 +1,4 @@
 ---
-#ansible_port: 22
-ansible_user: ubuntu
-
 ## devops labels
 platform_daily_support_devops_labels:
   team: "devops_tools_team"
@@ -31,10 +28,10 @@ oidc_provider_well_known_config_url: "{{ oidc_provider_url }}/{{ lookup('communi
 vault_options:
   engine_mount_point: 'k8s-provisioning'
   url: 'https://vault.k8s-frambozen.nl'
-  auth_method: token
+  auth_method: "token"
 
 docker_repo_configs:
-  - name: ralphsmeets
+  - name: "ralphsmeets"
     password: "{{ lookup('community.hashi_vault.vault_kv2_get', 'docker/ralphsmeets', **vault_options )['secret']['password'] }}"
     user: "{{ lookup('community.hashi_vault.vault_kv2_get', 'docker/ralphsmeets', **vault_options )['secret']['user'] }}"
     dockerconfigjson: "{{ lookup('community.hashi_vault.vault_kv2_get', 'docker/ralphsmeets', **vault_options )['secret']['configjson'] | b64encode }}"
@@ -42,15 +39,15 @@ docker_repo_configs:
 ingress_tls:
   prod:
     annotations:
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
       traefik.ingress.kubernetes.io/router.tls: "true"
       kubernetes.io/ingress.class: "traefik"
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    tls_secretname_postfix: -tls-prod-cert
+    tls_secretname_postfix: "-tls-prod-cert"
   staging:
     annotations:
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
       traefik.ingress.kubernetes.io/router.tls: "true"
       kubernetes.io/ingress.class: "traefik"
       cert-manager.io/cluster-issuer: "letsencrypt-staging"
-    tls_secretname_postfix: tls-staging-cert
+    tls_secretname_postfix: "tls-staging-cert"
