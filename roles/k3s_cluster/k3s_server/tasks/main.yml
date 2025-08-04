@@ -131,7 +131,8 @@
       changed_when: false
 
     # Copy the k3s config to a second file to detect changes.
-    # If no changes are found, we can skip copying the kubeconfig to the control node.
+    # If no changes are found, we can skip copying the 
+     to the control node.
     - name: Copy k3s.yaml to second file
       ansible.builtin.copy:
         src: /etc/rancher/k3s/k3s.yaml
