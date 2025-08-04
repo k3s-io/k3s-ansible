@@ -73,7 +73,7 @@
   kubernetes.core.helm:
     update_repo_cache: true
     name: argocd
-    kubeconfig: "~/.kube/config.pro.new"
+    kubeconfig: "{{ kubeconfig }}"
     release_namespace: "{{ argocd_namespace }}"
     create_namespace: true
     chart_ref: "{{ argocd_helm_chart }}"

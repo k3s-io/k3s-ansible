@@ -6,3 +6,5 @@ universe:
 
 
 ansible_user: "unbuntu"
+
+kubeconfig: "~/.kube/k3s-pro-config.yaml"

@@ -4,3 +4,5 @@ universe:
   environment: "dev"
 
 ansible_user: "root"
+
+kubeconfig: "~/.kube/k3s-dev-config.yaml"

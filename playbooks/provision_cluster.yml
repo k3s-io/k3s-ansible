@@ -10,4 +10,4 @@
     - role: nfs_client
     - role: monitoring
   environment:
-    KUBECONFIG: "~/.kube/config.pro.new"
+    KUBECONFIG: "{{ kubeconfig }}"

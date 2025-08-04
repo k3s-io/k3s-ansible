@@ -16,7 +16,7 @@
   kubernetes.core.helm:
     update_repo_cache: true
     name: nfs-client
-    kubeconfig: "~/.kube/config.pro.new"
+    kubeconfig: "{{ kubeconfig }}"
     release_namespace: "{{ nfs_client_namespace }}"
     create_namespace: true
     chart_ref: "{{ nfs_client_helm_chart }}"

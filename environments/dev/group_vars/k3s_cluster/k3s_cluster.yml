@@ -11,7 +11,7 @@ k3s_cluster:
   extra_agent_args: ""
   server_location: "/var/lib/rancher/k3s"
   systemd_dir: "/etc/systemd/system"
-  kubeconfig: "~/.kube/config.pro.new"
+  kubeconfig: "{{ kubeconfig }}"
   user_kubectl: true
   cluster_context: k3s-ansible
   server_group: server

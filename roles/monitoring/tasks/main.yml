@@ -11,7 +11,7 @@
   kubernetes.core.helm:
     update_repo_cache: true
     name: monitoring
-    kubeconfig: "~/.kube/config.pro.new"
+    kubeconfig: "{{ kubeconfig }}"
     release_namespace: "{{ monitoring_namespace }}"
     create_namespace: true
     chart_repo_url: "{{ monitoring_helm.chart_repo_url }}"

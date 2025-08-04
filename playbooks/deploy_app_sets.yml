@@ -8,4 +8,4 @@
   roles:
     - role: argocd
   environment:
-    KUBECONFIG: "~/.kube/config.pro.new"
+    KUBECONFIG: "{{ kubeconfig }}"
