@@ -1,2 +1,1 @@
 ---
-k3s_cluster.systemd_dir: /etc/systemd/system

@@ -1,22 +1,18 @@
 ---
 # Define all the specific k3s variables
 k3s_cluster:
-  version: "v1.26.9+k3s1"
+  version: v1.30.2+k3s1
+  token: "0/GbTTn3tz6PZtwD2NAHwCo0bzzv81OON/pkLJBIy+uLCe0oVqCnR7hWD0L012533y7g+2X06A4MycDiFctZoQ=="  
   api_endpoint: "{{ hostvars[groups['server'][0]]['ansible_host'] | default(groups['server'][0]) }}"
-  token: "my_token"  # Use ansible vault if you want to keep it secret
+  api_port: 6443
+  use_external_database: False
+  #extra_server_args: '--datastore-endpoint mysql://k3s-pro:Ia!UeE15))LcA1q.@tcp(192.168.1.72:3306)/k3s-pro'
   extra_server_args: ""
   extra_agent_args: ""
-
-# Optional vars
-# k3s_cluster.api_port: 6443
-# k3s_cluster.server_location: /var/lib/rancher/k3s
-# k3s_cluster.systemd_dir: /etc/systemd/system
-# extra_service_envs: [ 'ENV_VAR1=VALUE1', 'ENV_VAR2=VALUE2' ]
-# Manifests or Airgap should be either full paths or relative to the playbook directory.
-# List of locally available manifests to apply to the cluster, useful for PVCs or Traefik modifications.
-# extra_manifests: [ '/path/to/manifest1.yaml', '/path/to/manifest2.yaml' ]
-# airgap_dir: /tmp/k3s-airgap-images
-# config_yaml:  |
-# # This is now an inner yaml file. Maintain the indentation.
-# # YAML here will be placed as the content of /etc/rancher/k3s/config.yaml
-# # See https://docs.k3s.io/installation/configuration#configuration-file
+  server_location: "/var/lib/rancher/k3s"
+  systemd_dir: "/etc/systemd/system"
+  kubeconfig: "~/.kube/config.pro.new"
+  user_kubectl: true
+  cluster_context: k3s-ansible
+  server_group: server
+  agent_group: agent

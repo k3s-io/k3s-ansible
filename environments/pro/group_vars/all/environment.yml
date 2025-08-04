@@ -5,5 +5,4 @@ universe:
   environment: "pro"
 
 
-ansible_user:
-  "unbuntu"
+ansible_user: "unbuntu"

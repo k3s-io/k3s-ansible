@@ -9,8 +9,3 @@ k3s_cluster:
     agent:
       hosts:
         192.168.185.164:
-  
-    helm:
-  hosts:
-    localhost:
-    
