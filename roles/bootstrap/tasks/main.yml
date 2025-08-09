@@ -141,6 +141,13 @@
 
 - name: longhorn
   block:
+    - name: Longhorn - Tag create-default-disk in agent nodes
+      ansible.builtin.shell: |
+        kubectl annotate node {{ item }} 'node.longhorn.io/default-disks-config=[{"path":"{{hostvars[item].longhorn_data_dir | default(longhorn_data_dir)}}", "allowScheduling":true}]' --overwrite
+        sleep 5
+        kubectl label node {{ item }} 'node.longhorn.io/create-default-disk=config' --overwrite
+      when: "hostvars[item].k3s_agent_longhorn_enabled"
+      with_items: "{{ groups['agent'] }}"
     - name: Longhorn - Install chart
       kubernetes.core.helm:
         name: longhorn
@@ -151,15 +158,6 @@
         release_namespace: kube-system
         values: "{{ longhorn_helm_values }}"
         context: "{{ k3s_context_name }}"
-    # - name: Longhorn - Tag server nodes
-    #   ansible.builtin.shell: |
-    #     kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["SERVER_NODE"]}]' -n kube-system
-    #   retries: 10
-    #   delay: 30
-    #   register: result
-    #   until: result.rc == 0
-    #   when: "hostvars[item].k3s_agent_longhorn_enabled"
-    #   with_items: "{{ groups['server'] }}"
     - name: Longhorn - Tag agent nodes
       ansible.builtin.shell: |
         kubectl patch node.longhorn.io {{ item }} --type=json -p='[{"op": "replace", "path": "/spec/tags", "value":["AGENT_NODE"]}]' -n kube-system
@@ -167,16 +165,6 @@
       delay: 30
       register: result
       until: result.rc == 0
-      when: "hostvars[item].k3s_agent_longhorn_enabled"
-      with_items: "{{ groups['agent'] }}"
-    # - name: Longhorn - Tag create-default-disk in server nodes
-    #   ansible.builtin.shell: |
-    #     kubectl label node {{ item }} 'node.longhorn.io/create-default-disk=true'
-    #   when: "not longhorn_enabled_only_agent and hostvars[item].k3s_server_longhorn_enabled"
-    #   with_items: "{{ groups['server'] }}"
-    - name: Longhorn - Tag create-default-disk in agent nodes
-      ansible.builtin.shell: |
-        kubectl label node {{ item }} 'node.longhorn.io/create-default-disk=true'
       when: "hostvars[item].k3s_agent_longhorn_enabled"
       with_items: "{{ groups['agent'] }}"
     - name: Longhorn - Install Snapshot Controller chart
