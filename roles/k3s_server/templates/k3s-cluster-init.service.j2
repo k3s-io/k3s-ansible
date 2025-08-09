@@ -14,6 +14,7 @@ EnvironmentFile=-/etc/sysconfig/%N
 EnvironmentFile=-/etc/systemd/system/k3s.service.env
 KillMode=process
 Delegate=yes
+User=root
 # Having non-zero Limit*s causes performance problems due to accounting overhead
 # in the kernel. We recommend using cgroups to do container-local accounting.
 LimitNOFILE=1048576
@@ -23,6 +24,7 @@ TasksMax=infinity
 TimeoutStartSec=0
 Restart=always
 RestartSec=5s
+ExecStartPre=/bin/sh -xc '! /usr/bin/systemctl is-enabled --quiet nm-cloud-setup.service 2>/dev/null'
 ExecStartPre=-/sbin/modprobe br_netfilter
 ExecStartPre=-/sbin/modprobe overlay
 ExecStart={{ bin_dir }}/k3s server --cluster-init --data-dir {{ k3s_location }} --token '{{ token }}' \

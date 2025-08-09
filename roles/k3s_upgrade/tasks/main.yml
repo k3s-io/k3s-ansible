@@ -14,6 +14,7 @@
     INSTALL_K3S_BIN_DIR: "{{ bin_dir }}"
     INSTALL_K3S_SKIP_ENABLE: "{{ 'false' if is_android else 'true' }}"
     INSTALL_K3S_SKIP_START: "true"
+    INSTALL_K3S_EXEC: "{{ 'server' if 'server' in group_names else 'agent' }}"
   changed_when: true
 
 - name: Restore K3s service

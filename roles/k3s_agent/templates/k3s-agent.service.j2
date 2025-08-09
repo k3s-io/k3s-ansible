@@ -11,9 +11,10 @@ WantedBy=multi-user.target
 Type=notify
 EnvironmentFile=-/etc/default/%N
 EnvironmentFile=-/etc/sysconfig/%N
-EnvironmentFile=-/etc/systemd/system/k3s.service.env
+EnvironmentFile=-/etc/systemd/system/k3s-agent.service.env
 KillMode=process
 Delegate=yes
+User=root
 # Having non-zero Limit*s causes performance problems due to accounting overhead
 # in the kernel. We recommend using cgroups to do container-local accounting.
 LimitNOFILE=1048576
