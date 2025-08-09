@@ -1,8 +1,8 @@
 ---
 base_packages:
-  - cpufrequtils
   - curl
   - daemontools
+  - linux-cpupower
   - net-tools
   - nfs-common
   - open-iscsi

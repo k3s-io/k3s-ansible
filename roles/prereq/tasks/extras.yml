@@ -150,17 +150,6 @@
         nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
   when: k3s_gpu_nvidia_enabled
 
-# - name: Configure NTP service
-#   block:
-#     - name: Enable and check NTP service
-#       ansible.builtin.systemd:
-#         name: ntpd
-#         daemon_reload: true
-#         state: started
-#         enabled: true
-#   when: ansible_os_family == 'Debian'
-#   ignore_errors: true
-
 - name: Ensure Volumes
   block:
     - ansible.builtin.template:

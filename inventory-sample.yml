@@ -57,7 +57,6 @@ k3s_cluster:
     extra_agent_args: ""
 
     extra_packages: # Install extra packages
-      - ntp
       - vim
 
     ###############################
