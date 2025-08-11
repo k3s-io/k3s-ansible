@@ -1,26 +1,49 @@
-helm_chart_repository:
-  argo: https://argoproj.github.io/argo-helm
-  dex: https://charts.dexidp.io
-  emberstack: https://emberstack.github.io/helm-charts
-  external-dns: https://kubernetes-sigs.github.io/external-dns/
-  ingress-nginx: https://kubernetes.github.io/ingress-nginx
-  jetstack: https://charts.jetstack.io
-  longhorn: https://charts.longhorn.io
-  nfs-subdir-external-provisioner: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
-  nvidia-k8s-device-plugin: https://nvidia.github.io/k8s-device-plugin
-  oauth2-proxy: https://oauth2-proxy.github.io/manifests
-  piraeus-charts: https://piraeus.io/helm-charts/
-  stakater: https://stakater.github.io/stakater-charts
 helm_chart_version:
-  argo/argo-cd: 8.2.5
-  dex/dex: 0.23.0
-  emberstack/reflector: 9.1.22
-  external-dns/external-dns: 1.18.0
-  ingress-nginx/ingress-nginx: 4.11.2
-  jetstack/cert-manager: v1.18.2
-  longhorn/longhorn: 1.9.1
-  nfs-subdir-external-provisioner/nfs-subdir-external-provisioner: 4.0.18
-  nvidia-k8s-device-plugin/nvidia-device-plugin: 0.17.3
-  oauth2-proxy/oauth2-proxy: 7.16.0
-  piraeus-charts/snapshot-controller: 4.1.0
-  stakater/reloader: 2.2.0
+  argo-cd:
+    ref: argo/argo-cd
+    repository: https://argoproj.github.io/argo-helm
+    version: 8.2.5
+  dex:
+    ref: dex/dex
+    repository: https://charts.dexidp.io
+    version: 0.23.0
+  reflector:
+    ref: emberstack/reflector
+    repository: https://emberstack.github.io/helm-charts
+    version: 9.1.22
+  external-dns:
+    ref: external-dns/external-dns
+    repository: https://kubernetes-sigs.github.io/external-dns
+    version: 1.18.0
+  ingress-nginx:
+    ref: ingress-nginx/ingress-nginx
+    repository: https://kubernetes.github.io/ingress-nginx
+    version: 4.11.2
+  cert-manager:
+    ref: jetstack/cert-manager
+    repository: https://charts.jetstack.io
+    version: v1.18.2
+  longhorn:
+    ref: longhorn/longhorn
+    repository: https://charts.longhorn.io
+    version: 1.9.1
+  nfs-subdir-external-provisioner:
+    ref: nfs-subdir-external-provisioner/nfs-subdir-external-provisioner
+    repository: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
+    version: 4.0.18
+  nvidia-device-plugin:
+    ref: nvidia-k8s-device-plugin/nvidia-device-plugin
+    repository: https://nvidia.github.io/k8s-device-plugin
+    version: 0.17.3
+  oauth2-proxy:
+    ref: oauth2-proxy/oauth2-proxy
+    repository: https://oauth2-proxy.github.io/manifests
+    version: 7.16.0
+  snapshot-controller:
+    ref: piraeus-charts/snapshot-controller
+    repository: https://piraeus.io/helm-charts
+    version: 4.1.0
+  reloader:
+    ref: stakater/reloader
+    repository: https://stakater.github.io/stakater-charts
+    version: 2.2.0

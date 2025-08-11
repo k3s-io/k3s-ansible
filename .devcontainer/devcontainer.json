@@ -2,18 +2,17 @@
 	"name": "Python3.12",
 	"image": "mcr.microsoft.com/devcontainers/python:1-3.12-bullseye",
 	"features": {
-		"ghcr.io/devcontainers-contrib/features/poetry:2": {
-			"version": "1.8.2"
-		}
+		"ghcr.io/va-h/devcontainers-features/uv:1": {}
 	},
-	"postCreateCommand": "poetry install && echo 'source .venv/bin/activate' >> $HOME/.bashrc",
+	"postCreateCommand": "uv sync --locked",
 	"customizations": {
 		"vscode": {
 			"extensions": [
 				"donjayamanne.python-extension-pack",
 				"redhat.vscode-yaml",
 				"github.vscode-github-actions",
-				"eamodio.gitlens"
+				"eamodio.gitlens",
+				"charliermarsh.ruff"
 			]
 		}
 	}

@@ -20,10 +20,10 @@
 - name: Install Helm charts
   tags: always
   kubernetes.core.helm_repository:
-    name: "{{ item.key }}"
-    repo_url: "{{ item.value }}"
+    name: "{{ item.value.chart_ref.split('/')[0] }}"
+    repo_url: "{{ item.value.repository }}"
     force_update: true
-  with_items: "{{ helm_chart_repository | dict2items }}"
+  with_items: "{{ helm_chart_version | dict2items }}"
 
 - name: cert-manager
   block:
@@ -31,7 +31,7 @@
       kubernetes.core.helm:
         name: cert-manager
         chart_ref: jetstack/cert-manager
-        chart_version: "{{ helm_chart_version['jetstack/cert-manager'] }}"
+        chart_version: "{{ helm_chart_version['cert-manager']['version'] }}"
         create_namespace: true
         force: "{{ helm_force_update }}"
         release_namespace: security
@@ -60,7 +60,7 @@
       kubernetes.core.helm:
         name: external-dns
         chart_ref: external-dns/external-dns
-        chart_version: "{{ helm_chart_version['external-dns/external-dns'] }}"
+        chart_version: "{{ helm_chart_version['external-dns']['version'] }}"
         create_namespace: true
         force: "{{ helm_force_update }}"
         release_namespace: kube-system
@@ -74,7 +74,7 @@
       kubernetes.core.helm:
         name: kubernetes-reflector
         chart_ref: emberstack/reflector
-        chart_version: "{{ helm_chart_version['emberstack/reflector'] }}"
+        chart_version: "{{ helm_chart_version['reflector']['version'] }}"
         create_namespace: true
         force: "{{ helm_force_update }}"
         release_namespace: kube-system
@@ -89,7 +89,7 @@
       kubernetes.core.helm:
         name: kubernetes-reloader
         chart_ref: stakater/reloader
-        chart_version: "{{ helm_chart_version['stakater/reloader'] }}"
+        chart_version: "{{ helm_chart_version['reloader']['version'] }}"
         create_namespace: true
         force: "{{ helm_force_update }}"
         release_namespace: kube-system
@@ -102,7 +102,7 @@
       kubernetes.core.helm:
         name: ingress-nginx
         chart_ref: ingress-nginx/ingress-nginx
-        chart_version: "{{ helm_chart_version['ingress-nginx/ingress-nginx'] }}"
+        chart_version: "{{ helm_chart_version['ingress-nginx']['version'] }}"
         create_namespace: true
         force: "{{ helm_force_update }}"
         release_namespace: kube-system
@@ -120,7 +120,7 @@
           kubernetes.core.helm:
             name: dex
             chart_ref: dex/dex
-            chart_version: "{{ helm_chart_version['dex/dex'] }}"
+            chart_version: "{{ helm_chart_version['dex']['version'] }}"
             create_namespace: true
             force: "{{ helm_force_update }}"
             release_namespace: security
@@ -130,7 +130,7 @@
           kubernetes.core.helm:
             name: oauth2-proxy
             chart_ref: oauth2-proxy/oauth2-proxy
-            chart_version: "{{ helm_chart_version['oauth2-proxy/oauth2-proxy'] }}"
+            chart_version: "{{ helm_chart_version['oauth2-proxy']['version'] }}"
             create_namespace: true
             force: "{{ helm_force_update }}"
             release_namespace: security
@@ -152,7 +152,7 @@
       kubernetes.core.helm:
         name: longhorn
         chart_ref: longhorn/longhorn
-        chart_version: "{{ helm_chart_version['longhorn/longhorn'] }}"
+        chart_version: "{{ helm_chart_version['longhorn']['version'] }}"
         create_namespace: true
         force: "{{ helm_force_update }}"
         release_namespace: kube-system
@@ -171,7 +171,7 @@
       kubernetes.core.helm:
         name: snapshot-controller
         chart_ref: piraeus-charts/snapshot-controller
-        chart_version: "{{ helm_chart_version['piraeus-charts/snapshot-controller'] }}"
+        chart_version: "{{ helm_chart_version['snapshot-controller']['version'] }}"
         create_namespace: true
         force: "{{ helm_force_update }}"
         release_namespace: kube-system
@@ -186,7 +186,7 @@
       kubernetes.core.helm:
         name: nfs-subdir-external-provisioner
         chart_ref: nfs-subdir-external-provisioner/nfs-subdir-external-provisioner
-        chart_version: "{{ helm_chart_version['nfs-subdir-external-provisioner/nfs-subdir-external-provisioner'] }}"
+        chart_version: "{{ helm_chart_version['nfs-subdir-external-provisioner']['version'] }}"
         create_namespace: true
         force: "{{ helm_force_update }}"
         release_namespace: kube-system
@@ -201,7 +201,7 @@
       kubernetes.core.helm:
         name: argo-cd
         chart_ref: argo/argo-cd
-        chart_version: "{{ helm_chart_version['argo/argo-cd'] }}"
+        chart_version: "{{ helm_chart_version['argo-cd']['version'] }}"
         create_namespace: true
         force: "{{ helm_force_update }}"
         release_namespace: automation
@@ -225,7 +225,7 @@
       kubernetes.core.helm:
         name: nvidia-device-plugin
         chart_ref: nvidia-k8s-device-plugin/nvidia-device-plugin
-        chart_version: "{{ helm_chart_version['nvidia-k8s-device-plugin/nvidia-device-plugin'] }}"
+        chart_version: "{{ helm_chart_version['nvidia-device-plugin']['version'] }}"
         create_namespace: true
         force: "{{ helm_force_update }}"
         release_namespace: kube-system

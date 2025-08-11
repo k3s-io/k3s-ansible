@@ -1,0 +1,65 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    ":semanticCommits"
+  ],
+  "automerge": false,
+  "prCreation": "immediate",
+  "automergeStrategy": "squash",
+  "forkProcessing": "enabled",
+  "ignorePaths": [
+    "**/.devcontainer/**",
+    "**/.github/**",
+    "**/Dockerfile"
+  ],
+  "packageRules": [
+    {
+      "matchDatasources": [
+        "pypi"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "lockFileMaintenance": {
+        "enabled": true
+      },
+      "groupName": "all non-major Python dependencies ({{ lookup (split (lowercase releaseTimestamp) 't') 0 }})",
+      "groupSlug": "all-minor-patch-python"
+    },
+    {
+      "matchDatasources": [
+        "helm"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch"
+      ],
+      "lockFileMaintenance": {
+        "enabled": true
+      },
+      "groupName": "all non-major Helm dependencies ({{ lookup (split (lowercase releaseTimestamp) 't') 0 }})",
+      "groupSlug": "all-minor-patch-helm"
+    },
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "jsonata",
+      "fileFormat": "yaml",
+      "managerFilePatterns": [
+        "/(^|/)roles/bootstrap/defaults/_version.yaml$/"
+      ],
+      "matchStrings": [
+        "$each(helm_chart_version, function($v, $k) {{'depName': $k, 'packageName': $k , 'currentValue': $v.version, 'registryUrl': $v.repository}})"
+      ],
+      "datasourceTemplate": "helm"
+    }
+  ]
+}

@@ -1,20 +1,17 @@
-[tool.poetry]
+[project]
 name = "datahub-local-bootstrap"
 version = "0.1.0"
 description = "Bootstrap a Kubernetes cluster via Ansible for deploying DataHub.local"
-authors = ["Alvaro Santos Andres <alvsanand@gmail.com>"]
-license = "Apache"
+authors = [{ name = "Alvaro Santos Andres", email = "alvsanand@gmail.com" }]
+requires-python = "<4.0,>=3.12"
 readme = "README.md"
+dependencies = [
+    "ansible==11.0.0",
+    "kubernetes==33.1.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-ansible = "^9.1.0"
-kubernetes = "^29.0.0"
-
-[tool.poetry.group.dev.dependencies]
-yamllint = "^1.33.0"
-ansible-lint = { version = "^6.22.1", markers = "platform_system != 'Windows'" }
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[dependency-groups]
+dev = [
+    "yamllint==1.37.1",
+    "ansible-lint==25.7.0",
+]
