@@ -3,6 +3,7 @@
   "extends": [
     ":semanticCommits"
   ],
+  "schedule": ["* * * * 0"],
   "automerge": false,
   "prCreation": "immediate",
   "automergeStrategy": "squash",
