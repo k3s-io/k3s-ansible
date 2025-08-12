@@ -81,22 +81,17 @@
         mode: "0755"
         state: directory
 
-    - name: Gather image archives
-      find:
-        paths: "{{ airgap_dir }}"
-        patterns: "*.tar*"
-      register: found_images
-      delegate_to: localhost
-      become: false
-
-    - name: Distribute image archives
+    - name: Distribute Airgap images {{ k3s_arch }}
       ansible.builtin.copy:
-        src: "{{ item.path }}"
-        dest: "/var/lib/rancher/k3s/agent/images/"
+        src: "{{ item }}"
+        dest: /var/lib/rancher/k3s/agent/images/{{ item | basename }}
         owner: root
         group: root
         mode: "0755"
-      loop: "{{ found_images.files }}"
+      with_fileglob:
+        - "{{ airgap_dir }}/*.tar.gz"
+        - "{{ airgap_dir }}/*.tar.zst"
+        - "{{ airgap_dir }}/*.tar"
 
     - name: Run K3s Install [server]
       when: inventory_hostname in groups['server'] or ansible_host in groups['server']
