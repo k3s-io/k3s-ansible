@@ -9,7 +9,7 @@
   when: ansible_distribution in ['Ubuntu']
   ansible.builtin.apt:
     name: policycoreutils  # Used by install script to restore SELinux context
-    update_cache: true
+    update_cache: "{{ airgap_dir is not defined }}"
 
 - name: Enable IPv4 forwarding
   ansible.posix.sysctl:
