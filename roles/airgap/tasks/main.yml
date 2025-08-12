@@ -81,21 +81,17 @@
         mode: "0755"
         state: directory
 
-    - name: Distribute K3s images {{ k3s_arch }}
+    - name: Distribute Airgap images {{ k3s_arch }}
       ansible.builtin.copy:
         src: "{{ item }}"
         dest: /var/lib/rancher/k3s/agent/images/{{ item | basename }}
         owner: root
         group: root
         mode: "0755"
-      with_first_found:
-        - files:
-            - "{{ airgap_dir }}/k3s-airgap-images-{{ k3s_arch }}.tar.zst"
-            - "{{ airgap_dir }}/k3s-airgap-images-{{ k3s_arch }}.tar.gz"
-            - "{{ airgap_dir }}/k3s-airgap-images-{{ k3s_arch }}.tar"
-          # with_first_found always runs, even inside the when block
-          # so we need to skip it if the file is not found
-          skip: true
+      with_fileglob:
+        - "{{ airgap_dir }}/*.tar.gz"
+        - "{{ airgap_dir }}/*.tar.zst"
+        - "{{ airgap_dir }}/*.tar"
 
     - name: Run K3s Install [server]
       when: inventory_hostname in groups['server'] or ansible_host in groups['server']
