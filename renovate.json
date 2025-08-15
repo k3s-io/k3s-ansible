@@ -11,26 +11,13 @@
   "ignorePaths": [
     "**/.devcontainer/**",
     "**/.github/**",
-    "**/Dockerfile"
+    "**/Dockerfile",
+    "**/releases/**"
   ],
   "packageRules": [
     {
       "matchDatasources": [
-        "pypi"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
-      "lockFileMaintenance": {
-        "enabled": true
-      },
-      "groupName": "all non-major Python dependencies ({{ lookup (split (lowercase releaseTimestamp) 't') 0 }})",
-      "groupSlug": "all-minor-patch-python"
-    },
-    {
-      "matchDatasources": [
-        "helm"
+        "helm","docker"
       ],
       "matchUpdateTypes": [
         "major",
@@ -40,8 +27,8 @@
       "lockFileMaintenance": {
         "enabled": true
       },
-      "groupName": "all non-major Helm dependencies ({{ lookup (split (lowercase releaseTimestamp) 't') 0 }})",
-      "groupSlug": "all-minor-patch-helm"
+      "groupName": "all non-major Helm/Docker dependencies ({{ lookup (split (lowercase releaseTimestamp) 't') 0 }})",
+      "groupSlug": "chore/all-minor-patch-helm-{{ lookup (split (lowercase releaseTimestamp) 't') 0 }}"
     },
     {
       "matchUpdateTypes": [
@@ -58,9 +45,19 @@
         "/(^|/)roles/bootstrap/defaults/_version.yaml$/"
       ],
       "matchStrings": [
-        "$each(helm_chart_version, function($v, $k) {{'depName': $k, 'packageName': $k , 'currentValue': $v.version, 'registryUrl': $v.repository}})"
+        "$each(helm_chart_version, function($v, $k) {{'depName':$k, 'packageName': ($contains($v.repository, 'oci://'))?($replace($v.repository, 'oci://', '') & '/' & $k):$k, 'datasource': ($contains($v.repository, 'oci://'))?'docker':'helm', 'currentValue': $v.version, 'registryUrl': ($contains($v.repository, 'oci://'))?'':$v.repository}})"
+      ]
+    },
+    {
+      "customType": "jsonata",
+      "fileFormat": "yaml",
+      "managerFilePatterns": [
+        "/(^|/)roles/bootstrap/defaults/_version.yaml$/"
       ],
-      "datasourceTemplate": "helm"
+      "matchStrings": [
+        "$each(container_image_version, function($v, $k) {{'packageName': $k , 'currentValue': $v.version}})"
+      ],
+      "datasourceTemplate": "docker"
     }
   ]
 }
