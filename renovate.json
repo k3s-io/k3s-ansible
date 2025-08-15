@@ -32,7 +32,7 @@
     },
     {
       "matchDatasources": [
-        "python"
+        "pypi"
       ],
       "matchUpdateTypes": [
         "major",
@@ -42,9 +42,15 @@
       "lockFileMaintenance": {
         "enabled": true
       },
-      "groupName": "all non-major Python dependencies ({{ lookup (split (lowercase currentVersionTimestamp ) 't') 0 }})",
+      "groupName": "all non-major Python dependencies ({{ lookup (split (lowercase releaseTimestamp) 't') 0 }})",
       "groupSlug": "all-minor-patch-python"
     },
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
+    }
     {
       "matchUpdateTypes": [
         "major"
