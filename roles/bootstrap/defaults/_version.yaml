@@ -2,7 +2,7 @@ helm_chart_version:
   argo-cd:
     ref: argo/argo-cd
     repository: https://argoproj.github.io/argo-helm
-    version: 8.2.7
+    version: 8.3.0
   dex:
     ref: dex/dex
     repository: https://charts.dexidp.io
@@ -18,7 +18,7 @@ helm_chart_version:
   ingress-nginx:
     ref: ingress-nginx/ingress-nginx
     repository: https://kubernetes.github.io/ingress-nginx
-    version: 4.13.0
+    version: 4.13.1
   cert-manager:
     ref: jetstack/cert-manager
     repository: https://charts.jetstack.io
@@ -38,7 +38,7 @@ helm_chart_version:
   oauth2-proxy:
     ref: oauth2-proxy/oauth2-proxy
     repository: https://oauth2-proxy.github.io/manifests
-    version: 7.17.1
+    version: 7.18.0
   snapshot-controller:
     ref: piraeus-charts/snapshot-controller
     repository: https://piraeus.io/helm-charts
