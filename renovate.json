@@ -27,8 +27,8 @@
       "lockFileMaintenance": {
         "enabled": true
       },
-      "groupName": "all non-major Helm/Docker dependencies ({{ lookup (split (lowercase releaseTimestamp) 't') 0 }})",
-      "groupSlug": "chore/all-minor-patch-helm-{{ lookup (split (lowercase releaseTimestamp) 't') 0 }}"
+      "groupName": "all non-major Helm/Docker dependencies ({{ lookup (split (lowercase currentVersionTimestamp ) 't') 0 }})",
+      "groupSlug": "chore/all-minor-patch-helm"
     },
     {
       "matchUpdateTypes": [
