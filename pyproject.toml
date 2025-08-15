@@ -6,12 +6,12 @@ authors = [{ name = "Alvaro Santos Andres", email = "alvsanand@gmail.com" }]
 requires-python = "<4.0,>=3.12"
 readme = "README.md"
 dependencies = [
-    "ansible==11.8.0",
+    "ansible==11.9.0",
     "kubernetes==33.1.0",
 ]
 
 [dependency-groups]
 dev = [
     "yamllint==1.37.1",
-    "ansible-lint==25.7.0",
+    "ansible-lint==25.8.1",
 ]
