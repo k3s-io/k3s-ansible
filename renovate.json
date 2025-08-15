@@ -60,19 +60,9 @@
         "/(^|/)roles/bootstrap/defaults/_version.yaml$/"
       ],
       "matchStrings": [
-        "$each(helm_chart_version, function($v, $k) {{'depName':$k, 'packageName': ($contains($v.repository, 'oci://'))?($replace($v.repository, 'oci://', '') & '/' & $k):$k, 'datasource': ($contains($v.repository, 'oci://'))?'docker':'helm', 'currentValue': $v.version, 'registryUrl': ($contains($v.repository, 'oci://'))?'':$v.repository}})"
+        "$each(helm_chart_version, function($v, $k) {{'depName':$k, 'packageName': ($contains($v.repository, 'oci://'))?($replace($v.repository, 'oci://', '') & '/' & $k):$k, 'datasource': ($contains($v.repository, 'oci://'))?'docker':'helm', 'currentValue': $v.version, 'registryUrl': ($contains($v.repository, 'oci://'))?'':$v.repository}})",
+        "$each(container_image_version, function($v, $k) {{'packageName': $k , 'datasource': 'docker', 'currentValue': $v}})"
       ]
-    },
-    {
-      "customType": "jsonata",
-      "fileFormat": "yaml",
-      "managerFilePatterns": [
-        "/(^|/)roles/bootstrap/defaults/_version.yaml$/"
-      ],
-      "matchStrings": [
-        "$each(container_image_version, function($v, $k) {{'packageName': $k , 'currentValue': $v.version}})"
-      ],
-      "datasourceTemplate": "docker"
     }
   ]
 }
