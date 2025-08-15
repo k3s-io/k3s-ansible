@@ -31,6 +31,21 @@
       "groupSlug": "chore/all-minor-patch-helm"
     },
     {
+      "matchDatasources": [
+        "python"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch"
+      ],
+      "lockFileMaintenance": {
+        "enabled": true
+      },
+      "groupName": "all non-major Python dependencies ({{ lookup (split (lowercase currentVersionTimestamp ) 't') 0 }})",
+      "groupSlug": "all-minor-patch-python"
+    },
+    {
       "matchUpdateTypes": [
         "major"
       ],
