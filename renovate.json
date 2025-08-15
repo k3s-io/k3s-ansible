@@ -51,12 +51,6 @@
       ],
       "enabled": false
     }
-    {
-      "matchUpdateTypes": [
-        "major"
-      ],
-      "enabled": false
-    }
   ],
   "customManagers": [
     {
