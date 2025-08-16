@@ -18,6 +18,6 @@
     # Fixes issues in newer Ubuntu where VXLan isn't setup right.
     # See: https://github.com/k3s-io/k3s/issues/4234
     name: linux-modules-extra-raspi
-    update_cache: true
+    update_cache: "{{ airgap_dir is not defined }}"
     state: present
   when: "ansible_distribution_version is version('20.10', '>=') and ansible_distribution_version is version('24.04', '<')"
