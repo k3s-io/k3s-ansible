@@ -28,6 +28,98 @@ All managed nodes in inventory must have:
 
 It is also recommended that all managed nodes disable firewalls and swap. See [K3s Requirements](https://docs.k3s.io/installation/requirements) for more information.
 
+### Disabling Swap (Required for k3s)
+
+Kubernetes requires swap to be disabled for proper memory management and performance. **You must disable swap on all nodes before running k3s.**
+
+**For Raspberry Pi nodes, use this method:**
+
+```bash
+# Run these commands on each Pi node:
+sudo dphys-swapfile swapoff              # Turn off swap
+sudo dphys-swapfile uninstall            # Remove swap file
+sudo systemctl disable dphys-swapfile    # Disable service permanently
+```
+
+**Verify swap is disabled:**
+
+```bash
+# Should show Swap: 0B (or all zeros)
+free -h
+
+# Alternative check (should show nothing):
+swapon --show
+```
+
+**Why disable swap?**
+- Kubernetes needs predictable memory behavior for proper pod scheduling
+- Swap causes performance issues, especially on SD cards
+- Prevents accurate memory usage tracking and resource limits
+
+## (RECOMMENDED SETUP) Setting up Passwordless SSH Access
+
+Before using this playbook, you must configure passwordless SSH access from your control machine to all nodes in your cluster.
+
+### Step 1: Generate SSH Key Pair (if you don't have one)
+
+On your control machine (where you'll run Ansible):
+
+```bash
+# Generate SSH key pair
+ssh-keygen -t rsa -b 4096 -C "your-email@example.com"
+
+# Press Enter to accept default location (~/.ssh/id_rsa)
+# Optionally set a passphrase or leave empty for passwordless access
+```
+
+### Step 2: Copy SSH Key to Each Node
+
+For each node in your cluster, copy your public SSH key:
+
+```bash
+# Replace with your actual node IP addresses and username
+ssh-copy-id username@192.168.1.147    # First node
+ssh-copy-id username@192.168.1.171    # Second node  
+ssh-copy-id username@192.168.1.177    # Third node
+```
+
+### Step 3: Clean Up Old Host Keys (if needed - OPTIONAL)
+
+If you get "WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!" errors, remove old host keys:
+
+```bash
+# Remove old host keys for each Pi (if they exist)
+ssh-keygen -R 192.168.1.147
+ssh-keygen -R 192.168.1.171  
+ssh-keygen -R 192.168.1.177
+
+# Then connect manually to accept new host keys
+ssh username@192.168.1.147    # Type 'yes' when prompted
+ssh username@192.168.1.171    # Type 'yes' when prompted  
+ssh username@192.168.1.177    # Type 'yes' when prompted
+```
+
+### Step 4: Test Passwordless Access
+
+Verify you can SSH to each node without entering a password:
+
+```bash
+ssh username@192.168.1.147    # Should connect without password prompt
+ssh username@192.168.1.171
+ssh username@192.168.1.177
+```
+
+### Step 5: Configure Sudo Access (Important!)
+
+Each node must allow your user to run sudo commands without a password. On each node, run:
+
+```bash
+sudo visudo
+
+# Add this line (replace 'username' with your actual username):
+gorlitzer ALL=(ALL) NOPASSWD:ALL
+```
+
 ## Installation
 
 ### With ansible-galaxy
@@ -49,6 +141,8 @@ $ cd k3s-ansible
 
 ## Usage
 
+**Important**: Before proceeding, ensure you have completed the [Setting up Passwordless SSH Access](#setting-up-passwordless-ssh-access) section above.
+
 First copy the sample inventory to `inventory.yml`.
 
 ```bash
@@ -69,7 +163,6 @@ k3s_cluster:
         192.16.35.12:
         192.16.35.13:
 ```
-
 If needed, you can also edit `vars` section at the bottom to match your environment (the `ansible_user` probably needs to be changed).
 
 If multiple hosts are in the server group the playbook will automatically setup k3s in HA mode with embedded etcd.
