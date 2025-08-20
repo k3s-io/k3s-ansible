@@ -11,6 +11,12 @@
     name: policycoreutils  # Used by install script to restore SELinux context
     update_cache: "{{ airgap_dir is not defined }}"
 
+- name: Install Dependent RHEL 10 Package
+  when: ansible_distribution in ['RedHat'] and ansible_distribution_major_version == "10"
+  ansible.builtin.dnf:
+    name: kernel-modules-extra   # Load br_netfilter module
+    update_cache: "{{ airgap_dir is not defined }}"
+
 - name: Enable IPv4 forwarding
   ansible.posix.sysctl:
     name: net.ipv4.ip_forward
