@@ -27,12 +27,18 @@
         mode: "0755"
 
     - name: Download K3s binary
-      ansible.builtin.command:
+      # For some reason, ansible-lint thinks using enviroment with command is an error
+      # even though its valid https://ansible.readthedocs.io/projects/lint/rules/inline-env-var/#correct-code
+      ansible.builtin.command: # noqa inline-env-var
         cmd: /usr/local/bin/k3s-install.sh
-      environment:
-        INSTALL_K3S_SKIP_START: "true"
-        INSTALL_K3S_VERSION: "{{ k3s_version }}"
-        INSTALL_K3S_EXEC: "agent"
+      # Ensures that extra_install_envs are combined with required env vars
+      environment: >-
+        {{ extra_install_envs | combine({
+          "INSTALL_K3S_SKIP_START": "true",
+          "INSTALL_K3S_SYSTEMD_DIR": systemd_dir,
+          "INSTALL_K3S_VERSION": k3s_version,
+          "INSTALL_K3S_EXEC": "agent"
+        }) }}
       changed_when: true
 
 - name: Setup optional config file
