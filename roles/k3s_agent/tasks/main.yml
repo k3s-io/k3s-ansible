@@ -41,28 +41,6 @@
         }) }}
       changed_when: true
 
-- name: Compute final agent arguments
-  ansible.builtin.set_fact:
-    _api_endpoint_in_agent_config: >-
-      {% if agent_config_yaml is defined and api_endpoint is defined and agent_config_yaml | regex_search('tls-san:.*' + api_endpoint | regex_escape(), ignorecase=True) %}
-      true
-      {% else %}
-      false
-      {% endif %}
-    _api_endpoint_in_agent_args: >-
-      {% if api_endpoint is defined and extra_agent_args | regex_search('--tls-san[=\s]+' + api_endpoint | regex_escape(), ignorecase=True) %}
-      true
-      {% else %}
-      false
-      {% endif %}
-
-- name: Add TLS SAN to agent arguments if needed
-  ansible.builtin.set_fact:
-    opt_tls_san: >-
-      {% if api_endpoint is defined and api_endpoint != ansible_hostname and _api_endpoint_in_agent_config | bool == false and _api_endpoint_in_agent_args | bool == false %}
-      --tls-san={{ api_endpoint }}
-      {% endif %}
-
 - name: Setup optional config file
   when: agent_config_yaml is defined
   block:
@@ -103,16 +81,18 @@
   with_items:
     - "K3S_TOKEN={{ token }}"
 
-- name: Copy K3s service file
+- name: Modify ExecStart in k3s-agent.service to include API endpoint and extra args
   register: k3s_agent_service
-  ansible.builtin.template:
-    src: "k3s-agent.service.j2"
-    dest: "{{ systemd_dir }}/k3s-agent.service"
-    owner: root
-    group: root
-    mode: "u=rw,g=r,o=r"
+  ansible.builtin.replace:
+    path: "{{ systemd_dir }}/k3s-agent.service"
+    regexp: '^ExecStart=\/usr\/local\/bin\/k3s \\\n\s*agent.*'
+    replace: |
+      ExecStart=/usr/local/bin/k3s \
+          agent \
+          --server https://{{ api_endpoint }}:{{ api_port }} \
+          {{ extra_agent_args }}
 
-- name: Enable and check K3s service
+- name: Enable and check K3s agent service
   ansible.builtin.systemd:
     name: k3s-agent
     daemon_reload: "{{ true if k3s_agent_service.changed else false }}"
