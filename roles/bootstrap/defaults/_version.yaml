@@ -6,11 +6,11 @@ helm_chart_version:
   dex:
     ref: dex/dex
     repository: https://charts.dexidp.io
-    version: 0.23.0
+    version: 0.23.1
   reflector:
     ref: emberstack/reflector
     repository: https://emberstack.github.io/helm-charts
-    version: 9.1.25
+    version: 9.1.27
   external-dns:
     ref: external-dns/external-dns
     repository: https://kubernetes-sigs.github.io/external-dns
