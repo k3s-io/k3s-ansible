@@ -9,6 +9,3 @@ server_group: server  # noqa var-naming[no-role-prefix]
 agent_group: agent  # noqa var-naming[no-role-prefix]
 use_external_database: false # noqa var-naming[no-role-prefix]
 extra_server_args: "" # noqa var-naming[no-role-prefix]
-# Auto-computed TLS SANs to prevent certificate validation issues
-_computed_tls_sans: "{% if api_endpoint is defined and api_endpoint != ansible_hostname %}--tls-san={{ api_endpoint }}{% endif %}"
-_final_server_args: "{{ extra_server_args }} {{ _computed_tls_sans }}"

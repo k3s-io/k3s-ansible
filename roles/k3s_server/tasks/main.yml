@@ -41,6 +41,29 @@
     regexp: '\.\s+<\(k3s completion bash\)'
     line: ". <(k3s completion bash)  # Added by k3s-ansible"
 
+- name: Compute final server arguments
+  ansible.builtin.set_fact:
+    _api_endpoint_in_config: >-
+      {% if server_config_yaml is defined and api_endpoint is defined and server_config_yaml | regex_search('tls-san:.*' + api_endpoint | regex_escape(), ignorecase=True) %}
+      true
+      {% else %}
+      false
+      {% endif %}
+    _api_endpoint_in_args: >-
+      {% if api_endpoint is defined and extra_server_args | regex_search('--tls-san[=\s]+' + api_endpoint | regex_escape(), ignorecase=True) %}
+      true
+      {% else %}
+      false
+      {% endif %}
+
+- name: Add TLS SAN to server arguments if needed
+  ansible.builtin.set_fact:
+    final_server_args: >-
+      {{ extra_server_args }}
+      {% if api_endpoint is defined and api_endpoint != ansible_hostname and _api_endpoint_in_config | bool == false and _api_endpoint_in_args | bool == false %}
+      --tls-san={{ api_endpoint }}
+      {% endif %}
+
 - name: Setup optional config file
   when: server_config_yaml is defined
   block:
