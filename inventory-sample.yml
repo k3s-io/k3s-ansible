@@ -26,6 +26,7 @@ k3s_cluster:
     # Optional vars
     # extra_server_args: ""
     # extra_agent_args: ""
+    # extra_install_envs: { 'INSTALL_K3S_SKIP_SELINUX_RPM': 'true' }
     # cluster_context: k3s-ansible
     # api_port: 6443
     # k3s_server_location: /var/lib/rancher/k3s
