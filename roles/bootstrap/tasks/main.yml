@@ -17,10 +17,10 @@
   ansible.builtin.include_vars:
     file: defaults/_version.yaml
 
-- name: Install Helm charts
+- name: Install Helm repositories
   tags: always
   kubernetes.core.helm_repository:
-    name: "{{ item.value.chart_ref.split('/')[0] }}"
+    name: "{{ item.value.ref.split('/')[0] }}"
     repo_url: "{{ item.value.repository }}"
     force_update: true
   with_items: "{{ helm_chart_version | dict2items }}"
