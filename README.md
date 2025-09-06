@@ -38,6 +38,17 @@ It is also recommended that all managed nodes disable firewalls and swap. See [K
 $ ansible-galaxy collection install git+https://github.com/k3s-io/k3s-ansible.git
 ```
 
+Alternatively, add it to the [`requirement.yaml` file of your Ansible project](https://docs.ansible.com/ansible/latest/collections_guide/collections_installing.html#install-multiple-collections-with-a-requirements-file) as follows:
+
+```yaml
+collections:
+  - name: https://github.com/k3s-io/k3s-ansible.git
+    type: git
+    version: <comit-ish>
+```
+
+As a comit-ish, you can use a branch, a version tag, or a specific commit.
+
 ### From source
 
 Alternatively to an installation with `ansible-galaxy`, the `k3s-ansible` repository can simply be cloned from github:
