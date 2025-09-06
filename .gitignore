@@ -4,3 +4,5 @@ venv
 .vagrant
 inventory.yml
 playbook/debug.yml
+.ansible/
+PR_DESCRIPTION.md
