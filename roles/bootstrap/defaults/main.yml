@@ -28,6 +28,7 @@ ingress_nginx_helm_config:
     watchIngressWithoutClass: true
 
     allowSnippetAnnotations: true
+    annotations-risk-level: Critical
     config:
       use-forwarded-headers: "true"
       proxy-body-size: 0
