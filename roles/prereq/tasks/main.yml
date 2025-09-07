@@ -120,7 +120,9 @@
             groups[server_group] | default([])
             + groups[agent_group] | default([])
           )
-          | map('extract', hostvars, ['ansible_default_ipv4', 'address'])
+          | map('extract', hostvars)
+          | selectattr('ansible_default_ipv4', 'defined')
+          | map(attribute='ansible_default_ipv4.address')
           | flatten | unique | list
         }}
 
