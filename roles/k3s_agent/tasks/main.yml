@@ -81,16 +81,18 @@
   with_items:
     - "K3S_TOKEN={{ token }}"
 
-- name: Copy K3s service file
+- name: Modify ExecStart in k3s-agent.service to include API endpoint and extra args
   register: k3s_agent_service
-  ansible.builtin.template:
-    src: "k3s-agent.service.j2"
-    dest: "{{ systemd_dir }}/k3s-agent.service"
-    owner: root
-    group: root
-    mode: "u=rw,g=r,o=r"
+  ansible.builtin.replace:
+    path: "{{ systemd_dir }}/k3s-agent.service"
+    regexp: '^ExecStart=\/usr\/local\/bin\/k3s \\\n\s*agent.*'
+    replace: |
+      ExecStart=/usr/local/bin/k3s \
+          agent \
+          --server https://{{ api_endpoint }}:{{ api_port }} \
+          {{ extra_agent_args }}
 
-- name: Enable and check K3s service
+- name: Enable and check K3s agent service
   ansible.builtin.systemd:
     name: k3s-agent
     daemon_reload: "{{ true if k3s_agent_service.changed else false }}"
