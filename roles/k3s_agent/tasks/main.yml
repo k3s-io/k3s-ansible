@@ -41,6 +41,28 @@
         }) }}
       changed_when: true
 
+- name: Compute final agent arguments
+  ansible.builtin.set_fact:
+    _api_endpoint_in_agent_config: >-
+      {% if agent_config_yaml is defined and api_endpoint is defined and agent_config_yaml | regex_search('tls-san:.*' + api_endpoint | regex_escape(), ignorecase=True) %}
+      true
+      {% else %}
+      false
+      {% endif %}
+    _api_endpoint_in_agent_args: >-
+      {% if api_endpoint is defined and extra_agent_args | regex_search('--tls-san[=\s]+' + api_endpoint | regex_escape(), ignorecase=True) %}
+      true
+      {% else %}
+      false
+      {% endif %}
+
+- name: Add TLS SAN to agent arguments if needed
+  ansible.builtin.set_fact:
+    opt_tls_san: >-
+      {% if api_endpoint is defined and api_endpoint != ansible_hostname and _api_endpoint_in_agent_config | bool == false and _api_endpoint_in_agent_args | bool == false %}
+      --tls-san={{ api_endpoint }}
+      {% endif %}
+
 - name: Setup optional config file
   when: agent_config_yaml is defined
   block:
