@@ -58,8 +58,7 @@
 
 - name: Add TLS SAN to agent arguments if needed
   ansible.builtin.set_fact:
-    final_agent_args: >-
-      {{ extra_agent_args }}
+    opt_tls_san: >-
       {% if api_endpoint is defined and api_endpoint != ansible_hostname and _api_endpoint_in_agent_config | bool == false and _api_endpoint_in_agent_args | bool == false %}
       --tls-san={{ api_endpoint }}
       {% endif %}
