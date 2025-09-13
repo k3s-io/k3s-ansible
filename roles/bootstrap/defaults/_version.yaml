@@ -2,7 +2,7 @@ helm_chart_version:
   argo-cd:
     ref: argo/argo-cd
     repository: https://argoproj.github.io/argo-helm
-    version: 8.3.5
+    version: 8.3.7
   dex:
     ref: dex/dex
     repository: https://charts.dexidp.io
@@ -10,11 +10,11 @@ helm_chart_version:
   reflector:
     ref: emberstack/reflector
     repository: https://emberstack.github.io/helm-charts
-    version: 9.1.30
+    version: 9.1.31
   external-dns:
     ref: external-dns/external-dns
     repository: https://kubernetes-sigs.github.io/external-dns
-    version: 1.18.0
+    version: 1.19.0
   ingress-nginx:
     ref: ingress-nginx/ingress-nginx
     repository: https://kubernetes.github.io/ingress-nginx
@@ -34,7 +34,7 @@ helm_chart_version:
   nvidia-device-plugin:
     ref: nvidia-k8s-device-plugin/nvidia-device-plugin
     repository: https://nvidia.github.io/k8s-device-plugin
-    version: 0.17.3
+    version: 0.17.4
   oauth2-proxy:
     ref: oauth2-proxy/oauth2-proxy
     repository: https://oauth2-proxy.github.io/manifests
