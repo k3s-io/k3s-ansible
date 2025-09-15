@@ -1,21 +1,21 @@
 ---
 - name: Get k3s installed version
   ansible.builtin.command: k3s --version
-  register: k3s_version_output
+  register: k3s_agent_version_output
   changed_when: false
   ignore_errors: true
 
 - name: Set k3s installed version
-  when: not ansible_check_mode and k3s_version_output.rc == 0
+  when: not ansible_check_mode and k3s_agent_version_output.rc == 0
   ansible.builtin.set_fact:
-    installed_k3s_version: "{{ k3s_version_output.stdout_lines[0].split(' ')[2] }}"
+    k3s_agent_installed_version: "{{ k3s_agent_version_output.stdout_lines[0].split(' ')[2] }}"
 
 # If airgapped, all K3s artifacts are already on the node.
 # We should be downloading and installing the newer version only if we are in one of the following cases :
 #   - we couldn't get k3s installed version in the first task of this role
 #   - the installed version of K3s on the nodes is older than the requested version in ansible vars
 - name: Download artifact only if needed
-  when: not ansible_check_mode and airgap_dir is undefined and ( k3s_version_output.rc != 0 or installed_k3s_version is version(k3s_version, '<') )
+  when: not ansible_check_mode and airgap_dir is undefined and ( k3s_agent_version_output.rc != 0 or k3s_agent_installed_version is version(k3s_version, '<') )
   block:
     - name: Download K3s install script
       ansible.builtin.get_url:
@@ -50,6 +50,7 @@
         mode: "0755"
         state: directory
     - name: Copy config values
+      # noqa var-naming[no-role-prefix]
       ansible.builtin.copy:
         content: "{{ agent_config_yaml }}"
         dest: "/etc/rancher/k3s/config.yaml"
@@ -57,6 +58,7 @@
       register: _agent_config_result
 
 - name: Get the token from the first server
+  # noqa var-naming[no-role-prefix]
   ansible.builtin.set_fact:
     token: "{{ hostvars[groups[server_group][0]].token }}"
 
