@@ -3,21 +3,22 @@
 # local control-plane instead of the remote host. Shell supports wildcards.
 - name: Get k3s installed version
   ansible.builtin.command: k3s --version
-  register: k3s_version_output
+  register: k3s_upgrade_version_output
   changed_when: false
   check_mode: false
 
 - name: Set k3s installed version
   ansible.builtin.set_fact:
-    installed_k3s_version: "{{ k3s_version_output.stdout_lines[0].split(' ')[2] }}"
+    k3s_upgrade_current_version: "{{ k3s_upgrade_version_output.stdout_lines[0].split(' ')[2] }}"
   check_mode: false
 
 # We should be downloading and installing the newer version only if we are in the following case :
 #   - the installed version of K3s on the nodes is older than the requested version in ansible vars
 - name: Update node only if needed
-  when: installed_k3s_version is version(k3s_version, '<')
+  when: k3s_upgrade_current_version is version(k3s_version, '<')
   block:
     - name: Find K3s service files
+      # noqa var-naming[no-role-prefix]
       ansible.builtin.find:
         paths: "{{ systemd_dir }}"
         patterns: "k3s*.service"

@@ -44,11 +44,11 @@
       ansible.builtin.command:
         cmd: ufw status
       changed_when: false
-      register: ufw_status
+      register: prereq_ufw_status
 
     - name: If ufw enabled, open api port
       when:
-        - "'Status: active' in ufw_status['stdout']"
+        - "'Status: active' in prereq_ufw_status['stdout']"
       community.general.ufw:
         rule: allow
         port: "{{ api_port }}"
@@ -56,7 +56,7 @@
 
     - name: If ufw enabled, open etcd ports
       when:
-        - "'Status: active' in ufw_status['stdout']"
+        - "'Status: active' in prereq_ufw_status['stdout']"
         - groups[server_group] | length > 1
       community.general.ufw:
         rule: allow
@@ -65,7 +65,7 @@
 
     - name: If ufw enabled, allow default CIDRs
       when:
-        - "'Status: active' in ufw_status['stdout']"
+        - "'Status: active' in prereq_ufw_status['stdout']"
       community.general.ufw:
         rule: allow
         src: '{{ item }}'
@@ -162,19 +162,19 @@
 - name: Check for Apparmor existence
   ansible.builtin.stat:
     path: /sys/module/apparmor/parameters/enabled
-  register: apparmor_enabled
+  register: prereq_apparmor_enabled
 
 - name: Check if Apparmor is enabled
-  when: apparmor_enabled.stat.exists
+  when: prereq_apparmor_enabled.stat.exists
   ansible.builtin.command: cat /sys/module/apparmor/parameters/enabled
-  register: apparmor_status
+  register: prereq_apparmor_status
   changed_when: false
 
 - name: Install Apparmor Parser [Suse]
   when:
     - ansible_os_family == 'Suse'
-    - apparmor_status is defined
-    - apparmor_status.stdout == "Y"
+    - prereq_apparmor_status is defined
+    - prereq_apparmor_status.stdout == "Y"
   ansible.builtin.package:
     name: apparmor-parser
     state: present
@@ -183,8 +183,8 @@
   when:
     - ansible_distribution == 'Debian'
     - ansible_facts['distribution_major_version'] == "11"
-    - apparmor_status is defined
-    - apparmor_status.stdout == "Y"
+    - prereq_apparmor_status is defined
+    - prereq_apparmor_status.stdout == "Y"
   ansible.builtin.package:
     name: apparmor
     state: present
