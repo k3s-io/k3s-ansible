@@ -20,6 +20,9 @@ RUN apt-get update && apt-get install -y \
     netcat-openbsd \
     # Sudo for privilege escalation
     sudo \
+    python3-pip \
+    python3-virtualenv \
+    python-is-python3 \
     # Clean up
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -48,9 +51,28 @@ RUN chown -R ansible:ansible /home/ansible/.ssh \
 RUN mkdir -p /etc/sudoers.d \
     && echo 'ansible ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ansible
 
+RUN cat <<EOF >/etc/systemd/system/nologin-handler.service
+[Unit]
+Description=Prevent nologin file creation
+After=local-fs.target
+Before=systemd-user-sessions.service
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c 'while true; do rm -f /var/run/nologin; sleep 1; done'
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 # Configure systemd for container use
 RUN systemctl enable ssh \
-    && systemctl enable docker
+    && systemctl enable docker \
+    && systemctl enable nologin-handler.service
 
 # Expose SSH port
 EXPOSE 22
+
+CMD ["/lib/systemd/systemd"]

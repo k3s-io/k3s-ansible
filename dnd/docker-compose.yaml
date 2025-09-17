@@ -1,6 +1,8 @@
 services:
   server-0:
-    image: k3s-test-node:v5
+    image: k3s-test-node
+    build:
+      context: .
     hostname: server-0
     privileged: true
     cgroup: host
@@ -22,54 +24,10 @@ services:
       retries: 3
       start_period: 30s
 
-  server-1:
-    image: k3s-test-node:v5
-    hostname: server-1
-    privileged: true
-    cgroup: host
-    ports:
-      - "2221:22"
-    networks:
-      k3s-net:
-        ipv4_address: 10.10.10.101
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:rw
-    tmpfs:
-      - /tmp
-      - /run
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "22"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-
-  server-2:
-    image: k3s-test-node:v5
-    hostname: server-2
-    privileged: true
-    cgroup: host
-    ports:
-      - "2222:22"
-    networks:
-      k3s-net:
-        ipv4_address: 10.10.10.102
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:rw
-    tmpfs:
-      - /tmp
-      - /run
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "22"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-
   agent-0:
-    image: k3s-test-node:v5
+    image: k3s-test-node
+    build:
+      context: .
     hostname: agent-0
     privileged: true
     cgroup: host
@@ -92,7 +50,9 @@ services:
       start_period: 30s
 
   agent-1:
-    image: k3s-test-node:v5
+    image: k3s-test-node
+    build:
+      context: .
     hostname: agent-1
     privileged: true
     cgroup: host
