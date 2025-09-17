@@ -4,22 +4,19 @@ k3s_cluster:
     server:
       hosts:
         server-0:
-          ansible_host: localhost
-          ansible_port: 2220
     agent:
       hosts:
         agent-0:
-          ansible_host: localhost
-          ansible_port: 2223
         agent-1:
-          ansible_host: localhost
-          ansible_port: 2224
 
   # Required Vars
   vars:
     ansible_user: ansible
-    ansible_ssh_private_key_file: /Users/andrew.tippey/Development/k3s-ansible-test-env/dnd/keys/k3s # Make absolute path
+    ansible_ssh_private_key_file: /project/dnd/keys/k3s # Make absolute path
     ansible_ssh_common_args: '-o StrictHostKeychecking=no'
+    extra_server_args: "--snapshotter=native"
+    extra_agent_args: "--snapshotter=native"
+
     k3s_version: v1.31.12+k3s1
     # The token should be a random string of reasonable length. You can generate
     # one with the following commands:

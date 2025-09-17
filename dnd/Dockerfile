@@ -3,6 +3,8 @@ FROM jrei/systemd-ubuntu:noble
 
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \

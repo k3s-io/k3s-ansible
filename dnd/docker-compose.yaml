@@ -1,4 +1,29 @@
 services:
+  ansible:
+    image: k3s-test-node
+    build:
+      context: .
+    hostname: ansible-control
+    privileged: true
+    cgroup: host
+    ports:
+      - "2221:22"
+    networks:
+      k3s-net:
+        ipv4_address: 10.10.10.101
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - ./../:/project
+    tmpfs:
+      - /tmp
+      - /run
+    entrypoint: ['/project/dnd/ansible_install.sh']
+    depends_on:
+    - server-0
+    - agent-0
+    - agent-1
+    restart: "no"
+  
   server-0:
     image: k3s-test-node
     build:

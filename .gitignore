@@ -6,3 +6,4 @@ inventory.yml
 playbook/debug.yml
 .ansible/
 PR_DESCRIPTION.md
+.DS_Store
