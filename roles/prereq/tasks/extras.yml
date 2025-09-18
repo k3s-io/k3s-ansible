@@ -178,5 +178,6 @@
     - ansible.builtin.cron:
         name: "k3s-prune-images"
         hour: "0"
+        minute: "0"
         job: "{{ bin_dir }}/k3s crictl rmi --prune | multilog t s1048576 n5 '!tai64nlocal' /var/log/k3s-prune-images/ 2>&1"
 # - fail:
