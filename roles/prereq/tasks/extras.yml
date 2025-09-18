@@ -167,4 +167,16 @@
         minute: "*/5"
         job: "{{ bin_dir }}/ensure-volumes | multilog t s1048576 n5 '!tai64nlocal' /var/log/ensure-volumes/ 2>&1"
   when: "extra_volumes"
+
+- name: Prune Images
+  become: true
+  block:
+    - ansible.builtin.file:
+        path: "/var/log/k3s-prune-images/"
+        mode: 0755
+        state: directory
+    - ansible.builtin.cron:
+        name: "k3s-prune-images"
+        hour: "0"
+        job: "{{ bin_dir }}/k3s crictl rmi --prune | multilog t s1048576 n5 '!tai64nlocal' /var/log/k3s-prune-images/ 2>&1"
 # - fail:
