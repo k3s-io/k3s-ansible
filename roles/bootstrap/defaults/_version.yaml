@@ -2,7 +2,7 @@ helm_chart_version:
   argo-cd:
     ref: argo/argo-cd
     repository: https://argoproj.github.io/argo-helm
-    version: 8.3.7
+    version: 8.5.2
   dex:
     ref: dex/dex
     repository: https://charts.dexidp.io
@@ -46,4 +46,4 @@ helm_chart_version:
   reloader:
     ref: stakater/reloader
     repository: https://stakater.github.io/stakater-charts
-    version: 2.2.2
+    version: 2.2.3
