@@ -2,7 +2,7 @@ helm_chart_version:
   argo-cd:
     ref: argo/argo-cd
     repository: https://argoproj.github.io/argo-helm
-    version: 8.5.2
+    version: 8.5.3
   dex:
     ref: dex/dex
     repository: https://charts.dexidp.io
