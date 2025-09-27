@@ -67,8 +67,8 @@
   when:
     - api_endpoint is defined
     - api_endpoint != ansible_hostname
-    - not _api_endpoint_in_config | bool
-    - not _api_endpoint_in_args | bool
+    - not (_api_endpoint_in_config | trim | bool)
+    - not (_api_endpoint_in_args | trim | bool)
   ansible.builtin.set_fact:
     opt_tls_san: "--tls-san={{ api_endpoint }}"
 
