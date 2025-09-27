@@ -38,7 +38,7 @@
       ansible.builtin.set_fact:
         airgap_k3s_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'arm' if ansible_architecture == 'armv7l' else 'amd64' }}"
 
-    - name: Distribute K3s binary {{ airgap_k3s_arch }}
+    - name: Distribute K3s binary
       ansible.builtin.copy:
         src: "{{ item }}"
         dest: /usr/local/bin/k3s
@@ -81,7 +81,7 @@
         mode: "0755"
         state: directory
 
-    - name: Distribute Airgap images {{ k3s_arch }}
+    - name: Distribute Airgap images
       ansible.builtin.copy:
         src: "{{ item }}"
         dest: /var/lib/rancher/k3s/agent/images/{{ item | basename }}
