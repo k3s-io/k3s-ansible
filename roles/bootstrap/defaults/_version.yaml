@@ -2,7 +2,7 @@ helm_chart_version:
   argo-cd:
     ref: argo/argo-cd
     repository: https://argoproj.github.io/argo-helm
-    version: 8.5.3
+    version: 8.5.6
   dex:
     ref: dex/dex
     repository: https://charts.dexidp.io
@@ -10,7 +10,7 @@ helm_chart_version:
   reflector:
     ref: emberstack/reflector
     repository: https://emberstack.github.io/helm-charts
-    version: 9.1.31
+    version: 9.1.32
   external-dns:
     ref: external-dns/external-dns
     repository: https://kubernetes-sigs.github.io/external-dns
@@ -26,7 +26,7 @@ helm_chart_version:
   longhorn:
     ref: longhorn/longhorn
     repository: https://charts.longhorn.io
-    version: 1.9.1
+    version: 1.10.0
   nfs-subdir-external-provisioner:
     ref: nfs-subdir-external-provisioner/nfs-subdir-external-provisioner
     repository: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
