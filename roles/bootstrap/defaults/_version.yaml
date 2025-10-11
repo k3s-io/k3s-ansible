@@ -2,7 +2,7 @@ helm_chart_version:
   argo-cd:
     ref: argo/argo-cd
     repository: https://argoproj.github.io/argo-helm
-    version: 8.5.8
+    version: 8.6.0
   dex:
     ref: dex/dex
     repository: https://charts.dexidp.io
@@ -22,7 +22,7 @@ helm_chart_version:
   cert-manager:
     ref: jetstack/cert-manager
     repository: https://charts.jetstack.io
-    version: v1.18.2
+    version: v1.19.0
   longhorn:
     ref: longhorn/longhorn
     repository: https://charts.longhorn.io
