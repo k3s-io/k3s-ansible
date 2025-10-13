@@ -273,6 +273,7 @@
       ansible.builtin.lineinfile:
         path: "{{ systemd_dir }}/k3s.service.env"
         line: "{{ item }}"
+        create: true
       with_items:
         - "K3S_TOKEN={{ token }}"
 
