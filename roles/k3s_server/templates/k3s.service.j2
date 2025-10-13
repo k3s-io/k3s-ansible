@@ -26,6 +26,6 @@ RestartSec=5s
 ExecStartPre=-/sbin/modprobe br_netfilter
 ExecStartPre=-/sbin/modprobe overlay
 ExecStart=/usr/local/bin/k3s server --data-dir {{ k3s_server_location }} {% if cluster_init == true %}--cluster-init {% endif %} \
-    {% if join == true %}--server https://{{ api_endpoint }}:{{ api_port }} {% endif %} \
-    {{ opt_tls_san }} \
-    {{ extra_server_args }} 
+    {% if join == true %}--server https://{{ api_endpoint }}:{{ api_port }}{% endif %}{% if opt_tls_san is defined %} \
+    {{ opt_tls_san }}{% endif %}{% if extra_server_args is defined %} \
+    {{ extra_server_args }}{% endif %} 
