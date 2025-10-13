@@ -36,7 +36,7 @@
         {{ extra_install_envs | combine({
           "INSTALL_K3S_SKIP_START": "true",
           "INSTALL_K3S_SYSTEMD_DIR": systemd_dir,
-          "INSTALL_K3S_VERSION": k3s_version,
+          "INSTALL_K3S_VERSION": k3s_version | default(omit),
           "INSTALL_K3S_EXEC": "agent"
         }) }}
       changed_when: true
