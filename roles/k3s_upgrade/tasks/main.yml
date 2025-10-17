@@ -27,6 +27,7 @@
   ansible.builtin.systemd:
     state: restarted
     daemon_reload: true
+    enabled: true
     name: k3s
   when: "'server' in group_names and not is_android"
 
@@ -34,6 +35,7 @@
   ansible.builtin.systemd:
     state: restarted
     daemon_reload: true
+    enabled: true
     name: k3s-agent
   when: "'agent' in group_names and not is_android"
 
