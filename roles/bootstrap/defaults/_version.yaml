@@ -2,7 +2,7 @@ helm_chart_version:
   argo-cd:
     ref: argo/argo-cd
     repository: https://argoproj.github.io/argo-helm
-    version: 8.6.0
+    version: 8.6.4
   dex:
     ref: dex/dex
     repository: https://charts.dexidp.io
@@ -10,7 +10,7 @@ helm_chart_version:
   reflector:
     ref: emberstack/reflector
     repository: https://emberstack.github.io/helm-charts
-    version: 9.1.34
+    version: 9.1.35
   external-dns:
     ref: external-dns/external-dns
     repository: https://kubernetes-sigs.github.io/external-dns
@@ -22,7 +22,7 @@ helm_chart_version:
   cert-manager:
     ref: jetstack/cert-manager
     repository: https://charts.jetstack.io
-    version: v1.19.0
+    version: v1.19.1
   longhorn:
     ref: longhorn/longhorn
     repository: https://charts.longhorn.io
@@ -42,7 +42,7 @@ helm_chart_version:
   snapshot-controller:
     ref: piraeus-charts/snapshot-controller
     repository: https://piraeus.io/helm-charts
-    version: 4.1.0
+    version: 4.1.1
   reloader:
     ref: stakater/reloader
     repository: https://stakater.github.io/stakater-charts
