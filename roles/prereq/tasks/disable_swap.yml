@@ -1,0 +1,26 @@
+---
+
+- name: Check if swap is enabled
+  ansible.builtin.command: swapon --show=NAME --noheadings
+  register: swap_devices
+  changed_when: false
+  failed_when: false
+
+- name: Disable swap if any is active
+  ansible.builtin.command: swapoff -a
+  when: swap_devices.stdout | length > 0
+  changed_when: "'swapoff' in swap_devices.stdout or swap_devices.stdout | length > 0"
+
+- name: Remove any swap entry (UUID, device, or file) from /etc/fstab
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp: '^\s*(UUID=[^\s]+|/dev/[^\s]+|/swap\S*)\s+none\s+swap\s+sw\s+.*$'
+    replace: ''
+  register: remove_swap_fstab
+  notify: Reload systemd daemon if needed
+
+- name: Remove empty lines from /etc/fstab (cleanup)
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: '^$'
+    state: absent

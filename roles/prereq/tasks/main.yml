@@ -260,3 +260,6 @@
         content: "{{ registries_config_yaml }}"
         dest: "/etc/rancher/k3s/registries.yaml"
         mode: "0644"
+
+- name: Disable Swap
+  ansible.builtin.include_tasks: disable_swap.yml
