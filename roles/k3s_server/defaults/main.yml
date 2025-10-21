@@ -1,12 +1,18 @@
 ---
 k3s_server_location: "/var/lib/rancher/k3s"
-systemd_dir: "/etc/systemd/system"  # noqa var-naming[no-role-prefix]
-api_port: 6443  # noqa var-naming[no-role-prefix]
-kubeconfig: ~/.kube/config.new  # noqa var-naming[no-role-prefix]
-user_kubectl: true  # noqa var-naming[no-role-prefix]
-cluster_context: k3s-ansible  # noqa var-naming[no-role-prefix]
-server_group: server  # noqa var-naming[no-role-prefix]
-agent_group: agent  # noqa var-naming[no-role-prefix]
+systemd_dir: "/etc/systemd/system" # noqa var-naming[no-role-prefix]
+api_port: 6443 # noqa var-naming[no-role-prefix]
+kubeconfig: ~/.kube/config.new # noqa var-naming[no-role-prefix]
+user_kubectl: true # noqa var-naming[no-role-prefix]
+cluster_context: k3s-ansible # noqa var-naming[no-role-prefix]
+server_group: server # noqa var-naming[no-role-prefix]
+agent_group: agent # noqa var-naming[no-role-prefix]
 use_external_database: false # noqa var-naming[no-role-prefix]
 extra_server_args: "" # noqa var-naming[no-role-prefix]
 extra_install_envs: {} # noqa var-naming[no-role-prefix]
+
+# Added vars from my fork
+token_wait_delay: 10 # noqa var-naming[no-role-prefix]
+join_retries: 20 # noqa var-naming[no-role-prefix]
+join_wait_delay: 10 # noqa var-naming[no-role-prefix]
+

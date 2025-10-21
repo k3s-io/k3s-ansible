@@ -72,7 +72,6 @@
   ansible.builtin.set_fact:
     opt_tls_san: "--tls-san={{ api_endpoint }}"
 
-
 - name: Setup optional config file
   when: server_config_yaml is defined
   block:
@@ -165,11 +164,11 @@
     - name: Pause to allow first server startup
       when: (groups[server_group] | length) > 1
       ansible.builtin.pause:
-        seconds: 10
+        seconds: "{{ token_wait_delay }}"
 
     - name: Check whether kubectl is installed on control node
       # noqa var-naming[no-role-prefix]
-      ansible.builtin.command: 'kubectl'
+      ansible.builtin.command: "kubectl"
       register: kubectl_installed
       ignore_errors: true
       delegate_to: 127.0.0.1
@@ -210,8 +209,8 @@
           when: kubeconfig == "~/.kube/config.new"
           ansible.builtin.replace:
             path: "{{ kubeconfig }}"
-            regexp: 'default'
-            replace: '{{ cluster_context }}'
+            regexp: "default"
+            replace: "{{ cluster_context }}"
           delegate_to: 127.0.0.1
           become: false
 
@@ -315,14 +314,13 @@
           k3s kubectl get nodes -l "node-role.kubernetes.io/control-plane=true" -o=jsonpath="{.items[*].metadata.name}"
       register: k3s_server_nodes
       until: k3s_server_nodes.rc == 0 and (k3s_server_nodes.stdout.split() | length) == (groups[server_group] | length)
-      retries: 20
-      delay: 10
+      retries: "{{ join_retries }}"
+      delay: "{{ join_wait_delay }}"
       changed_when: false
 
 - name: Setup kubectl for user
   when: user_kubectl
   block:
-
     - name: Create directory .kube
       ansible.builtin.file:
         path: ~{{ ansible_user }}/.kube
@@ -341,8 +339,8 @@
     - name: Configure default KUBECONFIG for user
       ansible.builtin.lineinfile:
         path: ~{{ ansible_user }}/.bashrc
-        regexp: 'export KUBECONFIG=~/.kube/config'
-        line: 'export KUBECONFIG=~/.kube/config # Added by k3s-ansible'
+        regexp: "export KUBECONFIG=~/.kube/config"
+        line: "export KUBECONFIG=~/.kube/config # Added by k3s-ansible"
         state: present
 
     - name: Configure kubectl autocomplete
