@@ -10,8 +10,6 @@ agent_group: agent # noqa var-naming[no-role-prefix]
 use_external_database: false # noqa var-naming[no-role-prefix]
 extra_server_args: "" # noqa var-naming[no-role-prefix]
 extra_install_envs: {} # noqa var-naming[no-role-prefix]
-
-# Added vars from my fork
 token_wait_delay: 10 # noqa var-naming[no-role-prefix]
 join_retries: 20 # noqa var-naming[no-role-prefix]
 join_wait_delay: 10 # noqa var-naming[no-role-prefix]
