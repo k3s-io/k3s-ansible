@@ -13,4 +13,4 @@ extra_install_envs: {} # noqa var-naming[no-role-prefix]
 token_wait_delay: 10 # noqa var-naming[no-role-prefix]
 join_retries: 20 # noqa var-naming[no-role-prefix]
 join_wait_delay: 10 # noqa var-naming[no-role-prefix]
-host_user: "{{ ansible_user }}"
+host_user: "{{ ansible_user }}" # noqa var-naming[no-role-prefix]
