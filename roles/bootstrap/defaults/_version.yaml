@@ -10,7 +10,7 @@ helm_chart_version:
   reflector:
     ref: emberstack/reflector
     repository: https://emberstack.github.io/helm-charts
-    version: 9.1.35
+    version: 9.1.37
   external-dns:
     ref: external-dns/external-dns
     repository: https://kubernetes-sigs.github.io/external-dns
@@ -34,7 +34,7 @@ helm_chart_version:
   nvidia-device-plugin:
     ref: nvidia-k8s-device-plugin/nvidia-device-plugin
     repository: https://nvidia.github.io/k8s-device-plugin
-    version: 0.17.4
+    version: 0.18.0
   oauth2-proxy:
     ref: oauth2-proxy/oauth2-proxy
     repository: https://oauth2-proxy.github.io/manifests
