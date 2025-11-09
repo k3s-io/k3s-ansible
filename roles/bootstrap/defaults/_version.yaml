@@ -10,7 +10,7 @@ helm_chart_version:
   reflector:
     ref: emberstack/reflector
     repository: https://emberstack.github.io/helm-charts
-    version: 9.1.37
+    version: 9.1.38
   external-dns:
     ref: external-dns/external-dns
     repository: https://kubernetes-sigs.github.io/external-dns
@@ -18,7 +18,7 @@ helm_chart_version:
   ingress-nginx:
     ref: ingress-nginx/ingress-nginx
     repository: https://kubernetes.github.io/ingress-nginx
-    version: 4.13.3
+    version: 4.14.0
   cert-manager:
     ref: jetstack/cert-manager
     repository: https://charts.jetstack.io
@@ -42,8 +42,8 @@ helm_chart_version:
   snapshot-controller:
     ref: piraeus-charts/snapshot-controller
     repository: https://piraeus.io/helm-charts
-    version: 4.1.1
+    version: 4.2.0
   reloader:
     ref: stakater/reloader
     repository: https://stakater.github.io/stakater-charts
-    version: 2.2.3
+    version: 2.2.5
