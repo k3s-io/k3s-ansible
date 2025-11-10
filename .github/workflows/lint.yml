@@ -16,10 +16,10 @@ jobs:
       - name: Check out the codebase.
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.7.
+      - name: Set up Python 3.13.
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.13.x'
 
       - name: Install test dependencies.
         run: pip3 install yamllint ansible-lint ansible
