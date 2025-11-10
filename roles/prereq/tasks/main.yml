@@ -63,6 +63,20 @@
         port: "2379:2381"
         proto: tcp
 
+    - name: If ufw enabled, open inter-node ports
+      when:
+        - "'Status: active' in prereq_ufw_status['stdout']"
+      community.general.ufw:
+        rule: allow
+        port: "{{ item.port }}"
+        proto: "{{ item.proto }}"
+      loop:
+        - { port: "5001", proto: "tcp" }    # Spegel (Embedded distributed registry)
+        - { port: "8472", proto: "udp" }    # Flannel VXLAN
+        - { port: "10250", proto: "tcp" }   # Kubelet metrics
+        - { port: "51820", proto: "udp" }   # Flannel Wireguard (IPv4)
+        - { port: "51821", proto: "udp" }   # Flannel Wireguard (IPv6)
+
     - name: If ufw enabled, allow default CIDRs
       when:
         - "'Status: active' in prereq_ufw_status['stdout']"
