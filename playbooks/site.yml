@@ -19,3 +19,17 @@
   become: true
   roles:
     - role: k3s_agent
+
+# playbooks/setup-oled.yml
+- hosts: node1
+  become: true
+  roles:
+    - role: oled_display
+  tags: oled
+
+# playbooks/setup-oled.yml
+# - hosts: server
+#   become: true
+#   roles:
+#     - role: argocd
+#   tags: argocd

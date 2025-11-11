@@ -1,50 +1,21 @@
 ---
-# - name: Enable cgroup via boot commandline if not already enabled
-- name: Ensure cgroups are configured correctly for Kubernetes
-  become: true
-  block:
-    - name: Detect cmdline.txt path (Ubuntu 25.x or older)
-      stat:
-        path: /boot/firmware/current/cmdline.txt
-      register: cmdline_current
+- name: Check if /boot/firmware/cmdline.txt exists
+  ansible.builtin.stat:
+    path: /boot/firmware/cmdline.txt
+  register: boot_firmware_cmdline_txt
 
-    - name: Set cmdline path dynamically
-      set_fact:
-        cmdline_path: >-
-          {{ '/boot/firmware/current/cmdline.txt'
-             if cmdline_current.stat.exists
-             else '/boot/firmware/cmdline.txt' }}
-
-    - name: Read current cmdline.txt
-      slurp:
-        src: "{{ cmdline_path }}"
-      register: cmdline_file
-
-    - name: Decode and prepare cmdline content
-      set_fact:
-        cmdline_content: "{{ cmdline_file['content'] | b64decode | trim }}"
-
-    - name: Add required cgroup parameters if missing
-      set_fact:
-        new_cmdline: >-
-          {{ cmdline_content }}
-          {{ 'cgroup_enable=cpuset' if 'cgroup_enable=cpuset' not in cmdline_content else '' }}
-          {{ 'cgroup_memory=1' if 'cgroup_memory=1' not in cmdline_content else '' }}
-          {{ 'cgroup_enable=memory' if 'cgroup_enable=memory' not in cmdline_content else '' }}
-
-    - name: Clean up spaces and ensure single line
-      set_fact:
-        final_cmdline: "{{ new_cmdline | regex_replace('\\s+', ' ') | trim }}"
-
-    - name: Write back updated cmdline.txt if changed
-      copy:
-        dest: "{{ cmdline_path }}"
-        content: "{{ final_cmdline }}\n"
-        owner: root
-        group: root
-        mode: '0644'
-      when: final_cmdline != cmdline_content
-      notify: Reboot Pi
+- name: Enable cgroup via boot commandline if not already enabled
+  ansible.builtin.replace:
+    path: "{{ (boot_firmware_cmdline_txt.stat.exists) | ternary('/boot/firmware/cmdline.txt', '/boot/firmware/current/cmdline.txt') }}"
+    regexp: '^([\w](?!.*\b{{ cgroup_item }}\b).*)$'
+    replace: '\1 {{ cgroup_item }}'
+  with_items:
+    - "cgroup_enable=cpuset"
+    - "cgroup_memory=1"
+    - "cgroup_enable=memory"
+  loop_control:
+    loop_var: cgroup_item
+  notify: Reboot Pi
 
 - name: Install Ubuntu Raspi Extra Packages
   ansible.builtin.apt:
