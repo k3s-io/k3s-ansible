@@ -4,10 +4,13 @@ k3s_cluster:
     server:
       hosts:
         192.16.35.11:
+          # node_external_ip: "203.0.113.11"  # External IP for this server node
     agent:
       hosts:
         192.16.35.12:
+          # node_external_ip: "203.0.113.12"  # External IP for this agent node
         192.16.35.13:
+          # node_external_ip: "203.0.113.13"  # External IP for this agent node
 
   # Required Vars
   vars:

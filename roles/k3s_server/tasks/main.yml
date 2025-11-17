@@ -72,6 +72,12 @@
   ansible.builtin.set_fact:
     opt_tls_san: "--tls-san={{ api_endpoint }}"
 
+- name: Append node external IP to extra server args if defined
+  # noqa var-naming[no-role-prefix]
+  when: hostvars[inventory_hostname]['node_external_ip'] is defined and hostvars[inventory_hostname]['node_external_ip'] != ""
+  ansible.builtin.set_fact:
+    extra_server_args: "{{ extra_server_args }} --node-ip={{ inventory_hostname }} --node-external-ip={{ hostvars[inventory_hostname]['node_external_ip'] }}"
+
 
 - name: Setup optional config file
   when: server_config_yaml is defined
