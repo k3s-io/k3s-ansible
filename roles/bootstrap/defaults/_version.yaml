@@ -10,7 +10,7 @@ helm_chart_version:
   reflector:
     ref: emberstack/reflector
     repository: https://emberstack.github.io/helm-charts
-    version: 9.1.38
+    version: 9.1.39
   external-dns:
     ref: external-dns/external-dns
     repository: https://kubernetes-sigs.github.io/external-dns
@@ -26,7 +26,7 @@ helm_chart_version:
   longhorn:
     ref: longhorn/longhorn
     repository: https://charts.longhorn.io
-    version: 1.10.0
+    version: 1.10.1
   nfs-subdir-external-provisioner:
     ref: nfs-subdir-external-provisioner/nfs-subdir-external-provisioner
     repository: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
