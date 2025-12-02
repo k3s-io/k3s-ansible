@@ -167,7 +167,7 @@ It is assumed that the control node has access to the internet. The playbook wil
 
 ## Kubeconfig
 
-After successful bringup, the kubeconfig of the cluster is copied to the control node  and merged with `~/.kube/config` under the `k3s-ansible` context.
+After successful bringup, the kubeconfig of the cluster is copied to the control node  and merged with `~/.kube/config` under the `k3s-ansible` context unless overwritten by the `cluster_context` variable.
 Assuming you have [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) installed, you can confirm access to your **Kubernetes** cluster with the following:
 
 ```bash
@@ -177,6 +177,19 @@ kubectl get nodes
 
 If you wish for your kubeconfig to be copied elsewhere and not merged, you can set the `kubeconfig` variable in `inventory.yml` to the desired path.
 
+If you wish to get a new copy of the kubeconfig after installation you can run the site playbook again using the `kubeconfig` tag.
+
+*Installed with ansible-galaxy*
+
+```bash
+ansible-playbook k3s.orchestration.site -i inventory.yml --tags kubeconfig
+```
+
+*Running the playbook from inside the repository*
+
+```bash
+ansible-playbook playbooks/site.yml -i inventory.yml --tags kubeconfig
+```
 ## Local Testing
 
 A Vagrantfile is provided that provision a 5 nodes cluster using Vagrant (LibVirt or Virtualbox as provider). To use it:
@@ -185,7 +198,7 @@ A Vagrantfile is provided that provision a 5 nodes cluster using Vagrant (LibVir
 vagrant up
 ```
 
-By default, each node is given 2 cores and 2GB of RAM and runs Ubuntu 20.04. You can customize these settings by editing the `Vagrantfile`.
+By default, each node is given 2 cores and 2GB of RAM and runs Ubuntu 24.04. You can customize these settings by editing the `Vagrantfile`.
 
 ## Need More Features?
 
