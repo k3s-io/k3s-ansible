@@ -1,5 +1,23 @@
 # `k3s-ansible` changelog (`k3s.orchestration`)
 
+## 1.1.1
+
+### PRs Merged
+
+- Improve capture regex for k3s-agent service replacement (#470)
+- Add ability to move kubeconfig to control node on demand (#467)
+- refactor(prereq): use ansible_os_family for broader RHEL support (#469)
+- fix(upgrade): Implement airgap support for the upgrade flow. (#465)
+- Refactor task to add compatibility with cmdline changes on ubuntu 25 (#461)
+- feat: add ufw allow inter-node ports (#460)
+- Pin python to 3.13 for ansible 2.19 support (#462)
+- allow for opt_tls_san to be undefined, since it's optionally defined (#456)
+- Reduce run noise (#450)
+
+For a full list of commits see [diff between 1.1.1 and 1.1.0](https://github.com/k3s-io/k3s-ansible/compare/1.1.1...1.1.0).
+
+Thanks to all community contributors including: fch-aa, lufisaal, PhilThurston, rpressiani, softplus10, too-gee, triplepoint!
+
 ## 1.1.0
 
 ### PRs Merged
