@@ -87,7 +87,7 @@
   register: k3s_agent_service
   ansible.builtin.replace:
     path: "{{ systemd_dir }}/k3s-agent.service"
-    regexp: '^ExecStart=\/usr\/local\/bin\/k3s \\\n\s*agent.*'
+    regexp: '^ExecStart=\/usr\/local\/bin\/k3s \\\n\s*agent.*(?:\n(?:[\t\s].*|$))*'
     replace: |
       ExecStart=/usr/local/bin/k3s \
           agent \
