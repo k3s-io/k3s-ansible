@@ -32,6 +32,7 @@
         mode: preserve
         force: true
       loop: "{{ k3s_service_files.files }}"
+      check_mode: false
 
     - name: Stage airgap artifacts for upgrade
       when: airgap_dir is defined
@@ -70,6 +71,7 @@
         path: "{{ item.path }}.bak"
         state: absent
       loop: "{{ k3s_service_files.files }}"
+      check_mode: false
 
     - name: Restart K3s service [server]
       when: "server_group in group_names"
