@@ -14,7 +14,7 @@
 - allow for opt_tls_san to be undefined, since it's optionally defined (#456)
 - Reduce run noise (#450)
 
-For a full list of commits see [diff between 1.1.1 and 1.1.0](https://github.com/k3s-io/k3s-ansible/compare/1.1.1...1.1.0).
+For a full list of commits see [diff between 1.1.0 and 1.1.1](https://github.com/k3s-io/k3s-ansible/compare/1.1.0...1.1.1).
 
 Thanks to all community contributors including: fch-aa, lufisaal, PhilThurston, rpressiani, softplus10, too-gee, triplepoint!
 
