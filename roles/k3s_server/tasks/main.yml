@@ -171,6 +171,7 @@
       # noqa var-naming[no-role-prefix]
       ansible.builtin.command: 'kubectl'
       register: kubectl_installed
+      tags: kubeconfig
       ignore_errors: true
       delegate_to: 127.0.0.1
       become: false
@@ -185,11 +186,11 @@
         mode: "0600"
         remote_src: true
       register: k3s_server_copy_yaml
+      tags: kubeconfig
 
     - name: Apply K3S kubeconfig to control node
       when:
-        - kubectl_installed.rc == 0
-        - k3s_server_copy_yaml.changed
+        - kubectl_installed.rc == 0 and (k3s_server_copy_yaml.changed or 'kubeconfig' in ansible_run_tags)
       block:
         - name: Copy kubeconfig to control node
           ansible.builtin.fetch:
