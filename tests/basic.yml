@@ -1,0 +1,18 @@
+---
+k3s_cluster:
+  children:
+    server:
+      hosts:
+        server-node:
+    agent:
+      hosts:
+        agent-node:
+  vars:
+    ansible_connection: docker
+    ansible_user: root
+    ansible_become: true
+    k3s_version: v1.33.1+k3s1
+    token: "secret12345"
+    api_endpoint: "server-node"
+    extra_server_args: "--snapshotter=native"
+    extra_agent_args: "--snapshotter=native"
