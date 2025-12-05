@@ -1,0 +1,75 @@
+---
+name: Integration Test
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        container_os: [debian12]
+
+    # K3s requires privileged containers to run inside Docker and access to cgrougs.
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v6
+
+      - name: Set up Python 3.13.
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13.x'
+
+      - name: Install Ansible and dependencies
+        run: |
+          pip install ansible
+          ansible-galaxy collection install -r collections/requirements.yml
+
+      - name: Verify Inventory
+        run: ansible-inventory -i tests/basic.yml --list
+
+      - name: Create Docker Network
+        run: docker network create k3s-ansible
+
+      - name: Start Docker containers
+        run: |
+          # Start the Server node
+          docker run -d --name server-node \
+            --privileged \
+            --volume=/sys/fs/cgroup:/sys/fs/cgroup:rw \
+            --volume=/lib/modules:/lib/modules:ro \
+            --cgroupns=host \
+            --network=k3s-ansible \
+            geerlingguy/docker-${{ matrix.container_os }}-ansible:latest
+
+          # Start the Agent node
+          docker run -d --name agent-node \
+            --privileged \
+            --volume=/sys/fs/cgroup:/sys/fs/cgroup:rw \
+            --volume=/lib/modules:/lib/modules:ro \
+            --cgroupns=host \
+            --network=k3s-ansible \
+            geerlingguy/docker-${{ matrix.container_os }}-ansible:latest
+
+      - name: Run Playbook
+        env:
+          ANSIBLE_FORCE_COLOR: '1'
+        run: ansible-playbook playbooks/site.yml -i tests/basic.yml
+
+
+      - name: Verify K3s is running on Server
+        run: docker exec server-node k3s kubectl get nodes | grep Ready
+
+      - name: Verify K3s is running on Agent
+        run: docker exec agent-node systemctl status k3s-agent | grep running
+
+      - name: Remove K3s from Server and Agent
+        run: ansible-playbook playbooks/reset.yml -i tests/basic.yml
+
+      - name: Stop and remove Docker containers
+        run: |
+          docker stop server-node && docker rm -f server-node
+          docker stop agent-node && docker rm -f agent-node
+          docker network rm k3s-ansible
