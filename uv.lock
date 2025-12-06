@@ -54,7 +54,7 @@ wheels = [
 
 [[package]]
 name = "ansible-lint"
-version = "25.11.1"
+version = "25.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ansible-compat" },
@@ -64,7 +64,6 @@ dependencies = [
     { name = "cryptography" },
     { name = "distro" },
     { name = "filelock" },
-    { name = "importlib-metadata" },
     { name = "jsonschema" },
     { name = "packaging" },
     { name = "pathspec" },
@@ -77,9 +76,9 @@ dependencies = [
     { name = "wcmatch" },
     { name = "yamllint" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/cb/df/bec71ebd33b7dc0a9f857ef2af51642f6bca42d3bc242195148a147ae517/ansible_lint-25.11.1.tar.gz", hash = "sha256:f9d7ce3877eeda5c39ee70acf9b88677732fea4cfc28a005c014dfaaa8678c85", size = 716918, upload-time = "2025-11-24T21:05:26.942Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/15/4c/e3e33869fe2bad5d263474f61bb606272ad2b913e5004b503b1f6adc50a8/ansible_lint-25.12.0.tar.gz", hash = "sha256:84fa30130fe8771d8d8997bff09fd2a762a053ae9530d498fa3e66eb74608fe9", size = 716893, upload-time = "2025-12-02T15:47:18.115Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c4/28/42c8be5ba5d0c4a6bc35059bc10642fc183f23cdefd704932d1900053880/ansible_lint-25.11.1-py3-none-any.whl", hash = "sha256:f81946a540dc6b4b0cb5a8b050ab3c67c2b29a12aa0a0ba8dae03a9d44670f19", size = 322904, upload-time = "2025-11-24T21:05:24.968Z" },
+    { url = "https://files.pythonhosted.org/packages/16/cb/271dd004bb9b2eef240b76c3e0bbaa24a2bd34b49ce13231810e3ffd9283/ansible_lint-25.12.0-py3-none-any.whl", hash = "sha256:df8385af857a1f509145e680850845efb783c3bf2ccb8d95acaced92e01100e3", size = 323024, upload-time = "2025-12-02T15:47:16.401Z" },
 ]
 
 [[package]]
@@ -296,7 +295,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "ansible-lint", specifier = "==25.11.1" },
+    { name = "ansible-lint", specifier = "==25.12.0" },
     { name = "yamllint", specifier = "==1.37.1" },
 ]
 
@@ -348,18 +347,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f1/70/7703c29685631f5a7590aa73f1f1d3fa9a380e654b86af429e0934a32f7d/idna-3.10.tar.gz", hash = "sha256:12f65c9b470abda6dc35cf8e63cc574b1c52b11df2c86030af0ac09b01b13ea9", size = 190490, upload-time = "2024-09-15T18:07:39.745Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/76/c6/c88e154df9c4e1a2a66ccf0005a88dfb2650c1dffb6f5ce603dfbd452ce3/idna-3.10-py3-none-any.whl", hash = "sha256:946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3", size = 70442, upload-time = "2024-09-15T18:07:37.964Z" },
-]
-
-[[package]]
-name = "importlib-metadata"
-version = "8.7.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "zipp" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/76/66/650a33bd90f786193e4de4b3ad86ea60b53c89b669a5c7be931fac31cdb0/importlib_metadata-8.7.0.tar.gz", hash = "sha256:d13b81ad223b890aa16c5471f2ac3056cf76c5f10f82d6f9292f0b415f389000", size = 56641, upload-time = "2025-04-27T15:29:01.736Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/20/b0/36bd937216ec521246249be3bf9855081de4c5e06a0c9b4219dbeda50373/importlib_metadata-8.7.0-py3-none-any.whl", hash = "sha256:e5dd1551894c77868a30651cef00984d50e1002d06942a7101d34870c5f02afd", size = 27656, upload-time = "2025-04-27T15:29:00.214Z" },
 ]
 
 [[package]]
@@ -878,13 +865,4 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/46/f2/cd8b7584a48ee83f0bc94f8a32fea38734cefcdc6f7324c4d3bfc699457b/yamllint-1.37.1.tar.gz", hash = "sha256:81f7c0c5559becc8049470d86046b36e96113637bcbe4753ecef06977c00245d", size = 141613, upload-time = "2025-05-04T08:25:54.355Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/dd/b9/be7a4cfdf47e03785f657f94daea8123e838d817be76c684298305bd789f/yamllint-1.37.1-py3-none-any.whl", hash = "sha256:364f0d79e81409f591e323725e6a9f4504c8699ddf2d7263d8d2b539cd66a583", size = 68813, upload-time = "2025-05-04T08:25:52.552Z" },
-]
-
-[[package]]
-name = "zipp"
-version = "3.23.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e3/02/0f2892c661036d50ede074e376733dca2ae7c6eb617489437771209d4180/zipp-3.23.0.tar.gz", hash = "sha256:a07157588a12518c9d4034df3fbbee09c814741a33ff63c05fa29d26a2404166", size = 25547, upload-time = "2025-06-08T17:06:39.4Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/54/647ade08bf0db230bfea292f893923872fd20be6ac6f53b2b936ba839d75/zipp-3.23.0-py3-none-any.whl", hash = "sha256:071652d6115ed432f5ce1d34c336c0adfd6a884660d1e9712a256d3d3bd4b14e", size = 10276, upload-time = "2025-06-08T17:06:38.034Z" },
 ]
