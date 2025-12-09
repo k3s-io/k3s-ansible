@@ -8,5 +8,4 @@ api_port: 6443  # noqa var-naming[no-role-prefix]
 extra_server_args: ""  # noqa var-naming[no-role-prefix]
 extra_agent_args: ""  # noqa var-naming[no-role-prefix]
 use_external_database: false  # noqa var-naming[no-role-prefix]
-force_reconfigure: false  # noqa var-naming[no-role-prefix]
 # api_endpoint must be provided by inventory for agent nodes

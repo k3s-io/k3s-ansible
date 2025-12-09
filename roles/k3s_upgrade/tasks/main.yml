@@ -12,28 +12,12 @@
     k3s_upgrade_current_version: "{{ k3s_upgrade_version_output.stdout_lines[0].split(' ')[2] }}"
   check_mode: false
 
-# We should be downloading and installing the newer version only if we are in the following case :
+# We update the node configuration in the following cases:
 #   - the installed version of K3s on the nodes is older than the requested version in ansible vars
-#   - force_reconfigure is set to true (to apply new extra_server_args/extra_agent_args)
+#   - the installed version equals the requested version (to apply config changes like extra_server_args/extra_agent_args)
 - name: Update node only if needed
-  when: k3s_upgrade_current_version is version(k3s_version, '<') or (force_reconfigure | default(false) | bool)
+  when: k3s_upgrade_current_version is version(k3s_version, '<=')
   block:
-    - name: Find K3s service files
-      # noqa var-naming[no-role-prefix]
-      ansible.builtin.find:
-        paths: "{{ systemd_dir }}"
-        patterns: "k3s*.service*"
-      register: k3s_service_files
-
-    - name: Save current K3s service
-      ansible.builtin.copy:
-        src: "{{ item.path }}"
-        dest: "{{ item.path }}.bak"
-        remote_src: true
-        mode: preserve
-        force: true
-      loop: "{{ k3s_service_files.files }}"
-
     - name: Stage airgap artifacts for upgrade
       when: airgap_dir is defined
       ansible.builtin.include_role:
@@ -133,12 +117,6 @@
               agent \
               --server https://{{ api_endpoint }}:{{ api_port }} \
               {{ extra_agent_args | default('') }}
-
-    - name: Clean up temporary K3s service backups
-      ansible.builtin.file:
-        path: "{{ item.path }}.bak"
-        state: absent
-      loop: "{{ k3s_service_files.files }}"
 
     - name: Restart K3s service [server]
       when: server_group in group_names
