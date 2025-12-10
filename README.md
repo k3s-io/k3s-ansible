@@ -103,6 +103,23 @@ ansible-playbook k3s.orchestration.site -i inventory.yml
 ansible-playbook playbooks/site.yml -i inventory.yml
 ```
 
+Alternatively, to run the playbook from your existing project setup, run the playbook from within your own playbook:
+
+*Installed with ansible-galaxy*
+
+```yaml
+- name: Import kube cluster playbook
+  ansible.builtin.import_playbook: k3s-ansible/playbooks/site.yml
+```
+
+*Running the playbook from inside the repository*
+
+```yaml
+- name: Import kube cluster playbook
+  ansible.builtin.import_playbook: k3s.orchestration.site
+```
+
+
 ### Using an external database
 
 If an external database is preferred, this can be achieved by passing the `--datastore-endpoint` as an extra server argument as well as setting the `use_external_database` flag to true.
