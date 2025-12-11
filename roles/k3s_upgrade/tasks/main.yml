@@ -12,27 +12,12 @@
     k3s_upgrade_current_version: "{{ k3s_upgrade_version_output.stdout_lines[0].split(' ')[2] }}"
   check_mode: false
 
-# We should be downloading and installing the newer version only if we are in the following case :
+# We update the node configuration in the following cases:
 #   - the installed version of K3s on the nodes is older than the requested version in ansible vars
+#   - the installed version equals the requested version (to apply config changes like extra_server_args/extra_agent_args)
 - name: Update node only if needed
-  when: k3s_upgrade_current_version is version(k3s_version, '<')
+  when: k3s_upgrade_current_version is version(k3s_version, '<=')
   block:
-    - name: Find K3s service files
-      # noqa var-naming[no-role-prefix]
-      ansible.builtin.find:
-        paths: "{{ systemd_dir }}"
-        patterns: "k3s*.service*"
-      register: k3s_service_files
-
-    - name: Save current K3s service
-      ansible.builtin.copy:
-        src: "{{ item.path }}"
-        dest: "{{ item.path }}.bak"
-        remote_src: true
-        mode: preserve
-        force: true
-      loop: "{{ k3s_service_files.files }}"
-
     - name: Stage airgap artifacts for upgrade
       when: airgap_dir is defined
       ansible.builtin.include_role:
@@ -45,6 +30,8 @@
     - name: Install new K3s Version
       # For some reason, ansible-lint thinks using enviroment with command is an error
       # even though its valid https://ansible.readthedocs.io/projects/lint/rules/inline-env-var/#correct-code
+      # Skip if only reconfiguring (no version change needed)
+      when: k3s_upgrade_current_version is version(k3s_version, '<')
       ansible.builtin.command: # noqa inline-env-var
         cmd: /usr/local/bin/k3s-install.sh
       environment: >-
@@ -56,30 +43,90 @@
              | combine(airgap_dir is defined and {"INSTALL_K3S_SKIP_DOWNLOAD": "true"} or {}) }}
       changed_when: true
 
-    - name: Restore K3s service
-      ansible.builtin.copy:
-        src: "{{ item.path }}.bak"
-        dest: "{{ item.path }}"
-        remote_src: true
-        mode: preserve
-        force: true
-      loop: "{{ k3s_service_files.files }}"
+    - name: Regenerate K3s service file [server]
+      when: server_group in group_names
+      block:
+        - name: Determine if tls-san is already in config or args
+          ansible.builtin.set_fact:
+            _api_endpoint_in_args: >-
+              {% if api_endpoint is defined and extra_server_args | default('') | regex_search('--tls-san[=\s]+' + api_endpoint | regex_escape(), ignorecase=True) %}
+              true
+              {% else %}
+              false
+              {% endif %}
 
-    - name: Clean up temporary K3s service backups
-      ansible.builtin.file:
-        path: "{{ item.path }}.bak"
-        state: absent
-      loop: "{{ k3s_service_files.files }}"
+        - name: Add TLS SAN to arguments if needed
+          when:
+            - api_endpoint is defined
+            - api_endpoint != ansible_hostname
+            - not (_api_endpoint_in_args | trim | bool)
+          ansible.builtin.set_fact:
+            opt_tls_san: "--tls-san={{ api_endpoint }}"
+
+        - name: Copy K3s service file [Single/External DB]
+          when: groups[server_group] | length == 1 or use_external_database | default(false)
+          ansible.builtin.template:
+            src: "k3s.service.j2"
+            dest: "{{ systemd_dir }}/k3s.service"
+            owner: root
+            group: root
+            mode: "0644"
+          vars:
+            cluster_init: false
+            join: false
+
+        - name: Copy K3s service file [HA - first server]
+          when:
+            - groups[server_group] | length > 1
+            - not use_external_database | default(false)
+            - inventory_hostname == groups[server_group][0] or ansible_host == groups[server_group][0]
+          ansible.builtin.template:
+            src: "k3s.service.j2"
+            dest: "{{ systemd_dir }}/k3s.service"
+            owner: root
+            group: root
+            mode: "0644"
+          vars:
+            cluster_init: true
+            join: false
+
+        - name: Copy K3s service file [HA - joining server]
+          when:
+            - groups[server_group] | length > 1
+            - not use_external_database | default(false)
+            - inventory_hostname != groups[server_group][0] and ansible_host != groups[server_group][0]
+          ansible.builtin.template:
+            src: "k3s.service.j2"
+            dest: "{{ systemd_dir }}/k3s.service"
+            owner: root
+            group: root
+            mode: "0644"
+          vars:
+            cluster_init: false
+            join: true
+
+    - name: Regenerate K3s service file [agent]
+      when:
+        - agent_group in group_names
+        - api_endpoint is defined
+      ansible.builtin.replace:
+        path: "{{ systemd_dir }}/k3s-agent.service"
+        regexp: '^ExecStart=\/usr\/local\/bin\/k3s \\\n\s*agent.*(?:\n(?:[\t\s].*|$))*'
+        replace: |
+          ExecStart=/usr/local/bin/k3s \
+              agent \
+              --server https://{{ api_endpoint }}:{{ api_port }} \
+              {{ extra_agent_args | default('') }}
 
     - name: Restart K3s service [server]
-      when: "server_group in group_names"
+      when: server_group in group_names
       ansible.builtin.systemd:
         state: restarted
         daemon_reload: true
         name: k3s
 
     - name: Restart K3s service [agent]
-      when: "agent_group in group_names"
+      when: agent_group in group_names
       ansible.builtin.systemd:
         state: restarted
         daemon_reload: true
