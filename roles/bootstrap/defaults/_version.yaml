@@ -10,7 +10,7 @@ helm_chart_version:
   reflector:
     ref: emberstack/reflector
     repository: https://emberstack.github.io/helm-charts
-    version: 9.1.44
+    version: 9.1.45
   external-dns:
     ref: external-dns/external-dns
     repository: https://kubernetes-sigs.github.io/external-dns
@@ -22,7 +22,7 @@ helm_chart_version:
   cert-manager:
     ref: jetstack/cert-manager
     repository: https://charts.jetstack.io
-    version: v1.19.1
+    version: v1.19.2
   longhorn:
     ref: longhorn/longhorn
     repository: https://charts.longhorn.io
@@ -46,4 +46,4 @@ helm_chart_version:
   reloader:
     ref: stakater/reloader
     repository: https://stakater.github.io/stakater-charts
-    version: 2.2.5
+    version: 2.2.6
