@@ -9,8 +9,8 @@
       block:
         - name: Verify Ansible meets airgap version requirements.
           ansible.builtin.assert:
-            that: "ansible_version.full is version_compare('2.12', '>=')"
-            msg: "The Airgap role requires at least ansible-core 2.12"
+            that: "ansible_version.full is version_compare('2.15', '>=')"
+            msg: "The Airgap role requires at least ansible-core 2.15"
 
         - name: Check for existing install script
           become: false

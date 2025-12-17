@@ -2,8 +2,8 @@
 - name: Enforce minimum Ansible version
   ansible.builtin.assert:
     that:
-      - ansible_version.full is version('2.14', '>=')
-    msg: "Minimum ansible-core version required is 2.14"
+      - ansible_version.full is version('2.15', '>=')
+    msg: "Minimum ansible-core version required is 2.15"
 
 - name: Install Dependent Ubuntu Packages
   when: ansible_facts['distribution'] in ['Ubuntu']
