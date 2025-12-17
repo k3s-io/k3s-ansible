@@ -67,7 +67,7 @@
   ansible.builtin.lineinfile:
     path: "{{ systemd_dir }}/k3s-agent.service.env"
     line: "{{ item }}"
-  with_items: "{{ extra_service_envs }}"
+  loop: "{{ extra_service_envs }}"
 
 - name: Delete any existing token from the environment if different from the new one
   ansible.builtin.lineinfile:
@@ -80,7 +80,7 @@
   ansible.builtin.lineinfile:
     path: "{{ systemd_dir }}/k3s-agent.service.env"
     line: "{{ item }}"
-  with_items:
+  loop:
     - "K3S_TOKEN={{ token }}"
 
 - name: Modify ExecStart in k3s-agent.service to include API endpoint and extra args
