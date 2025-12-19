@@ -10,6 +10,14 @@
   ansible.builtin.set_fact:
     k3s_server_installed_version: "{{ k3s_server_version_output.stdout_lines[0].split(' ')[2] }}"
 
+- name: Stop play if trying to upgrade via site.yml when upgrade is preferred
+  when:
+    - k3s_server_installed_version is defined
+    - k3s_server_installed_version is version(k3s_version, '<')
+    - upgrade_preferred is true
+  ansible.builtin.fail:
+    msg: "Upgrade detected: Installed k3s version ({{ k3s_server_installed_version }}) is older than desired version ({{ k3s_version }}). Please use upgrade.yml playbook for version upgrades."
+
 # If airgapped, all K3s artifacts are already on the node.
 # We should be downloading and installing the newer version only if we are in one of the following cases :
 #   - we couldn't get k3s installed version in the first task of this role
@@ -144,22 +152,11 @@
         line: "K3S_TOKEN={{ token }}"
       when: token is defined
 
-    - name: Restart K3s service
-      when:
-        - ansible_facts.services['k3s.service'] is defined
-        - ansible_facts.services['k3s.service'].state == 'running'
-        - service_file_single.changed or service_file_ha.changed or _server_config_result.changed
+    - name: Ensure K3s service is running and enabled
       ansible.builtin.systemd:
         name: k3s
-        daemon_reload: true
-        state: restarted
-
-    - name: Enable and check K3s service
-      when: ansible_facts.services['k3s.service'] is not defined or ansible_facts.services['k3s.service'].state != 'running'
-      ansible.builtin.systemd:
-        name: k3s
-        daemon_reload: true
-        state: started
+        daemon_reload: "{{ true if (service_file_single.changed or service_file_ha.changed) else false }}"
+        state: "{{ 'restarted' if (service_file_single.changed or service_file_ha.changed or _server_config_result.changed) else 'started' }}"
         enabled: true
 
     - name: Pause to allow first server startup
@@ -291,23 +288,13 @@
         cluster_init: false
       register: k3s_server_service_file
 
-    - name: Restart K3s service
-      when:
-        - ansible_facts.services['k3s.service'] is defined
-        - ansible_facts.services['k3s.service'].state == 'running'
-        - k3s_server_service_file.changed or _server_config_result.changed
+    - name: Ensure K3s service is running and enabled
       ansible.builtin.systemd:
         name: k3s
-        daemon_reload: true
-        state: restarted
-
-    - name: Enable and check K3s service
-      when: ansible_facts.services['k3s.service'] is not defined or ansible_facts.services['k3s.service'].state != 'running'
-      ansible.builtin.systemd:
-        name: k3s
-        daemon_reload: true
-        state: started
+        daemon_reload: "{{ true if k3s_server_service_file.changed else false }}"
+        state: "{{ 'restarted' if (k3s_server_service_file.changed or _server_config_result.changed) else 'started' }}"
         enabled: true
+      throttle: 1
 
     - name: Verify that all server nodes joined
       when: not ansible_check_mode and (groups[server_group] | length) > 1
