@@ -267,7 +267,7 @@
       ansible.builtin.lineinfile:
         state: absent
         path: "{{ systemd_dir }}/k3s.service.env"
-        regexp: "^K3S_TOKEN=\\s*(?!{{ token }}\\s*$)"
+        regexp: "^K3S_TOKEN=\\s*(?!{{ token | regex_escape }}\\s*$)"
 
     - name: Add the token for joining the cluster to the environment
       no_log: true # avoid logging the server token
