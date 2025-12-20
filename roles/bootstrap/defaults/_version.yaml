@@ -46,4 +46,4 @@ helm_chart_version:
   reloader:
     ref: stakater/reloader
     repository: https://stakater.github.io/stakater-charts
-    version: 2.2.6
+    version: 2.2.7
