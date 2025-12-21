@@ -1,0 +1,113 @@
+traefik_helm_values:
+  # https://github.com/traefik/traefik-helm-chart/blob/master/traefik/values.yaml
+  service:
+    type: NodePort
+  ports:
+    web:
+      port: 8000
+      expose:
+        default: true
+      exposedPort: 80
+      protocol: TCP
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+    websecure:
+      port: 8443
+      expose:
+        default: true
+      exposedPort: 443
+      protocol: TCP
+      transport:
+        respondingTimeouts:
+          readTimeout: "300s"
+          writeTimeout: "300s"
+          idleTimeout: "300s"
+        lifeCycle:
+          graceTimeOut: "300s"
+    metrics:
+      port: 9100
+      expose:
+        default: false
+      exposedPort: 9100
+      protocol: TCP
+  ingressRoute:
+    dashboard:
+      enabled: false
+  podSecurityContext:
+    fsGroup: 65532
+    fsGroupChangePolicy: "OnRootMismatch"
+    runAsGroup: 65532
+    runAsNonRoot: true
+    runAsUser: 65532
+  deployment:
+    replicas: 2
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "500m"
+    limits:
+      memory: "512Mi"
+  logs:
+    general:
+      level: INFO
+  metrics:
+    prometheus:
+      entryPoint: metrics
+      service:
+        enabled: true
+      addEntryPointsLabels: true
+      addServicesLabels: true
+      disableAPICheck: true
+      serviceMonitor:
+        enabled: true
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+  podDisruptionBudget:
+    minAvailable: 1
+  providers:
+    kubernetesCRD:
+      allowCrossNamespace: true
+  extraObjects:
+    - apiVersion: gateway.networking.k8s.io/v1
+      kind: HTTPRoute
+      metadata:
+      name: traefik-web-ui
+      annotations:
+        gethomepage.dev/enabled: "true"
+        gethomepage.dev/name: "Traefik"
+        gethomepage.dev/href: "https://system-traefik.{{ ingress_hostname }}"
+        gethomepage.dev/group: "Infra"
+        gethomepage.dev/icon: "si-traefikproxy"
+        gethomepage.dev/pod-selector: "app.kubernetes.io/name=traefik"
+      spec:
+      parentRefs:
+        - name: traefik-gateway
+          namespace: traefik
+      hostnames:
+        - system-traefik.{{ ingress_hostname }}
+      rules:
+        - matches:
+            - path:
+              type: PathPrefix
+              value: /
+          backendRefs:
+            - name: api@internal
+              kind: TraefikService
+              port: 9000
+        - matches:
+            - path:
+              type: PathPrefix
+              value: /oauth2/
+          backendRefs:
+            - name: oauth2-proxy
+              namespace: security
+              port: 80
+
+external_dns_secret_name:
+external_dns_secret_data:
+external_dns_helm_values:

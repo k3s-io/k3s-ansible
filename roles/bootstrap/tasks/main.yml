@@ -96,21 +96,21 @@
         values: "{{ kubernetes_reloader_helm_values }}"
         context: "{{ k3s_context_name }}"
 
-- name: ingress-nginx
+- name: traefik
   block:
-    - name: ingress-nginx - Install chart
+    - name: traefik - Install chart
       kubernetes.core.helm:
-        name: ingress-nginx
-        chart_ref: ingress-nginx/ingress-nginx
-        chart_version: "{{ helm_chart_version['ingress-nginx']['version'] }}"
+        name: traefik
+        chart_ref: traefik/traefik
+        chart_version: "{{ helm_chart_version['traefik']['version'] }}"
         create_namespace: true
         force: "{{ helm_force_update }}"
         release_namespace: kube-system
-        values: "{{ ingress_nginx_helm_config }}"
+        values: "{{ traefik_helm_values }}"
         context: "{{ k3s_context_name }}"
     - ansible.builtin.wait_for:
         timeout: "120"
-  tags: only-ingress-nginx
+  tags: only-traefik
 
 - name: security
   block:

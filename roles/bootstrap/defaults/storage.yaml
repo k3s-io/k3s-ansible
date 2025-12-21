@@ -1,0 +1,54 @@
+longhorn_enabled: false
+longhorn_enabled_only_agent: false
+longhorn_replica_count: 2
+longhorn_data_dir: /var/lib/longhorn/
+longhorn_helm_values:
+  # https://github.com/longhorn/longhorn/blob/master/chart/values.yaml
+  global:
+    nodeSelector:
+      "longhorn.io/enabled": "true"
+
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+  defaultSettings:
+    createDefaultDiskLabeledNodes: true
+    defaultDataPath: "{{ longhorn_data_dir }}"
+    storageMinimalAvailablePercentage: "{{ longhorn_storage_minimal_available_percentage | default(25) }}"
+    storageReservedPercentageForDefaultDisk: "{{ longhorn_storage_reserved_percentage_for_default_disk | default(30) }}"
+  persistence:
+    defaultClassReplicaCount: "{{ longhorn_replica_count }}"
+    defaultNodeSelector:
+      enable: "{{ longhorn_enabled_only_agent }}"
+      selector: "AGENT_NODE"
+  metrics:
+    serviceMonitor:
+      enabled: "{{ enable_service_monitors }}"
+  ingress:
+    enabled: true
+    ingressClassName: "nginx"
+    host: "system-longhorn.{{ ingress_hostname }}"
+    path: /
+    pathType: Prefix
+    tls: false
+    secureBackends: false
+    annotations:
+      gethomepage.dev/enabled: "true"
+      gethomepage.dev/name: "Longhorn"
+      gethomepage.dev/pod-selector: "app=longhorn-ui"
+      gethomepage.dev/description: "Cloud-Native distributed storage built on and for Kubernetes"
+      gethomepage.dev/group: "System"
+      gethomepage.dev/icon: "sh-rancher-longhorn-light"
+
+snapshot_controller: {}
+
+nfs_external_provisioner_enabled: false
+nfs_external_provisioner_path: "/"
+nfs_external_provisioner_helm_values:
+  storageClass:
+    name: nfs
+  nfs:
+    server: "{{ nfs_external_provisioner_server }}"
+    path: "{{ nfs_external_provisioner_path }}"
+    mountOptions: ["vers=4"]

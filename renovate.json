@@ -3,7 +3,9 @@
   "extends": [
     ":semanticCommits"
   ],
-  "schedule": ["* * * * 0,6"],
+  "schedule": [
+    "* * * * 0,6"
+  ],
   "automerge": false,
   "prCreation": "immediate",
   "automergeStrategy": "squash",
@@ -17,7 +19,8 @@
   "packageRules": [
     {
       "matchDatasources": [
-        "helm","docker"
+        "helm",
+        "docker"
       ],
       "matchUpdateTypes": [
         "major",
@@ -44,12 +47,6 @@
       },
       "groupName": "all non-major Python dependencies ({{ lookup (split (lowercase releaseTimestamp) 't') 0 }})",
       "groupSlug": "all-minor-patch-python"
-    },
-    {
-      "matchUpdateTypes": [
-        "major"
-      ],
-      "enabled": false
     }
   ],
   "customManagers": [

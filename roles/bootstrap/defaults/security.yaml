@@ -1,0 +1,248 @@
+---
+security_enabled: false
+security_github_client_id:
+security_github_client_secret:
+security_github_organizations:
+security_github_organizations_mapped: |
+  {% for org in security_github_organizations.split(',') %}
+  - name: "{{ org.split(':')[0] }}"
+  {% if ":" in org %}
+    teams:
+  {% for team in org.split(':')[1].split('|') %}
+    - "{{ team }}"
+  {% endfor %}
+  {% endif %}
+  {% endfor %}
+
+security_static_users: ""
+
+security_ip_white_list:
+  - 127.0.0.1/32
+  - 10.42.0.0/16
+  - 10.43.0.0/16
+  - 192.168.31.0/24
+
+security_dex_helm_values_default_clients: |
+  - id: dex-static-clients
+    name: "dex-static-clients"
+    public: true
+    redirectURIs:
+      - 'https://example.com/oidc/callback'
+    secret: "{{ security_github_client_secret }}"
+  - id: argo-cd
+    name: "Argo CD"
+    redirectURIs:
+      - "https://automation-argo-cd.{{ ingress_hostname }}/api/dex/callback"
+    secret: "{{ security_github_client_secret }}"
+security_dex_extra_clients: []
+security_dex_helm_values:
+  # https://github.com/dexidp/helm-charts/blob/master/charts/dex/values.yaml
+  config:
+    storage:
+      type: kubernetes
+      config:
+        inCluster: true
+
+    issuer: https://security-dex.{{ ingress_hostname }}/dex
+    scopes:
+      - email
+      - groups
+      - offline_access
+      - openid
+      - profile
+
+    web:
+      allowedOrigins:
+        - "*"
+
+    staticClients: "{{ (security_dex_helm_values_default_clients | from_yaml) + (security_dex_extra_clients | from_yaml) }}"
+
+    staticPasswords: "{{ security_static_users | from_yaml }}"
+
+    enablePasswordDB: true
+
+    oauth2:
+      skipApprovalScreen: true
+      passwordConnector: local
+
+    connectors:
+      - type: github
+        id: github
+        name: GitHub
+        config:
+          clientID: "{{ security_github_client_id }}"
+          clientSecret: "{{ security_github_client_secret }}"
+          redirectURI: https://security-dex.{{ ingress_hostname }}/dex/callback
+          orgs: "{{ security_github_organizations_mapped | from_yaml }}"
+
+  serviceMonitor:
+    enabled: "{{ enable_service_monitors }}"
+
+  ingress:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: "security-dex.{{ ingress_hostname }}"
+        paths:
+          - path: /
+            pathType: Prefix
+
+security_oauth2_proxy_helm_values: # https://github.com/oauth2-proxy/manifests/blob/main/helm/oauth2-proxy/values.yaml
+  fullnameOverride: oauth2-proxy
+
+  config:
+    clientID: oauth2-proxy
+    clientSecret: "{{ security_github_client_secret }}"
+    cookieSecret: "{{ lookup('community.general.random_string', length=16, special=False) }}"
+
+  extraArgs:
+    provider: "oidc"
+    provider-display-name: "Github"
+    oidc-issuer-url: https://security-dex.{{ ingress_hostname }}/dex
+    redirect-url: https://security-oauth2.{{ ingress_hostname }}/oauth2/callback
+    skip-provider-button: false
+    approval-prompt: auto
+
+    code-challenge-method: S256
+    reverse-proxy: true
+    show-debug-on-error: true
+
+    cookie-csrf-expire: "1h"
+    cookie-domain: ".{{ ingress_hostname }}"
+    cookie-expire: "168h"
+    cookie-samesite: "lax"
+    cookie-secure: true
+    whitelist-domain: ".{{ ingress_hostname }}"
+
+    pass-access-token: true
+    pass-authorization-header: true
+    pass-host-header: true
+    pass-user-headers: true
+    set-authorization-header: true
+    set-xauthrequest: true
+    ssl-insecure-skip-verify: true
+    ssl-upstream-insecure-skip-verify: true
+
+    skip-jwt-bearer-tokens: true
+    oidc-extra-audience: "dex-static-clients"
+
+    display-htpasswd-form: false
+
+  gatewayApi:
+    enabled: true
+    gatewayRef:
+      name: "traefik"
+      namespace: "system"
+    rules:
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /
+    hostnames:
+      - "{{ ingress_hostname }}"
+      - "*.{{ ingress_hostname }}"
+      - "security-oauth2.{{ ingress_hostname }}"
+
+  extraObjects:
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: oauth2-proxy-cors-headers
+      spec:
+        headers:
+          accessControlAllowMethods:
+            - "GET"
+            - "OPTIONS"
+            - "PUT"
+          accessControlAllowHeaders:
+            - "*"
+          accessControlAllowOriginListRegex:
+            - "{{ ingress_hostname }}"
+          accessControlMaxAge: 100
+          addVaryHeader: true
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: oauth2-proxy-headers
+      spec:
+        headers:
+          stsSeconds: 315360000
+          browserXssFilter: true
+          contentTypeNosniff: true
+          forceSTSHeader: true
+          stsIncludeSubdomains: true
+          stsPreload: true
+          frameDeny: false
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: oauth2-proxy-auth-forward
+      spec:
+        forwardAuth:
+          address: https://security-oauth2.{{ ingress_hostname }}/oauth2/auth
+          trustForwardHeader: true
+          authResponseHeadersRegex: ^X-
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: oauth2-proxy-errors
+      spec:
+        errors:
+          status:
+            - "401"
+          statusRewrites:
+            "401": 302
+          service:
+            name: oauth2-proxy
+            port: http
+          query: "/oauth2/sign_in?rd={url}"
+    - apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: oauth2-proxy-auth
+      spec:
+        chain:
+          middlewares:
+            - name: oauth2-proxy-headers
+            - name: oauth2-proxy-errors
+            - name: oauth2-proxy-auth-forward
+    # DEX HTTPRoute because dex helm chart does not support Gateway API yet
+    - apiVersion: gateway.networking.k8s.io/v1
+      kind: HTTPRoute
+      metadata:
+      name: traefik-web-ui
+      annotations:
+        gethomepage.dev/enabled: "true"
+        gethomepage.dev/name: "Traefik"
+        gethomepage.dev/href: "https://system-traefik.{{ ingress_hostname }}"
+        gethomepage.dev/group: "Infra"
+        gethomepage.dev/icon: "si-traefikproxy"
+        gethomepage.dev/pod-selector: "app.kubernetes.io/name=traefik"
+      spec:
+      parentRefs:
+        - name: traefik-gateway
+          namespace: traefik
+      hostnames:
+        - system-traefik.{{ ingress_hostname }}
+      rules:
+        - matches:
+            - path:
+              type: PathPrefix
+              value: /
+          backendRefs:
+            - name: api@internal
+              kind: TraefikService
+              port: 9000
+        - matches:
+            - path:
+              type: PathPrefix
+              value: /oauth2/
+          backendRefs:
+            - name: oauth2-proxy
+              namespace: security
+              port: 80
+
+cert_manager_cluster_issuer_spec:
+  selfSigned: {}
+cert_manager_cluster_issuer_secret_name:
+cert_manager_cluster_issuer_secret_data:
