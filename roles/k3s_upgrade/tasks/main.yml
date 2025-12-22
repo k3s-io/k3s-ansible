@@ -27,6 +27,23 @@
           tags:
             - distribute_artifacts
 
+    # We must stop the service because we want to modify the service file before starting it again.
+    # INSTALL_K3S_SKIP_START does work on upgrades, because the service is already installed and started.
+    - name: Stop K3s service
+      when: k3s_upgrade_current_version is version(k3s_version, '<')
+      ansible.builtin.systemd:
+        state: stopped
+        name: "{{ (server_group in group_names) | ternary('k3s', 'k3s-agent') }}"
+
+    # We only save the token if the user did not provide one, leading to an auto-generated token on first install.
+    - name: Save the existing K3s token if needed
+      when:
+        - token is not defined
+        - inventory_hostname == groups[server_group][0] or ansible_host == groups[server_group][0]
+      ansible.builtin.command: cat /var/lib/rancher/k3s/server/node-token | cut -d':' -f4
+      register: k3s_upgrade_old_token
+      changed_when: false
+
     - name: Install new K3s Version
       # For some reason, ansible-lint thinks using enviroment with command is an error
       # even though its valid https://ansible.readthedocs.io/projects/lint/rules/inline-env-var/#correct-code
@@ -39,6 +56,7 @@
              | combine({
                "INSTALL_K3S_SKIP_START": "true",
                "INSTALL_K3S_VERSION": k3s_version,
+               "INSTALL_K3S_EXEC": ( "agent" if agent_group in group_names else "server" )
              })
              | combine(airgap_dir is defined and {"INSTALL_K3S_SKIP_DOWNLOAD": "true"} or {}) }}
       changed_when: true
@@ -119,6 +137,13 @@
               agent \
               --server https://{{ api_endpoint }}:{{ api_port }} \
               {{ extra_agent_args | default('') }}
+
+    - name: Add token to the environment
+      no_log: true # avoid logging the server token
+      ansible.builtin.lineinfile:
+        path: "{{ systemd_dir }}/{{ (agent_group in group_names) | ternary('k3s-agent.service.env', 'k3s.service.env') }}"
+        regexp: '^K3S_TOKEN='
+        line: "K3S_TOKEN={{ token is defined | ternary(token, k3s_upgrade_old_token.stdout) }}"
 
     - name: Restart K3s service [server]
       when: server_group in group_names
