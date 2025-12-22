@@ -11,7 +11,7 @@ k3s_cluster:
     ansible_connection: docker
     ansible_user: root
     ansible_become: true
-    k3s_version: v1.33.1+k3s1
+    k3s_version: v1.33.4+k3s1
     token: "secret12345"
     api_endpoint: "server-node"
     extra_server_args: "--snapshotter=native"

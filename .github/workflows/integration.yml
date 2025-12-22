@@ -65,6 +65,19 @@ jobs:
       - name: Verify K3s is running on Agent
         run: docker exec agent-node systemctl status k3s-agent | grep running
 
+      - name: Modify the k3s_version in inventory for upgrade
+        run: |
+          sed -i 's/k3s_version: v1.33.4+k3s1/k3s_version: v1.34.1+k3s1/' tests/basic.yml
+
+      - name: Run Upgrade Playbook
+        run: ansible-playbook playbooks/upgrade.yml -i tests/basic.yml
+
+      - name: Verify K3s upgraded on Server
+        run: docker exec server-node k3s --version | grep v1.34.
+
+      - name: Verify K3s upgraded on Agent
+        run: docker exec agent-node k3s --version | grep v1.34.
+        
       - name: Remove K3s from Server and Agent
         run: ansible-playbook playbooks/reset.yml -i tests/basic.yml
 
