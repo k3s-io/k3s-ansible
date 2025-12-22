@@ -9,8 +9,8 @@
       block:
         - name: Verify Ansible meets airgap version requirements.
           ansible.builtin.assert:
-            that: "ansible_version.full is version_compare('2.12', '>=')"
-            msg: "The Airgap role requires at least ansible-core 2.12"
+            that: "ansible_version.full is version_compare('2.15', '>=')"
+            msg: "The Airgap role requires at least ansible-core 2.15"
 
         - name: Check for existing install script
           become: false
@@ -40,7 +40,7 @@
 
         - name: Determine architecture and set airgap_k3s_arch
           ansible.builtin.set_fact:
-            airgap_k3s_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'arm' if ansible_architecture == 'armv7l' else 'amd64' }}"
+            airgap_k3s_arch: "{{ 'arm64' if ansible_facts['architecture'] == 'aarch64' else 'arm' if ansible_facts['architecture'] == 'armv7l' else 'amd64' }}"
 
         - name: Distribute K3s binary
           ansible.builtin.copy:
@@ -71,7 +71,7 @@
 
         - name: Install K3s SELinux RPM
           when:
-            - ansible_os_family == 'RedHat'
+            - ansible_facts['os_family'] == 'RedHat'
             - airgap_selinux_copy.skipped is false
           ansible.builtin.dnf:
             name: "{{ airgap_selinux_copy.results[0].dest }}"

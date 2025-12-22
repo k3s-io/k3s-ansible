@@ -9,7 +9,7 @@
     path: "{{ (boot_firmware_cmdline_txt.stat.exists) | ternary('/boot/firmware/cmdline.txt', '/boot/firmware/current/cmdline.txt') }}"
     regexp: '^([\w](?!.*\b{{ cgroup_item }}\b).*)$'
     replace: '\1 {{ cgroup_item }}'
-  with_items:
+  loop:
     - "cgroup_enable=cpuset"
     - "cgroup_memory=1"
     - "cgroup_enable=memory"
@@ -24,4 +24,4 @@
     name: linux-modules-extra-raspi
     update_cache: "{{ airgap_dir is not defined }}"
     state: present
-  when: "ansible_distribution_version is version('20.10', '>=') and ansible_distribution_version is version('24.04', '<')"
+  when: "ansible_facts['distribution_version'] is version('20.10', '>=') and ansible_facts['distribution_version'] is version('24.04', '<')"

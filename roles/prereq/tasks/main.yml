@@ -2,17 +2,17 @@
 - name: Enforce minimum Ansible version
   ansible.builtin.assert:
     that:
-      - ansible_version.full is version('2.14', '>=')
-    msg: "Minimum ansible-core version required is 2.14"
+      - ansible_version.full is version('2.15', '>=')
+    msg: "Minimum ansible-core version required is 2.15"
 
 - name: Install Dependent Ubuntu Packages
-  when: ansible_distribution in ['Ubuntu']
+  when: ansible_facts['distribution'] in ['Ubuntu']
   ansible.builtin.apt:
     name: policycoreutils  # Used by install script to restore SELinux context
     update_cache: "{{ airgap_dir is not defined }}"
 
 - name: Install Dependent RHEL 10 Package
-  when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == "10"
+  when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == "10"
   ansible.builtin.dnf:
     name: kernel-modules-extra   # Load br_netfilter module
     update_cache: "{{ airgap_dir is not defined }}"
@@ -30,7 +30,7 @@
     value: "1"
     state: present
     reload: true
-  when: ansible_all_ipv6_addresses | length > 0
+  when: ansible_facts['all_ipv6_addresses'] | length > 0
 
 - name: Populate service facts
   ansible.builtin.service_facts:
@@ -114,7 +114,7 @@
         state: enabled
         permanent: true
         immediate: true
-      with_items:
+      loop:
         - 5001/tcp   # Spegel (Embedded distributed registry)
         - 8472/udp   # Flannel VXLAN
         - 10250/tcp  # Kubelet metrics
@@ -135,8 +135,8 @@
             + groups[agent_group] | default([])
           )
           | map('extract', hostvars)
-          | selectattr('ansible_default_ipv4', 'defined')
-          | map(attribute='ansible_default_ipv4.address')
+          | selectattr('ansible_facts.default_ipv4', 'defined')
+          | map(attribute='ansible_facts.default_ipv4.address')
           | flatten | unique | list
         }}
 
@@ -154,13 +154,13 @@
     content: "br_netfilter"
     dest: /etc/modules-load.d/br_netfilter.conf
     mode: "u=rw,g=,o="
-  when: (ansible_os_family == 'RedHat' or ansible_distribution == 'Archlinux')
+  when: (ansible_facts['os_family'] == 'RedHat' or ansible_facts['distribution'] == 'Archlinux')
 
 - name: Load br_netfilter
   community.general.modprobe:
     name: br_netfilter
     state: present
-  when: (ansible_os_family == 'RedHat' or ansible_distribution == 'Archlinux')
+  when: (ansible_facts['os_family'] == 'RedHat' or ansible_facts['distribution'] == 'Archlinux')
 
 - name: Set bridge-nf-call-iptables (just to be sure)
   ansible.posix.sysctl:
@@ -168,7 +168,7 @@
     value: "1"
     state: present
     reload: true
-  when: (ansible_os_family == 'RedHat' or ansible_distribution == 'Archlinux')
+  when: (ansible_facts['os_family'] == 'RedHat' or ansible_facts['distribution'] == 'Archlinux')
   loop:
     - net.bridge.bridge-nf-call-iptables
     - net.bridge.bridge-nf-call-ip6tables
@@ -186,7 +186,7 @@
 
 - name: Install Apparmor Parser [Suse]
   when:
-    - ansible_os_family == 'Suse'
+    - ansible_facts['os_family'] == 'Suse'
     - prereq_apparmor_status is defined
     - prereq_apparmor_status.stdout == "Y"
   ansible.builtin.package:
@@ -195,7 +195,7 @@
 
 - name: Install Apparmor Parser [Debian]
   when:
-    - ansible_distribution == 'Debian'
+    - ansible_facts['distribution'] == 'Debian'
     - ansible_facts['distribution_major_version'] == "11"
     - prereq_apparmor_status is defined
     - prereq_apparmor_status.stdout == "Y"
@@ -227,7 +227,7 @@
     insertafter: EOF
     path: /etc/sudoers
     validate: 'visudo -cf %s'
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts['os_family'] == 'RedHat'
 
 - name: Setup alternative K3s directory
   when:

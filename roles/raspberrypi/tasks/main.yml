@@ -43,6 +43,6 @@
       ansible.builtin.include_tasks: "{{ item }}"
       with_first_found:
         - "prereq/{{ detected_distribution }}.yml"
-        - "prereq/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
-        - "prereq/{{ ansible_distribution }}.yml"
+        - "prereq/{{ ansible_facts['distribution'] }}-{{ ansible_facts['distribution_major_version'] }}.yml"
+        - "prereq/{{ ansible_facts['distribution'] }}.yml"
         - "prereq/default.yml"
