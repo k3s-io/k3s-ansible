@@ -10,14 +10,6 @@
   ansible.builtin.set_fact:
     k3s_agent_installed_version: "{{ k3s_agent_version_output.stdout_lines[0].split(' ')[2] }}"
 
-- name: Stop play if trying to upgrade via site.yml when upgrade is preferred
-  when:
-    - k3s_agent_installed_version is defined
-    - k3s_agent_installed_version is version(k3s_version, '<')
-    - upgrade_preferred is true
-  ansible.builtin.fail:
-    msg: "Upgrade detected: Installed k3s version ({{ k3s_agent_installed_version }}) is older than desired version ({{ k3s_version }}). Please use upgrade.yml playbook for version upgrades."
-
 # If airgapped, all K3s artifacts are already on the node.
 # We should be downloading and installing the newer version only if we are in one of the following cases :
 #   - we couldn't get k3s installed version in the first task of this role
