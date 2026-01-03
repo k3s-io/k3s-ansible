@@ -32,6 +32,37 @@
     reload: true
   when: ansible_facts['all_ipv6_addresses'] | length > 0
 
+- name: Handle modern nftables/iptables-nft stack (Arch Linux ARM 6.18+)
+  when:
+    - ansible_facts['distribution'] == 'Archlinux'
+    - ansible_facts['kernel'] is version('6.18', '>=')
+  block:
+    - name: Check if legacy iptables is installed
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Ensure legacy iptables is removed to avoid conflicts
+      community.general.pacman:
+        name: iptables
+        state: absent
+        force: true
+      when:
+        - "'iptables' in ansible_facts.packages"
+        - "'iptables-nft' not in ansible_facts.packages"
+
+    - name: Install iptables-nft and nftables
+      community.general.pacman:
+        name:
+          - iptables-nft
+          - nftables
+        state: present
+
+    - name: Ensure nftables is enabled and started
+      ansible.builtin.systemd:
+        name: nftables
+        state: started
+        enabled: true
+
 - name: Populate service facts
   ansible.builtin.service_facts:
 
@@ -222,7 +253,7 @@
 - name: Add /usr/local/bin to sudo secure_path
   ansible.builtin.lineinfile:
     line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
-    regexp: "Defaults(\\s)*secure_path(\\s)*="
+    regexp: 'Defaults(\s)*secure_path(\s)*='
     state: present
     insertafter: EOF
     path: /etc/sudoers
