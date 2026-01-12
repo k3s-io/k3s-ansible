@@ -47,6 +47,7 @@
       when: server_group in group_names
       block:
         - name: Determine if tls-san is already in config or args
+          # noqa var-naming[no-role-prefix]
           ansible.builtin.set_fact:
             _api_endpoint_in_args: >-
               {% if api_endpoint is defined and extra_server_args | default('') | regex_search('--tls-san[=\s]+' + api_endpoint | regex_escape(), ignorecase=True) %}
@@ -60,6 +61,7 @@
             - api_endpoint is defined
             - api_endpoint != ansible_hostname
             - not (_api_endpoint_in_args | trim | bool)
+          # noqa var-naming[no-role-prefix]
           ansible.builtin.set_fact:
             opt_tls_san: "--tls-san={{ api_endpoint }}"
 
