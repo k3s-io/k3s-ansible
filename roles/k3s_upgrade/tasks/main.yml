@@ -31,7 +31,7 @@
     # INSTALL_K3S_SKIP_START does work on upgrades, because the service is already installed and started.
     - name: Stop K3s service
       when: k3s_upgrade_current_version is version(k3s_version, '<')
-      ansible.builtin.systemd:
+      ansible.builtin.service:
         state: stopped
         name: "{{ (server_group in group_names) | ternary('k3s', 'k3s-agent') }}"
 
@@ -44,11 +44,13 @@
       register: k3s_upgrade_old_token
       changed_when: false
 
-    - name: Install new K3s Version
+    - name: Install new K3s Version [server]
       # For some reason, ansible-lint thinks using enviroment with command is an error
       # even though its valid https://ansible.readthedocs.io/projects/lint/rules/inline-env-var/#correct-code
       # Skip if only reconfiguring (no version change needed)
-      when: k3s_upgrade_current_version is version(k3s_version, '<')
+      when:
+        - k3s_upgrade_current_version is version(k3s_version, '<')
+        - server_group in group_names
       ansible.builtin.command: # noqa inline-env-var
         cmd: /usr/local/bin/k3s-install.sh
       environment: >-
@@ -56,9 +58,31 @@
              | combine({
                "INSTALL_K3S_SKIP_START": "true",
                "INSTALL_K3S_VERSION": k3s_version,
-               "INSTALL_K3S_EXEC": ( "agent" if agent_group in group_names else "server" )
              })
              | combine(airgap_dir is defined and {"INSTALL_K3S_SKIP_DOWNLOAD": "true"} or {}) }}
+      changed_when: true
+
+    - name: Install new K3s Version [agent]
+      # For some reason, ansible-lint thinks using enviroment with command is an error
+      # even though its valid https://ansible.readthedocs.io/projects/lint/rules/inline-env-var/#correct-code
+      # Unlike server, we always run the install command, because we are using it to reconfigure the ENV and Args passed to k3s-agent.
+      # Instead we just skip the download/replace if airgapped or no version change is needed.
+      when:
+        - agent_group in group_names
+      # noqa var-naming[no-role-prefix]
+      ansible.builtin.command:
+        cmd: /usr/local/bin/k3s-install.sh
+      environment: "{{ _install_envs }}"
+      vars:
+        _base_envs:
+          INSTALL_K3S_SKIP_DOWNLOAD: "{{ (airgap_dir is defined or k3s_upgrade_current_version == k3s_version) | ternary('true', 'false') }}"
+          INSTALL_K3S_SKIP_START: "true"
+          INSTALL_K3S_SYSTEMD_DIR: "{{ systemd_dir }}"
+          INSTALL_K3S_VERSION: "{{ k3s_version }}"
+          INSTALL_K3S_EXEC: "agent --server https://{{ api_endpoint }}:{{ api_port }} {{ extra_agent_args }}"
+          K3S_TOKEN: "{{ token if token is defined else k3s_upgrade_old_token.stdout }}"
+        # We overrides the extra_install_envs with required keys from _base_envs on purpose
+        _install_envs: "{{ extra_install_envs | default({}) | combine(_base_envs) }}"
       changed_when: true
 
     - name: Regenerate K3s service file [server]
@@ -125,23 +149,11 @@
             cluster_init: false
             join: true
 
-    - name: Regenerate K3s service file [agent]
-      when:
-        - agent_group in group_names
-        - api_endpoint is defined
-      ansible.builtin.replace:
-        path: "{{ systemd_dir }}/k3s-agent.service"
-        regexp: '^ExecStart=\/usr\/local\/bin\/k3s \\\n\s*agent.*(?:\n(?:[\t\s].*|$))*'
-        replace: |
-          ExecStart=/usr/local/bin/k3s \
-              agent \
-              --server https://{{ api_endpoint }}:{{ api_port }} \
-              {{ extra_agent_args | default('') }}
-
-    - name: Add token to the environment
+    - name: Add token to the environment [server]
+      when: server_group in group_names
       no_log: true # avoid logging the server token
       ansible.builtin.lineinfile:
-        path: "{{ systemd_dir }}/{{ (agent_group in group_names) | ternary('k3s-agent.service.env', 'k3s.service.env') }}"
+        path: "{{ systemd_dir }}/k3s.service.env"
         regexp: '^K3S_TOKEN='
         line: "K3S_TOKEN={{ token is defined | ternary(token, k3s_upgrade_old_token.stdout) }}"
 
@@ -154,7 +166,6 @@
 
     - name: Restart K3s service [agent]
       when: agent_group in group_names
-      ansible.builtin.systemd:
+      ansible.builtin.service:
         state: restarted
-        daemon_reload: true
         name: k3s-agent

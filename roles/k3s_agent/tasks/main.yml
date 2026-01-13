@@ -26,19 +26,19 @@
         group: root
         mode: "0755"
 
-    - name: Download K3s binary
-      # For some reason, ansible-lint thinks using enviroment with command is an error
-      # even though its valid https://ansible.readthedocs.io/projects/lint/rules/inline-env-var/#correct-code
-      ansible.builtin.command: # noqa inline-env-var
+    - name: Download K3s and install binary
+      # noqa var-naming[no-role-prefix]
+      ansible.builtin.command:
         cmd: /usr/local/bin/k3s-install.sh
-      # Ensures that extra_install_envs are combined with required env vars
-      environment: >-
-        {{ extra_install_envs | combine({
-          "INSTALL_K3S_SKIP_START": "true",
-          "INSTALL_K3S_SYSTEMD_DIR": systemd_dir,
-          "INSTALL_K3S_VERSION": k3s_version,
-          "INSTALL_K3S_EXEC": "agent"
-        }) }}
+      environment: "{{ _install_envs }}"
+      vars:
+        _base_envs:
+          INSTALL_K3S_SKIP_START: "true"
+          INSTALL_K3S_SYSTEMD_DIR: "{{ systemd_dir }}"
+          INSTALL_K3S_VERSION: "{{ k3s_version }}"
+          INSTALL_K3S_EXEC: "agent --server https://{{ api_endpoint }}:{{ api_port }} {{ extra_agent_args }}"
+        # We overrides the extra_install_envs with required keys from _base_envs on purpose
+        _install_envs: "{{ extra_install_envs | default({}) | combine(_base_envs) }}"
       changed_when: true
 
 - name: Setup optional config file
@@ -62,41 +62,33 @@
   ansible.builtin.set_fact:
     token: "{{ hostvars[groups[server_group][0]].token }}"
 
+- name: Set k3s agent environment file based on init system
+  ansible.builtin.set_fact:
+    k3s_agent_env_file: "{{ (ansible_facts['service_mgr'] == 'systemd') | ternary(systemd_dir ~ '/k3s-agent.service.env', '/etc/rancher/k3s/k3s-agent.env') }}"
+
 - name: Add service environment variables
   when: extra_service_envs is defined
   ansible.builtin.lineinfile:
-    path: "{{ systemd_dir }}/k3s-agent.service.env"
+    path: "{{ k3s_agent_env_file }}"
     line: "{{ item }}"
   loop: "{{ extra_service_envs }}"
 
 - name: Delete any existing token from the environment if different from the new one
   ansible.builtin.lineinfile:
     state: absent
-    path: "{{ systemd_dir }}/k3s-agent.service.env"
+    path: "{{ k3s_agent_env_file }}"
     regexp: "^K3S_TOKEN=\\s*(?!{{ token | regex_escape }}\\s*$)"
 
 - name: Add the token for joining the cluster to the environment
   no_log: true # avoid logging the server token
   ansible.builtin.lineinfile:
-    path: "{{ systemd_dir }}/k3s-agent.service.env"
+    path: "{{ k3s_agent_env_file }}"
     line: "{{ item }}"
   loop:
     - "K3S_TOKEN={{ token }}"
 
-- name: Modify ExecStart in k3s-agent.service to include API endpoint and extra args
-  register: k3s_agent_service
-  ansible.builtin.replace:
-    path: "{{ systemd_dir }}/k3s-agent.service"
-    regexp: '^ExecStart=\/usr\/local\/bin\/k3s \\\n\s*agent.*(?:\n(?:[\t\s].*|$))*'
-    replace: |
-      ExecStart=/usr/local/bin/k3s \
-          agent \
-          --server https://{{ api_endpoint }}:{{ api_port }} \
-          {{ extra_agent_args }}
-
-- name: Enable and check K3s agent service
-  ansible.builtin.systemd:
+- name: Enable and start K3s agent
+  ansible.builtin.service:
     name: k3s-agent
-    daemon_reload: "{{ true if k3s_agent_service.changed else false }}"
-    state: "{{ 'restarted' if (k3s_agent_service.changed or _agent_config_result.changed) else 'started' }}"
+    state: "{{ 'restarted' if _agent_config_result.changed else 'started' }}"
     enabled: true
