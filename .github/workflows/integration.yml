@@ -140,7 +140,11 @@ jobs:
         run: ansible-playbook playbooks/upgrade.yml -i tests/ha.yml
 
       - name: Verify K3s upgraded on all servers
-        run: sleep 5 && docker exec server-node1 k3s kubectl get nodes | grep v1.34 | wc -l | grep 3
+        run: |
+          sleep 5 && docker exec server-node1 k3s kubectl get nodes
+          for SERVER in $SERVERS; do
+            docker exec $SERVER k3s --version | grep v1.34.
+          done
         
       - name: Remove K3s from server nodes
         run: ansible-playbook playbooks/reset.yml -i tests/ha.yml
