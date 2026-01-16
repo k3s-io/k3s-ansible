@@ -1,0 +1,70 @@
+---
+- name: Collect Cluster Specifications
+  hosts: k3s_cluster
+  gather_facts: true
+  become: true
+  tasks:
+    - name: Get Disk Usage for Root
+      ansible.builtin.set_fact:
+        root_disk: "{{ ansible_mounts | selectattr('mount', 'equalto', '/') | first }}"
+
+    - name: Capture Node Specs
+      ansible.builtin.set_fact:
+        node_specs:
+          hostname: "{{ inventory_hostname }}"
+          ip: "{{ ansible_default_ipv4.address }}"
+          role: "{{ 'Server' if inventory_hostname in groups['server'] else 'Agent' }}"
+          cpu_cores: "{{ ansible_processor_vcpus }}"
+          ram_mb: "{{ ansible_memtotal_mb }}"
+          disk_total_gb: "{{ (root_disk.size_total / 1024 / 1024 / 1024) | round(2) }}"
+          disk_free_gb: "{{ (root_disk.size_available / 1024 / 1024 / 1024) | round(2) }}"
+          disk_percent_used: "{{ (100 - (root_disk.size_available / root_disk.size_total * 100)) | round(1) }}"
+          os: "{{ ansible_distribution }} {{ ansible_distribution_version }}"
+          kernel: "{{ ansible_kernel }}"
+
+- name: Generate and Log Report
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    report_file: "cluster_specs_report.md"
+  tasks:
+    - name: Aggregate Data
+      ansible.builtin.set_fact:
+        cluster_nodes: "{{ groups['k3s_cluster'] | map('extract', hostvars, 'node_specs') | list }}"
+
+    - name: Calculate Totals
+      ansible.builtin.set_fact:
+        total_cpu: "{{ cluster_nodes | map(attribute='cpu_cores') | map('int') | sum }}"
+        total_ram_gb: "{{ (cluster_nodes | map(attribute='ram_mb') | map('int') | sum / 1024) | round(2) }}"
+
+    - name: Create Report Content
+      ansible.builtin.set_fact:
+        report_content: |
+          # Cluster Specification Report
+          **Date:** {{ lookup('pipe', 'date "+%Y-%m-%d %H:%M:%S"') }}
+
+          ## Cluster Totals
+          - **Total Nodes:** {{ cluster_nodes | length }}
+          - **Total CPU:** {{ total_cpu }} Cores
+          - **Total RAM:** {{ total_ram_gb }} GB
+
+          ## Node Details
+          {% for node in cluster_nodes %}
+          ### {{ node.hostname }} ({{ node.role }})
+          - **IP Address:** {{ node.ip }}
+          - **OS:** {{ node.os }} (Kernel: {{ node.kernel }})
+          - **CPU:** {{ node.cpu_cores }} Cores
+          - **RAM:** {{ (node.ram_mb | int / 1024) | round(2) }} GB
+          - **Disk (Root):** {{ node.disk_free_gb }}GB free / {{ node.disk_total_gb }}GB total ({{ node.disk_percent_used }}% used)
+          
+          {% endfor %}
+
+    - name: Save Report to File
+      ansible.builtin.copy:
+        content: "{{ report_content }}"
+        dest: "{{ playbook_dir }}/../{{ report_file }}"
+
+    - name: Display Report
+      ansible.builtin.debug:
+        msg: "{{ report_content.split('\n') }}"
