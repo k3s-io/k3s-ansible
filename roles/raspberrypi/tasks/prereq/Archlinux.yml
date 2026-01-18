@@ -12,10 +12,10 @@
     raspberrypi_boot_file: "{{ (boot_files.results | selectattr('stat.exists') | map(attribute='item') | list | first) | default('') }}"
 
 # Arch ARM64 boots via /boot/boot.txt (UBoot), /boot/cmdline.txt only exists on legacy 32-bit systems
-- name: Enable cgroup via boot commandline
+- name: Enable cgroup via boot commandline (boot.txt)
   ansible.builtin.replace:
     path: "{{ raspberrypi_boot_file }}"
-    regexp: '^([\w](?!.*\b{{ cgroup_item }}\b).*)$'
+    regexp: '^(setenv bootargs(?!.*{{ cgroup_item }}).*)$'
     replace: '\1 {{ cgroup_item }}'
   with_items:
     - "cgroup_enable=cpuset"
@@ -23,4 +23,19 @@
     - "cgroup_enable=memory"
   loop_control:
     loop_var: cgroup_item
-  notify: "{{ (raspberrypi_boot_file == '/boot/boot.txt') | ternary('Regenerate bootloader image', 'Reboot Pi') }}"
+  when: raspberrypi_boot_file == '/boot/boot.txt'
+  notify: Regenerate bootloader image
+
+- name: Enable cgroup via boot commandline (cmdline.txt)
+  ansible.builtin.replace:
+    path: "{{ raspberrypi_boot_file }}"
+    regexp: '^(\S(?!.*{{ cgroup_item }}).*)$'
+    replace: '\1 {{ cgroup_item }}'
+  with_items:
+    - "cgroup_enable=cpuset"
+    - "cgroup_memory=1"
+    - "cgroup_enable=memory"
+  loop_control:
+    loop_var: cgroup_item
+  when: raspberrypi_boot_file == '/boot/cmdline.txt'
+  notify: Reboot Pi
