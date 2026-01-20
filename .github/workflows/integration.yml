@@ -30,10 +30,11 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.13.x'
+          cache: 'pip'
 
       - name: Install Ansible and dependencies
         run: |
-          pip install ansible
+          pip install -r requirements.txt
           ansible-galaxy collection install -r collections/requirements.yml
 
       - name: Verify Inventory

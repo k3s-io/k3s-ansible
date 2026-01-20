@@ -1,0 +1,2 @@
+# Used by GHA CI to cache pip dependencies
+ansible
