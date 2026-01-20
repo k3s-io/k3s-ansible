@@ -1,0 +1,3 @@
+---
+server_group: server # noqa var-naming[no-role-prefix]
+agent_group: agent # noqa var-naming[no-role-prefix]
