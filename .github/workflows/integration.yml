@@ -10,10 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        container_os: [debian12]
+        service_mgr: [systemd, openrc]
 
     # K3s requires privileged containers to run inside Docker and access to cgrougs.
     steps:
+      - name: Set container OS based on service manager
+        id: set-container
+        run: |
+          if [ "${{ matrix.service_mgr }}" == "systemd" ]; then
+            echo "container_os=geerlingguy/docker-debian12-ansible" >> $GITHUB_ENV
+          else
+            echo "container_os=jrei/openrc-alpine" >> $GITHUB_ENV
+          fi
+
       - name: Checkout codebase
         uses: actions/checkout@v6
 
@@ -42,7 +51,7 @@ jobs:
             --volume=/lib/modules:/lib/modules:ro \
             --cgroupns=host \
             --network=k3s-ansible \
-            geerlingguy/docker-${{ matrix.container_os }}-ansible:latest
+            geerlingguy/docker-debian12-ansible:latest
 
           # Start the Agent node
           docker run -d --name agent-node \
@@ -51,19 +60,27 @@ jobs:
             --volume=/lib/modules:/lib/modules:ro \
             --cgroupns=host \
             --network=k3s-ansible \
-            geerlingguy/docker-${{ matrix.container_os }}-ansible:latest
+            ${{ env.container_os }}:latest
 
+      - name: Setup openrc Image
+        if: matrix.service_mgr == 'openrc'
+        run: docker exec agent-node apk add curl python3
+      
       - name: Run Playbook
         env:
           ANSIBLE_FORCE_COLOR: '1'
         run: ansible-playbook playbooks/site.yml -i tests/basic.yml
 
-
       - name: Verify K3s is running on Server
         run: docker exec server-node k3s kubectl get nodes | grep Ready
 
-      - name: Verify K3s is running on Agent
+      - name: Verify K3s is running on Agent (systemd)
+        if: matrix.service_mgr == 'systemd'
         run: docker exec agent-node systemctl status k3s-agent | grep running
+
+      - name: Verify K3s is running on Agent (openrc)
+        if: matrix.service_mgr == 'openrc'
+        run: docker exec agent-node rc-service k3s-agent status | grep started
 
       - name: Modify the k3s_version in inventory for upgrade
         run: |
