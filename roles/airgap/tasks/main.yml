@@ -100,7 +100,7 @@
     - name: Install Airgap K3s
       block:
         - name: Run K3s Install [server]
-          when: inventory_hostname in groups['server'] or ansible_host in groups['server']
+          when: inventory_hostname in groups[server_group] or ansible_host in groups[server_group]
           ansible.builtin.command:
             cmd: /usr/local/bin/k3s-install.sh
           environment:
@@ -109,7 +109,7 @@
           changed_when: true
 
         - name: Run K3s Install [agent]
-          when: inventory_hostname in groups['agent'] or ansible_host in groups['agent']
+          when: inventory_hostname in groups[agent_group] or ansible_host in groups[agent_group]
           ansible.builtin.command:
             cmd: /usr/local/bin/k3s-install.sh
           environment:
