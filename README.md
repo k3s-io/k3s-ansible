@@ -177,7 +177,7 @@ $ cat inventory.yml
 airgap_dir: ./my-airgap # Paths are relative to the playbooks directory
 ```
 
-Additionally, if deploying on an OS with SELinux, you will also need to download the latest [k3s-selinux RPM](https://github.com/k3s-io/k3s-selinux/releases/latest) and place it in the airgap folder.
+Additionally, if deploying on an OS with SELinux, you will also need to download the latest [k3s-selinux RPM](https://github.com/k3s-io/k3s-selinux/releases/latest) and its dependencies `selinux-policy` and `container-selinux` RPMs and place them in the airgap folder.
 
 
 It is assumed that the control node has access to the internet. The playbook will automatically download the k3s install script on the control node, and then distribute all three artifacts to the managed nodes. 
