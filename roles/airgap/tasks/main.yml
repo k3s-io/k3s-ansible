@@ -57,7 +57,9 @@
               # so we need to skip it if the file is not found
               skip: true
 
+        # Dependencies are listed first so they get installed first in the next task
         - name: Distribute K3s SELinux RPM
+          when: ansible_facts['os_family'] == 'RedHat' or ansible_facts['os_family'] == 'Suse'
           ansible.builtin.copy:
             src: "{{ item }}"
             dest: /tmp/
@@ -65,16 +67,18 @@
             group: root
             mode: "0755"
           with_fileglob:
+            - "{{ airgap_dir }}/container-selinux*.rpm"
+            - "{{ airgap_dir }}/selinux-policy*.rpm"
             - "{{ airgap_dir }}/k3s-selinux*.rpm"
           register: airgap_selinux_copy
           ignore_errors: true
 
         - name: Install K3s SELinux RPM
           when:
-            - ansible_facts['os_family'] == 'RedHat'
+            - ansible_facts['os_family'] == 'RedHat' or ansible_facts['os_family'] == 'Suse'
             - airgap_selinux_copy.skipped is false
           ansible.builtin.dnf:
-            name: "{{ airgap_selinux_copy.results[0].dest }}"
+            name: "{{ airgap_selinux_copy.results | selectattr('dest', 'defined') | map(attribute='dest') | list }}"
             state: present
             disable_gpg_check: true
             disablerepo: "*"
