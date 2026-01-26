@@ -1,0 +1,16 @@
+---
+k3s_cluster:
+  children:
+    server:
+      hosts:
+        server-node1:
+        server-node2:
+        server-node3:
+  vars:
+    ansible_connection: docker
+    ansible_user: root
+    ansible_become: true
+    k3s_version: v1.33.4+k3s1
+    token: "secretha"
+    api_endpoint: "server-node1"
+    extra_server_args: "--snapshotter=native"
