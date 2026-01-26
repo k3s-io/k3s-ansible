@@ -103,3 +103,72 @@ jobs:
           docker stop server-node && docker rm -f server-node
           docker stop agent-node && docker rm -f agent-node
           docker network rm k3s-ansible
+
+  test-ha:
+    runs-on: ubuntu-latest
+    # K3s requires privileged containers to run inside Docker and access to cgrougs.
+    env:
+      SERVERS: server-node1 server-node2 server-node3
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v6
+
+      - name: Set up Python 3.13.
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13.x'
+
+      - name: Install Ansible and dependencies
+        run: |
+          pip install ansible
+          ansible-galaxy collection install -r collections/requirements.yml
+
+      - name: Verify Inventory
+        run: ansible-inventory -i tests/ha.yml --list
+
+      - name: Create Docker Network
+        run: docker network create k3s-ha-ansible
+
+      - name: Start Docker containers
+        run: |
+          for SERVER in $SERVERS; do
+            docker run -d --name $SERVER \
+              --privileged \
+              --volume=/sys/fs/cgroup:/sys/fs/cgroup:rw \
+              --volume=/lib/modules:/lib/modules:ro \
+              --cgroupns=host \
+              --network=k3s-ha-ansible \
+              geerlingguy/docker-debian12-ansible:latest
+          done
+
+      - name: Run Playbook
+        env:
+          ANSIBLE_FORCE_COLOR: '1'
+        run: ansible-playbook playbooks/site.yml -i tests/ha.yml
+
+      - name: Verify K3s is running on servers
+        run: docker exec server-node1 k3s kubectl get nodes | grep Ready | wc -l | grep 3
+
+      - name: Modify the k3s_version in inventory for upgrade
+        run: |
+          sed -i 's/k3s_version: v1.33.4+k3s1/k3s_version: v1.34.1+k3s1/' tests/ha.yml
+
+      - name: Run Upgrade Playbook
+        run: ansible-playbook playbooks/upgrade.yml -i tests/ha.yml
+
+      - name: Verify K3s upgraded on all servers
+        run: |
+          sleep 5 && docker exec server-node1 k3s kubectl get nodes
+          for SERVER in $SERVERS; do
+            docker exec $SERVER k3s --version | grep v1.34.
+          done
+        
+      - name: Remove K3s from server nodes
+        run: ansible-playbook playbooks/reset.yml -i tests/ha.yml
+
+      - name: Stop and remove Docker containers
+        run: |
+          for SERVER in $SERVERS; do
+            docker stop $SERVER && docker rm -f $SERVER
+          done
+          docker network rm k3s-ha-ansible
