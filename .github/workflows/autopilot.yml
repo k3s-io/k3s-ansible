@@ -1,0 +1,204 @@
+name: Collection Autopilot
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at midnight
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry Run (Skip Push/Publish)'
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  maintain-fork:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write # Required for pruning old runs
+    steps:
+      - name: Checkout Fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync with Upstream
+        id: sync
+        run: |
+          # Replace with the actual upstream repository
+          git remote add upstream https://github.com/k3s-io/k3s-ansible.git
+          git fetch upstream
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          MERGE_OUTPUT=$(git merge upstream/main --no-edit || echo "Merge failed")
+          echo "$MERGE_OUTPUT"
+          
+          if [[ "$MERGE_OUTPUT" == *"Already up to date."* ]] && [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Process, Validate, and Semantic Version
+        if: steps.sync.outputs.changed == 'true'
+        id: process
+        shell: python
+        run: |
+          import os, yaml, sys, subprocess
+
+          # 1. Load the merged galaxy.yml
+          with open('galaxy.yml', 'r') as f:
+              galaxy_data = yaml.safe_load(f)
+          
+          # --- FORK OVERRIDE LOGIC ---
+          # We force these values every time to prevent upstream overrides
+          galaxy_data['namespace'] = 'mattykay'
+          galaxy_data['name'] = 'k3s_ansible'
+          galaxy_data['authors'] = ['Matthew Kalnins <github@mattykay.com>', 'k3s-io community']
+          # ---------------------------
+
+          current_ver = galaxy_data.get('version', '0.0.0')
+          major, minor, patch = map(int, current_ver.split('.'))
+
+          # 2. Get commits for semantic check
+          try:
+              last_tag = subprocess.check_output(['git', 'describe', '--tags', '--abbrev=0']).decode().strip()
+              logs = subprocess.check_output(['git', 'log', f'{last_tag}..HEAD', '--oneline']).decode().lower()
+          except:
+              logs = subprocess.check_output(['git', 'log', '--oneline']).decode().lower()
+
+          # 3. Determine Bump
+          bump = "patch"
+          if any(x in logs for x in ["breaking change", "!:", "feat!:"]):
+              bump = "major"
+          elif "feat:" in logs:
+              bump = "minor"
+
+          # 4. Calculate Version
+          if bump == "major":
+              new_ver = f"{major + 1}.0.0"
+          elif bump == "minor":
+              new_ver = f"{major}.{minor + 1}.0"
+          else:
+              new_ver = f"{major}.{minor}.{patch + 1}"
+
+          galaxy_data['version'] = new_ver
+          
+          # --- GALAXY STRUCTURE FIX ---
+          # Ensure every role has a README.md and meta/main.yml
+          roles_path = 'roles'
+          if os.path.exists(roles_path):
+              for role in os.listdir(roles_path):
+                  role_dir = os.path.join(roles_path, role)
+                  if os.path.isdir(role_dir):
+                      # Create missing README.md
+                      if not os.path.exists(os.path.join(role_dir, 'README.md')):
+                          with open(os.path.join(role_dir, 'README.md'), 'w') as f:
+                              f.write(f"# {role}\nRole for k3s cluster deployment.")
+                      
+                      # Create missing meta directory and main.yml
+                      meta_dir = os.path.join(role_dir, 'meta')
+                      if not os.path.exists(meta_dir):
+                          os.makedirs(meta_dir)
+                      if not os.path.exists(os.path.join(meta_dir, 'main.yml')):
+                          with open(os.path.join(meta_dir, 'main.yml'), 'w') as f:
+                              f.write("galaxy_info:\n  author: mattykay\n  description: k3s role\n  license: Apache-2.0")
+
+          # 5. Write the "Mattykay-branded" file back
+          with open('galaxy.yml', 'w') as f:
+              yaml.dump(galaxy_data, f)
+
+          # 6. Assemble README
+          fork_header = ""
+          if os.path.exists('README_FORK.md'):
+              with open('README_FORK.md', 'r') as f:
+                  fork_header = f.read().strip()
+
+          with open('README.md', 'r') as f:
+              current_content = f.read()
+
+          # If our separator exists, discard everything above it to get back to pure upstream
+          separator = "# UPSTREAM DOCUMENTATION"
+          if separator in current_content:
+              upstream_content = current_content.split(separator)[-1].strip()
+          else:
+              upstream_content = current_content.strip()
+
+          # Rebuild from scratch
+          with open('README.md', 'w') as f:
+              f.write(f"{fork_header}\n\n")
+              f.write(f"**Current Version:** `{new_ver}` | [Full Changelog](./CHANGELOG.md)\n")
+              f.write(f"\n---\n{separator}\n{upstream_content}") 
+          
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              out.write(f"new_tag={new_ver}\n")
+              out.write(f"bump_type={bump}\n") 
+
+      - name: Commit and Tag
+        if: steps.sync.outputs.changed == 'true' && inputs.dry_run == false
+        run: |
+          git add galaxy.yml README.md
+          git commit -m "chore: release ${{ steps.process.outputs.new_tag }} [skip ci]"
+          
+          # Create the tag locally
+          git tag ${{ steps.process.outputs.new_tag }}
+          
+          # Push the branch (main)
+          git push origin main
+          
+          # Push ONLY the specific new tag to avoid touching old workflow-linked tags
+          git push origin refs/tags/${{ steps.process.outputs.new_tag }}
+
+      - name: GitHub Release & Galaxy Publish
+        if: steps.sync.outputs.changed == 'true' && inputs.dry_run == false
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GALAXY_API_KEY: ${{ secrets.GALAXY_API_KEY }}
+        run: |
+          # Force the release to your fork specifically
+          gh release create ${{ steps.process.outputs.new_tag }} \
+            --repo ${{ github.repository }} \
+            --target main \
+            --title "Release ${{ steps.process.outputs.new_tag }}" \
+            --generate-notes
+          
+          # Publish to Galaxy
+          pip install ansible-core
+          ansible-galaxy collection build
+          ansible-galaxy collection publish *.tar.gz --api-key $GALAXY_API_KEY
+
+      - name: Prune Old Workflow Runs
+        if: always()
+        run: |
+          gh run list --workflow "${{ github.workflow }}" --limit 100 --json databaseId -q '.[20:].databaseId' | xargs -I{} gh run delete {}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Send Discord Failure Alert
+        if: failure() && github.event_name != 'workflow_dispatch'
+        run: |
+          PAYLOAD=$(cat <<EOF
+          {
+            "embeds": [{
+              "title": "Collection Autopilot Failed",
+              "description": "The automated sync or publish process encountered an error.",
+              "color": 15158332,
+              "fields": [
+                { "name": "Repository", "value": "${{ github.repository }}", "inline": true },
+                { "name": "Workflow", "value": "${{ github.workflow }}", "inline": true },
+                { "name": "Run ID", "value": "${{ github.run_id }}", "inline": true },
+                { "name": "Bump Type", "value": "${{ steps.process.outputs.bump_type }}", "inline": true }
+              ],
+              "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+              "footer": { "text": "GitHub Actions Auto-Monitor" },
+              "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            }]
+          }
+          EOF
+          )
+
+          curl -X POST -H 'Content-Type: application/json' \
+          -d "$PAYLOAD" \
+          ${{ secrets.NOTIFY_WEBHOOK_URL }}}
