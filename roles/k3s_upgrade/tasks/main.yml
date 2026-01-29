@@ -40,7 +40,7 @@
       when:
         - token is not defined
         - inventory_hostname == groups[server_group][0] or ansible_host == groups[server_group][0]
-      ansible.builtin.command: cat /var/lib/rancher/k3s/server/node-token | cut -d':' -f4
+      ansible.builtin.command: cut -d':' -f4 /var/lib/rancher/k3s/server/node-token
       register: k3s_upgrade_old_token
       changed_when: false
 
