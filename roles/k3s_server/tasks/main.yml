@@ -10,6 +10,20 @@
   ansible.builtin.set_fact:
     k3s_server_installed_version: "{{ k3s_server_version_output.stdout_lines[0].split(' ')[2] }}"
 
+- name: Populate service facts
+  ansible.builtin.service_facts:
+
+# Stop the service before upgrading to allow the install script to replace the binary.
+# INSTALL_K3S_SKIP_START does not prevent a running service from blocking the upgrade.
+- name: Stop K3s before upgrade
+  when:
+    - k3s_server_version_output.rc == 0
+    - k3s_server_installed_version is version(k3s_version, '<')
+    - ansible_facts.services['k3s.service'] is defined
+  ansible.builtin.service:
+    state: stopped
+    name: k3s
+
 # If airgapped, all K3s artifacts are already on the node.
 # We should be downloading and installing the newer version only if we are in one of the following cases :
 #   - we couldn't get k3s installed version in the first task of this role
@@ -89,6 +103,24 @@
         mode: "0644"
       register: _server_config_result
 
+# On re-runs where no explicit token was provided, preserve the auto-generated token
+# from the existing cluster to prevent authentication failures.
+- name: Save existing token if auto-generated
+  when:
+    - token is not defined
+    - k3s_server_version_output.rc == 0
+    - inventory_hostname == groups[server_group][0] or ansible_host == groups[server_group][0]
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/token
+  register: k3s_server_saved_token
+
+- name: Set token from existing cluster
+  when:
+    - token is not defined
+    - k3s_server_saved_token is not skipped
+  ansible.builtin.set_fact:
+    token: "{{ k3s_server_saved_token.content | b64decode | trim }}"
+
 - name: Init first server node
   when: inventory_hostname == groups[server_group][0] or ansible_host == groups[server_group][0]
   block:
@@ -148,7 +180,9 @@
       when:
         - ansible_facts.services['k3s.service'] is defined
         - ansible_facts.services['k3s.service'].state == 'running'
-        - service_file_single.changed or service_file_ha.changed or _server_config_result.changed
+        - >-
+          service_file_single.changed or service_file_ha.changed or _server_config_result.changed
+          or (k3s_server_installed_version is defined and k3s_server_installed_version is version(k3s_version, '<'))
       ansible.builtin.systemd:
         name: k3s
         daemon_reload: true
@@ -295,7 +329,9 @@
       when:
         - ansible_facts.services['k3s.service'] is defined
         - ansible_facts.services['k3s.service'].state == 'running'
-        - k3s_server_service_file.changed or _server_config_result.changed
+        - >-
+          k3s_server_service_file.changed or _server_config_result.changed
+          or (k3s_server_installed_version is defined and k3s_server_installed_version is version(k3s_version, '<'))
       ansible.builtin.systemd:
         name: k3s
         daemon_reload: true

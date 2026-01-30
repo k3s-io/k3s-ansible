@@ -10,36 +10,52 @@
   ansible.builtin.set_fact:
     k3s_agent_installed_version: "{{ k3s_agent_version_output.stdout_lines[0].split(' ')[2] }}"
 
-# If airgapped, all K3s artifacts are already on the node.
-# We should be downloading and installing the newer version only if we are in one of the following cases :
-#   - we couldn't get k3s installed version in the first task of this role
-#   - the installed version of K3s on the nodes is older than the requested version in ansible vars
-- name: Download artifact only if needed
-  when: not ansible_check_mode and airgap_dir is undefined and ( k3s_agent_version_output.rc != 0 or k3s_agent_installed_version is version(k3s_version, '<') )
-  block:
-    - name: Download K3s install script
-      ansible.builtin.get_url:
-        url: https://get.k3s.io/
-        timeout: 120
-        dest: /usr/local/bin/k3s-install.sh
-        owner: root
-        group: root
-        mode: "0755"
+# Stop the service before upgrading to allow the install script to replace the binary.
+- name: Stop K3s agent before upgrade
+  when:
+    - k3s_agent_version_output.rc == 0
+    - k3s_agent_installed_version is version(k3s_version, '<')
+  ansible.builtin.service:
+    state: stopped
+    name: k3s-agent
 
-    - name: Download K3s and install binary
-      # noqa var-naming[no-role-prefix]
-      ansible.builtin.command:
-        cmd: /usr/local/bin/k3s-install.sh
-      environment: "{{ _install_envs }}"
-      vars:
-        _base_envs:
-          INSTALL_K3S_SKIP_START: "true"
-          INSTALL_K3S_SYSTEMD_DIR: "{{ systemd_dir }}"
-          INSTALL_K3S_VERSION: "{{ k3s_version }}"
-          INSTALL_K3S_EXEC: "agent --server https://{{ api_endpoint }}:{{ api_port }} {{ extra_agent_args }}"
-        # We overrides the extra_install_envs with required keys from _base_envs on purpose
-        _install_envs: "{{ extra_install_envs | default({}) | combine(_base_envs) }}"
-      changed_when: true
+# Download install script only when upgrading and not airgapped.
+- name: Download K3s install script
+  when:
+    - not ansible_check_mode
+    - airgap_dir is undefined
+    - k3s_agent_version_output.rc != 0 or k3s_agent_installed_version is version(k3s_version, '<')
+  ansible.builtin.get_url:
+    url: https://get.k3s.io/
+    timeout: 120
+    dest: /usr/local/bin/k3s-install.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+# Run the install script to install, upgrade, or reconfigure the agent.
+# On version upgrade: downloads and installs the new binary.
+# On same version: skips download, regenerates the service file to apply
+# config changes like extra_agent_args.
+# On airgap: always skips download, binary is distributed by the airgap role.
+- name: Install and configure K3s agent
+  when:
+    - not ansible_check_mode
+    - k3s_agent_version_output.rc != 0 or k3s_agent_installed_version is version(k3s_version, '<=')
+  # noqa var-naming[no-role-prefix]
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s-install.sh
+  environment: "{{ _install_envs }}"
+  vars:
+    _base_envs:
+      INSTALL_K3S_SKIP_DOWNLOAD: "{{ (airgap_dir is defined or (k3s_agent_installed_version is defined and k3s_agent_installed_version is version(k3s_version, '=='))) | ternary('true', 'false') }}"
+      INSTALL_K3S_SKIP_START: "true"
+      INSTALL_K3S_SYSTEMD_DIR: "{{ systemd_dir }}"
+      INSTALL_K3S_VERSION: "{{ k3s_version }}"
+      INSTALL_K3S_EXEC: "agent --server https://{{ api_endpoint }}:{{ api_port }} {{ extra_agent_args }}"
+    # We overrides the extra_install_envs with required keys from _base_envs on purpose
+    _install_envs: "{{ extra_install_envs | default({}) | combine(_base_envs) }}"
+  changed_when: true
 
 - name: Setup optional config file
   when: agent_config_yaml is defined
@@ -90,5 +106,9 @@
 - name: Enable and start K3s agent
   ansible.builtin.service:
     name: k3s-agent
-    state: "{{ 'restarted' if _agent_config_result.changed else 'started' }}"
+    state: >-
+      {{ 'restarted' if (_agent_config_result.changed | default(false)
+         or (k3s_agent_installed_version is defined
+             and k3s_agent_installed_version is version(k3s_version, '<=')))
+         else 'started' }}
     enabled: true
