@@ -82,12 +82,22 @@ jobs:
         if: matrix.service_mgr == 'openrc'
         run: docker exec agent-node rc-service k3s-agent status | grep started
 
+      - name: Re-run site.yml to verify idempotency
+        env:
+          ANSIBLE_FORCE_COLOR: '1'
+        run: ansible-playbook playbooks/site.yml -i tests/basic.yml
+
+      - name: Verify K3s is still running after idempotent re-run
+        run: docker exec server-node k3s kubectl get nodes | grep Ready
+
       - name: Modify the k3s_version in inventory for upgrade
         run: |
           sed -i 's/k3s_version: v1.33.4+k3s1/k3s_version: v1.34.1+k3s1/' tests/basic.yml
 
-      - name: Run Upgrade Playbook
-        run: ansible-playbook playbooks/upgrade.yml -i tests/basic.yml
+      - name: Upgrade via site.yml
+        env:
+          ANSIBLE_FORCE_COLOR: '1'
+        run: ansible-playbook playbooks/site.yml -i tests/basic.yml
 
       - name: Verify K3s upgraded on Server
         run: docker exec server-node k3s --version | grep v1.34.
@@ -149,12 +159,22 @@ jobs:
       - name: Verify K3s is running on servers
         run: docker exec server-node1 k3s kubectl get nodes | grep Ready | wc -l | grep 3
 
+      - name: Re-run site.yml to verify idempotency
+        env:
+          ANSIBLE_FORCE_COLOR: '1'
+        run: ansible-playbook playbooks/site.yml -i tests/ha.yml
+
+      - name: Verify K3s is still running after idempotent re-run
+        run: docker exec server-node1 k3s kubectl get nodes | grep Ready | wc -l | grep 3
+
       - name: Modify the k3s_version in inventory for upgrade
         run: |
           sed -i 's/k3s_version: v1.33.4+k3s1/k3s_version: v1.34.1+k3s1/' tests/ha.yml
 
-      - name: Run Upgrade Playbook
-        run: ansible-playbook playbooks/upgrade.yml -i tests/ha.yml
+      - name: Upgrade via site.yml
+        env:
+          ANSIBLE_FORCE_COLOR: '1'
+        run: ansible-playbook playbooks/site.yml -i tests/ha.yml
 
       - name: Verify K3s upgraded on all servers
         run: |
