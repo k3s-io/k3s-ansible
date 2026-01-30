@@ -33,6 +33,16 @@
     group: root
     mode: "0755"
 
+# Capture service file hash before the install script runs, so we can
+# detect whether the script actually changed anything.
+- name: Hash K3s agent service file before install
+  when:
+    - not ansible_check_mode
+    - k3s_agent_version_output.rc != 0 or k3s_agent_installed_version is version(k3s_version, '<=')
+  ansible.builtin.stat:
+    path: "{{ systemd_dir }}/k3s-agent.service"
+  register: k3s_agent_service_before
+
 # Run the install script to install, upgrade, or reconfigure the agent.
 # On version upgrade: downloads and installs the new binary.
 # On same version: skips download, regenerates the service file to apply
@@ -55,7 +65,14 @@
       INSTALL_K3S_EXEC: "agent --server https://{{ api_endpoint }}:{{ api_port }} {{ extra_agent_args }}"
     # We overrides the extra_install_envs with required keys from _base_envs on purpose
     _install_envs: "{{ extra_install_envs | default({}) | combine(_base_envs) }}"
-  changed_when: true
+  changed_when: false
+  register: k3s_agent_install_result
+
+- name: Hash K3s agent service file after install
+  when: k3s_agent_install_result is not skipped
+  ansible.builtin.stat:
+    path: "{{ systemd_dir }}/k3s-agent.service"
+  register: k3s_agent_service_after
 
 - name: Setup optional config file
   when: agent_config_yaml is defined
@@ -108,7 +125,8 @@
     name: k3s-agent
     state: >-
       {{ 'restarted' if (_agent_config_result.changed | default(false)
+         or (k3s_agent_service_before.stat.checksum | default('', true) != k3s_agent_service_after.stat.checksum | default('', true))
          or (k3s_agent_installed_version is defined
-             and k3s_agent_installed_version is version(k3s_version, '<=')))
+             and k3s_agent_installed_version is version(k3s_version, '<')))
          else 'started' }}
     enabled: true
