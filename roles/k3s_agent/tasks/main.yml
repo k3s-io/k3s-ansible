@@ -1,4 +1,10 @@
 ---
+- name: Append node external IP to extra agent args if defined
+  # noqa var-naming[no-role-prefix]
+  when: hostvars[inventory_hostname]['node_external_ip'] is defined and hostvars[inventory_hostname]['node_external_ip'] != ""
+  ansible.builtin.set_fact:
+    extra_agent_args: "{{ extra_agent_args }} --node-ip={{ inventory_hostname }} --node-external-ip={{ hostvars[inventory_hostname]['node_external_ip'] }}"
+
 - name: Get k3s installed version
   ansible.builtin.command: k3s --version
   register: k3s_agent_version_output
