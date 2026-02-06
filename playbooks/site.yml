@@ -11,7 +11,6 @@
 - name: Setup K3S server
   hosts: server
   become: true
-  serial: 1
   roles:
     - role: k3s_server
 
