@@ -43,6 +43,17 @@
     path: "{{ systemd_dir }}/k3s-agent.service"
   register: k3s_agent_service_before
 
+# Define if k3s binary download should be skipped
+# Airgapped installs: binary is distributed by the airgap role
+# Same version reinstalls: no need to re-download the existing binary
+- name: Set install skip download flag
+  ansible.builtin.set_fact:
+    k3s_agent_skip_download: >-
+      {{ (airgap_dir is defined or
+          (k3s_agent_installed_version is defined and
+           k3s_agent_installed_version is version(k3s_version, '==')))
+         | ternary('true', 'false') }}
+
 # Run the install script to install, upgrade, or reconfigure the agent.
 # On version upgrade: downloads and installs the new binary.
 # On same version: skips download, regenerates the service file to apply
@@ -58,7 +69,7 @@
   environment: "{{ _install_envs }}"
   vars:
     _base_envs:
-      INSTALL_K3S_SKIP_DOWNLOAD: "{{ (airgap_dir is defined or (k3s_agent_installed_version is defined and k3s_agent_installed_version is version(k3s_version, '=='))) | ternary('true', 'false') }}"
+      INSTALL_K3S_SKIP_DOWNLOAD: "{{ k3s_agent_skip_download }}"
       INSTALL_K3S_SKIP_START: "true"
       INSTALL_K3S_SYSTEMD_DIR: "{{ systemd_dir }}"
       INSTALL_K3S_VERSION: "{{ k3s_version }}"

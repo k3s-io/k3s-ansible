@@ -62,6 +62,16 @@
              | combine(airgap_dir is defined and {"INSTALL_K3S_SKIP_DOWNLOAD": "true"} or {}) }}
       changed_when: true
 
+    # Define if k3s binary download should be skipped
+    # Airgapped installs: binary is distributed by the airgap role
+    # Same version reinstalls: no need to re-download the existing binary
+    - name: Set install skip download flag
+      ansible.builtin.set_fact:
+        k3s_upgrade_skip_download: >-
+          {{ (airgap_dir is defined or
+              k3s_upgrade_current_version == k3s_version)
+             | ternary('true', 'false') }}
+
     - name: Install new K3s Version [agent]
       # For some reason, ansible-lint thinks using enviroment with command is an error
       # even though its valid https://ansible.readthedocs.io/projects/lint/rules/inline-env-var/#correct-code
@@ -75,7 +85,7 @@
       environment: "{{ _install_envs }}"
       vars:
         _base_envs:
-          INSTALL_K3S_SKIP_DOWNLOAD: "{{ (airgap_dir is defined or k3s_upgrade_current_version == k3s_version) | ternary('true', 'false') }}"
+          INSTALL_K3S_SKIP_DOWNLOAD: "{{ k3s_upgrade_skip_download }}"
           INSTALL_K3S_SKIP_START: "true"
           INSTALL_K3S_SYSTEMD_DIR: "{{ systemd_dir }}"
           INSTALL_K3S_VERSION: "{{ k3s_version }}"
