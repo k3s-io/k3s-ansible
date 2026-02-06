@@ -115,6 +115,7 @@
   register: k3s_server_saved_token
 
 - name: Set token from existing cluster
+  # noqa var-naming[no-role-prefix]
   when:
     - token is not defined
     - k3s_server_saved_token is not skipped
