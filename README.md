@@ -146,20 +146,23 @@ The format of the datastore-endpoint parameter is dependent upon the datastore b
 
 ## Upgrading
 
-A playbook is provided to upgrade K3s on all nodes in the cluster. To use it, update `k3s_version` with the desired version in `inventory.yml` and run one of the following commands. Again, the syntax is slightly different depending on whether you installed `k3s-ansible` with `ansible-galaxy` or if you run the playbook from within the cloned git repository:
-
+To upgrade K3s, update `k3s_version` in `inventory.yml` and re-run `site.yml`. The playbook detects the installed version and handles the upgrade automatically, including stopping services before replacing binaries and restarting them afterward.
 
 *Installed with ansible-galaxy*
 
 ```bash
-ansible-playbook k3s.orchestration.upgrade -i inventory.yml
+ansible-playbook k3s.orchestration.site -i inventory.yml
 ```
 
 *Running the playbook from inside the repository*
 
 ```bash
-ansible-playbook playbooks/upgrade.yml -i inventory.yml
+ansible-playbook playbooks/site.yml -i inventory.yml
 ```
+
+Re-running `site.yml` without changing `k3s_version` is safe and will only restart services if the configuration actually changed.
+
+> **Note:** A dedicated `upgrade.yml` playbook still exists for backward compatibility but is no longer required.
 
 ## Airgap Install
 
