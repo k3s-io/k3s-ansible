@@ -1,0 +1,94 @@
+# SG3 RabbitMQ Cluster using Official RabbitMQ Cluster Operator
+# High Availability setup with 3 replicas
+# Deployment Date: 2025-11-26
+# Reference: https://www.rabbitmq.com/kubernetes/operator/using-operator.html
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbitmq
+  namespace: rabbitmq
+spec:
+  # 3 replicas for High Availability
+  replicas: 3
+
+  # Use official RabbitMQ image with management plugin
+  image: rabbitmq:4.0.9-management-alpine
+
+  # Persistence configuration
+  persistence:
+    storageClassName: longhorn
+    storage: 2Gi
+
+  # Resource allocation per replica
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+
+  # RabbitMQ configuration
+  rabbitmq:
+    additionalConfig: |
+      # Memory management
+      vm_memory_high_watermark.relative = 0.6
+      vm_memory_high_watermark_paging_ratio = 0.75
+      disk_free_limit.absolute = 1GB
+
+      # Default queue type - quorum queues for HA (survive node restarts)
+      default_queue_type = quorum
+
+      # Queue master location
+      queue_master_locator = min-masters
+
+      # Performance tuning
+      channel_max = 2048
+      heartbeat = 60
+      frame_max = 131072
+
+      # HA settings
+      cluster_partition_handling = pause_minority
+
+      # Consumer acknowledgment timeout (in milliseconds)
+      # Set to 1 hour (3600000ms) to accommodate long-running tasks
+      consumer_timeout = 3600000
+
+    additionalPlugins:
+      - rabbitmq_prometheus
+      - rabbitmq_shovel
+      - rabbitmq_shovel_management
+
+  # Pod anti-affinity to spread across nodes
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: rabbitmq
+          topologyKey: kubernetes.io/hostname
+
+  # Service configuration
+  service:
+    type: LoadBalancer
+
+  # Override for TLS (optional, can add later)
+  # tls:
+  #   secretName: rabbitmq-tls
+
+  # Pod tolerations (none needed for now)
+  tolerations: []
+
+---
+# Secret for RabbitMQ credentials
+# The operator auto-generates credentials, but we can specify them
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rabbitmq-credentials
+  namespace: rabbitmq
+type: Opaque
+stringData:
+  username: rabbitmq
+  password: IEPY0sQbyhcOqePLag47BVGiE9zQu240
