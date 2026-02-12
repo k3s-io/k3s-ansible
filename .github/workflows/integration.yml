@@ -197,7 +197,7 @@ jobs:
           fi
           echo "SERVER LOGS"
           docker exec server-node journalctl -u k3s -n 10
-        
+
       - name: Remove K3s from Server and Agent
         run: ansible-playbook playbooks/reset.yml -i tests/basic.yml
 
