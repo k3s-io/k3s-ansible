@@ -330,3 +330,73 @@ jobs:
             docker stop $SERVER && docker rm -f $SERVER
           done
           docker network rm k3s-ha-ansible
+
+  test-external:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v6
+
+      - name: Set up Python 3.13.
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13.x'
+
+      - name: Install Ansible and dependencies
+        run: |
+          pip install ansible
+          ansible-galaxy collection install -r collections/requirements.yml
+
+      - name: Verify Inventory
+        run: ansible-inventory -i tests/external.yml --list
+
+      - name: Create Docker Network
+        run: docker network create k3s-ext-ansible
+
+      - name: Start Database container
+        run: |
+          docker run -d --name mysqlDB \
+          --network=k3s-ext-ansible \
+          -p 3306:3306 -e MYSQL_ROOT_PASSWORD=e2e mysql:8.4
+      
+      - name: Start Server container
+        run: |
+          docker run -d --name server-node \
+            --privileged \
+            --volume=/sys/fs/cgroup:/sys/fs/cgroup:rw \
+            --volume=/lib/modules:/lib/modules:ro \
+            --cgroupns=host \
+            --network=k3s-ext-ansible \
+            rancher/systemd-node:v0.0.8 /usr/lib/systemd/systemd --unit=noop.target --show-status=true
+
+      - name: Install server dependencies
+        run: docker exec server-node zypper install -y python3-rpm
+
+      - name: Run Playbook
+        env:
+          ANSIBLE_FORCE_COLOR: '1'
+        run: ansible-playbook playbooks/site.yml -i tests/external.yml
+
+      - name: Verify K3s is running on servers
+        run: docker exec server-node k3s kubectl get nodes | grep Ready | wc -l | grep 1
+
+      - name: Wait for all deployments to be ready
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            echo "Attempt $attempt: checking deployments"
+            output=$(docker exec server-node k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
+            echo "$output"
+            if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 6 ]; then
+              sleep 15
+            fi
+          done
+          exit 1
+
+      - name: Stop and remove Docker containers
+        run: |
+          docker stop server-node && docker rm -f server-node
+          docker stop mysqlDB && docker rm -f mysqlDB
+          docker network rm k3s-ext-ansible
