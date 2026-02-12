@@ -95,6 +95,16 @@ jobs:
       - name: Verify K3s upgraded on Agent
         run: docker exec agent-node k3s --version | grep v1.34.
         
+      - name: Add node-label to server config
+        run: |
+          printf "    server_config_yaml: |\n      node-label: foo=bar\n" >> tests/basic.yml
+
+      - name: Run site Playbook again to apply new server args
+        run: ansible-playbook playbooks/site.yml -i tests/basic.yml
+
+      - name: Verify new server args applied
+        run: docker exec server-node k3s kubectl get nodes -o jsonpath='{.items[0].metadata.labels.foo}' | grep bar 
+
       - name: Remove K3s from Server and Agent
         run: ansible-playbook playbooks/reset.yml -i tests/basic.yml
 
