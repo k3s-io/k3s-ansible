@@ -1,0 +1,75 @@
+#!/usr/bin/nft -f
+# vim:set ts=2 sw=2 et:
+
+# IPv4/IPv6 Simple firewall ruleset for K3s clusters.
+# This template allows K3s required ports in addition to basic networking.
+
+flush ruleset
+
+table inet filter {
+  chain input {
+    type filter hook input priority filter
+    policy drop
+
+    # Allow loopback
+    iif lo accept
+
+    # Allow established/related connections
+    ct state established,related accept
+
+    # Allow ICMP
+    ip protocol icmp accept
+    ip6 nexthdr ipv6-icmp accept
+
+    # Allow SSH
+    tcp dport ssh accept
+
+    # K3s API server
+    tcp dport {{ api_port | default(6443) }} accept
+
+    # etcd peer and client ports (for HA clusters)
+    {% if groups[server_group] | length > 1 %}
+    tcp dport 2379 accept
+    tcp dport 2380 accept
+    {% endif %}
+
+    # Flannel VXLAN
+    udp dport 8472 accept
+
+    # Kubelet metrics
+    tcp dport 10250 accept
+
+    # Flannel Wireguard
+    udp dport 51820 accept
+    udp dport 51821 accept
+
+    # NodePort range
+    tcp dport 30000-32767 accept
+    udp dport 30000-32767 accept
+
+    # Allow traffic from cluster CIDR (pod network)
+    ip saddr {{ cluster_cidr | default('10.42.0.0/16') }} accept
+
+    # Allow traffic from service CIDR
+    ip saddr {{ service_cidr | default('10.43.0.0/16') }} accept
+
+    # Reject everything else
+    counter reject with icmpx type admin-prohibited
+  }
+
+  chain forward {
+    type filter hook forward priority filter
+    policy drop
+
+    # Allow forwarded traffic for pods
+    ct state established,related accept
+
+    # Reject
+    counter reject with icmpx type admin-prohibited
+  }
+
+  chain output {
+    type filter hook output priority filter
+    policy accept
+  }
+}
