@@ -5,36 +5,44 @@ table inet filter {
   chain input {
     type filter hook input priority filter; policy drop;
 
+    # 1. Standard "Safe" Rules
     iif lo accept
     ct state established,related accept
     ip protocol icmp accept
     ip6 nexthdr ipv6-icmp accept
     tcp dport ssh accept
 
-    # Allow ALL traffic from the physical nodes in the cluster
-    # (This ensures nodes can talk to each other's Kubelets/APIs)
-    {% for host in (groups[server_group] + groups[agent_group] | default([])) | unique %}
+    # 2. Allow Inter-Node Communication (Like your Firewalld "Internal" zone)
+    # Whitelists every node in the Ansible inventory
+    {% for host in (groups[server_group] | default([]) + groups[agent_group] | default([])) | unique %}
+    {% if hostvars[host].ansible_default_ipv4 is defined %}
     ip saddr {{ hostvars[host].ansible_default_ipv4.address }} accept
+    {% endif %}
     {% endfor %}
 
-    # K3s Essential Ports
+    # 3. K3s Core Ports (Like your UFW/Firewalld port loops)
     tcp dport {{ api_port | default(6443) }} accept
-    udp dport { 8472, 51820, 51821 } accept # Flannel/Wireguard
-    tcp dport { 10250, 10248 } accept       # Kubelet
+    {% if groups[server_group] | length > 1 %}
+    tcp dport 2379-2381 accept  # etcd
+    {% endif %}
     
-    # Allow Pod-to-Node communication
-    ip saddr {{ cluster_cidr | default('10.42.0.0/16') }} accept
-    ip saddr {{ service_cidr | default('10.43.0.0/16') }} accept
+    # Inter-node overlay ports
+    tcp dport { 5001, 10250 } accept        # Spegel & Kubelet
+    udp dport { 8472, 51820, 51821 } accept # Flannel (VXLAN/Wireguard)
 
-    # NodePorts
+    # 4. Allow Cluster & Service CIDRs (The "Trusted" zone logic)
+    {% for cidr in (cluster_cidr + ',' + service_cidr) | split(',') %}
+    ip saddr {{ cidr }} accept
+    {% endfor %}
+
+    # 5. NodePort Range
     tcp dport 30000-32767 accept
     udp dport 30000-32767 accept
   }
 
   chain forward {
     type filter hook forward priority filter; policy accept;
-    # We set policy to accept for K3s/CNI to manage forwarding rules via iptables-nft
-    # but we still filter for safety if desired.
+    # We allow forwarding so K3s/CNI can manage pod-to-pod routing
     ct state established,related accept
   }
 
@@ -43,10 +51,10 @@ table inet filter {
   }
 }
 
-# Proper NAT table for Masquerading
 table inet nat {
   chain postrouting {
     type nat hook postrouting priority srcnat; policy accept;
+    # Masquerade traffic leaving the pod network
     ip saddr {{ cluster_cidr | default('10.42.0.0/16') }} masquerade
   }
 }
