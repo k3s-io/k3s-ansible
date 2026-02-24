@@ -1,75 +1,52 @@
 #!/usr/bin/nft -f
-# vim:set ts=2 sw=2 et:
-
-# IPv4/IPv6 Simple firewall ruleset for K3s clusters.
-# This template allows K3s required ports in addition to basic networking.
-
 flush ruleset
 
 table inet filter {
   chain input {
-    type filter hook input priority filter
-    policy drop
+    type filter hook input priority filter; policy drop;
 
-    # Allow loopback
     iif lo accept
-
-    # Allow established/related connections
     ct state established,related accept
-
-    # Allow ICMP
     ip protocol icmp accept
     ip6 nexthdr ipv6-icmp accept
-
-    # Allow SSH
     tcp dport ssh accept
 
-    # K3s API server
+    # Allow ALL traffic from the physical nodes in the cluster
+    # (This ensures nodes can talk to each other's Kubelets/APIs)
+    {% for host in (groups[server_group] + groups[agent_group] | default([])) | unique %}
+    ip saddr {{ hostvars[host].ansible_default_ipv4.address }} accept
+    {% endfor %}
+
+    # K3s Essential Ports
     tcp dport {{ api_port | default(6443) }} accept
-
-    # etcd peer and client ports (for HA clusters)
-    {% if groups[server_group] | length > 1 %}
-    tcp dport 2379 accept
-    tcp dport 2380 accept
-    {% endif %}
-
-    # Flannel VXLAN
-    udp dport 8472 accept
-
-    # Kubelet metrics
-    tcp dport 10250 accept
-
-    # Flannel Wireguard
-    udp dport 51820 accept
-    udp dport 51821 accept
-
-    # NodePort range
-    tcp dport 30000-32767 accept
-    udp dport 30000-32767 accept
-
-    # Allow traffic from cluster CIDR (pod network)
+    udp dport { 8472, 51820, 51821 } accept # Flannel/Wireguard
+    tcp dport { 10250, 10248 } accept       # Kubelet
+    
+    # Allow Pod-to-Node communication
     ip saddr {{ cluster_cidr | default('10.42.0.0/16') }} accept
-
-    # Allow traffic from service CIDR
     ip saddr {{ service_cidr | default('10.43.0.0/16') }} accept
 
-    # Reject everything else
-    counter reject with icmpx type admin-prohibited
+    # NodePorts
+    tcp dport 30000-32767 accept
+    udp dport 30000-32767 accept
   }
 
   chain forward {
-    type filter hook forward priority filter
-    policy drop
-
-    # Allow forwarded traffic for pods
+    type filter hook forward priority filter; policy accept;
+    # We set policy to accept for K3s/CNI to manage forwarding rules via iptables-nft
+    # but we still filter for safety if desired.
     ct state established,related accept
-
-    # Reject
-    counter reject with icmpx type admin-prohibited
   }
 
   chain output {
-    type filter hook output priority filter
-    policy accept
+    type filter hook output priority filter; policy accept;
+  }
+}
+
+# Proper NAT table for Masquerading
+table inet nat {
+  chain postrouting {
+    type nat hook postrouting priority srcnat; policy accept;
+    ip saddr {{ cluster_cidr | default('10.42.0.0/16') }} masquerade
   }
 }
