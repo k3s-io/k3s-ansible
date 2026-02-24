@@ -12,7 +12,7 @@ table inet filter {
     ip6 nexthdr ipv6-icmp accept
     tcp dport ssh accept
 
-    # 2. Allow Inter-Node Communication (Like your Firewalld "Internal" zone)
+    # 2. Allow Inter-Node Communication (Like Firewalld "Internal" zone)
     # Whitelists every node in the Ansible inventory
     {% for host in (groups[server_group] | default([]) + groups[agent_group] | default([])) | unique %}
     {% if hostvars[host].ansible_default_ipv4 is defined %}
@@ -20,7 +20,7 @@ table inet filter {
     {% endif %}
     {% endfor %}
 
-    # 3. K3s Core Ports (Like your UFW/Firewalld port loops)
+    # 3. K3s Core Ports (Like UFW/Firewalld port loops)
     tcp dport {{ api_port | default(6443) }} accept
     {% if groups[server_group] | length > 1 %}
     tcp dport 2379-2381 accept  # etcd
