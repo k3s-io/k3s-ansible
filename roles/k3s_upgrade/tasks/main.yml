@@ -62,6 +62,11 @@
              | combine(airgap_dir is defined and {"INSTALL_K3S_SKIP_DOWNLOAD": "true"} or {}) }}
       changed_when: true
 
+    - name: Get the token from the first server
+      # noqa var-naming[no-role-prefix]
+      ansible.builtin.set_fact:
+        k3s_server_upgrade_old_token: "{{ hostvars[groups[server_group][0]].k3s_upgrade_old_token }}"
+
     - name: Install new K3s Version [agent]
       # For some reason, ansible-lint thinks using enviroment with command is an error
       # even though its valid https://ansible.readthedocs.io/projects/lint/rules/inline-env-var/#correct-code
@@ -80,7 +85,7 @@
           INSTALL_K3S_SYSTEMD_DIR: "{{ systemd_dir }}"
           INSTALL_K3S_VERSION: "{{ k3s_version }}"
           INSTALL_K3S_EXEC: "agent --server https://{{ api_endpoint }}:{{ api_port }} {{ extra_agent_args }}"
-          K3S_TOKEN: "{{ token if token is defined else k3s_upgrade_old_token.stdout }}"
+          K3S_TOKEN: "{{ token if token is defined else k3s_server_upgrade_old_token.stdout }}"
         # We overrides the extra_install_envs with required keys from _base_envs on purpose
         _install_envs: "{{ extra_install_envs | default({}) | combine(_base_envs) }}"
       changed_when: true
