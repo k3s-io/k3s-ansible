@@ -10,19 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service_mgr: [systemd, openrc]
+        os: [debian12, rockylinux10, opensuseleap15, alpine]
 
     # K3s requires privileged containers to run inside Docker and access to cgrougs.
     steps:
-      - name: Set container OS based on service manager
+      - name: Set container OS full name
         id: set-container
         run: |
-          if [ "${{ matrix.service_mgr }}" == "systemd" ]; then
-            echo "container_os=geerlingguy/docker-debian12-ansible" >> $GITHUB_ENV
-            echo "service_mgr=systemd" >> $GITHUB_ENV
-          else
+          if [ "${{ matrix.os }}" == "alpine" ]; then
             echo "container_os=jrei/openrc-alpine" >> $GITHUB_ENV
             echo "service_mgr=openrc" >> $GITHUB_ENV
+          else
+            echo "container_os=geerlingguy/docker-${{ matrix.os }}-ansible" >> $GITHUB_ENV
+            echo "service_mgr=systemd" >> $GITHUB_ENV
           fi
 
       - name: Checkout codebase
@@ -65,7 +65,7 @@ jobs:
             ${{ env.container_os }}:latest
 
       - name: Setup openrc Image
-        if: matrix.service_mgr == 'openrc'
+        if: matrix.os == 'alpine'
         run: docker exec agent-node apk add curl python3
       
       - name: Run Playbook
@@ -77,11 +77,11 @@ jobs:
         run: docker exec server-node k3s kubectl get nodes | grep Ready
 
       - name: Verify K3s is running on Agent (systemd)
-        if: matrix.service_mgr == 'systemd'
+        if: matrix.os != 'alpine'
         run: docker exec agent-node systemctl status k3s-agent | grep running
 
       - name: Verify K3s is running on Agent (openrc)
-        if: matrix.service_mgr == 'openrc'
+        if: matrix.os == 'alpine'
         run: docker exec agent-node rc-service k3s-agent status | grep started
 
       - name: Modify the k3s_version in inventory for upgrade
@@ -215,13 +215,21 @@ jobs:
               geerlingguy/docker-debian12-ansible:latest
           done
 
+          docker run -d --name agent-node1 \
+            --privileged \
+            --volume=/sys/fs/cgroup:/sys/fs/cgroup:rw \
+            --volume=/lib/modules:/lib/modules:ro \
+            --cgroupns=host \
+            --network=k3s-ha-ansible \
+            geerlingguy/docker-debian12-ansible:latest
+
       - name: Run Playbook
         env:
           ANSIBLE_FORCE_COLOR: '1'
         run: ansible-playbook playbooks/site.yml -i tests/ha.yml
 
-      - name: Verify K3s is running on servers
-        run: docker exec server-node1 k3s kubectl get nodes | grep Ready | wc -l | grep 3
+      - name: Verify K3s is running on nodes
+        run: docker exec server-node1 k3s kubectl get nodes | grep Ready | wc -l | grep 4
 
       - name: Modify the k3s_version in inventory for upgrade
         run: |
@@ -230,12 +238,14 @@ jobs:
       - name: Run Upgrade Playbook
         run: ansible-playbook playbooks/upgrade.yml -i tests/ha.yml
 
-      - name: Verify K3s upgraded on all servers
+      - name: Verify K3s upgraded on all nodes
         run: |
           sleep 5 && docker exec server-node1 k3s kubectl get nodes
           for SERVER in $SERVERS; do
             docker exec $SERVER k3s --version | grep v1.34.
           done
+          
+          docker exec agent-node1 k3s --version | grep v1.34.
         
       - name: Debug nodes/pods on failure
         if: failure()
@@ -262,6 +272,7 @@ jobs:
           for SERVER in $SERVERS; do
             docker stop $SERVER && docker rm -f $SERVER
           done
+          docker stop agent-node1 && docker rm -f agent-node1
           docker network rm k3s-ha-ansible
 
   test-external:
