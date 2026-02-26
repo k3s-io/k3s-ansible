@@ -9,9 +9,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         os: [debian12, rockylinux10, opensuseleap15, alpine]
-        fail-fast: false
 
     # K3s requires privileged containers to run inside Docker and access to cgrougs.
     steps:
