@@ -103,7 +103,32 @@ jobs:
         run: ansible-playbook playbooks/site.yml -i tests/basic.yml
 
       - name: Verify new server args applied
-        run: docker exec server-node k3s kubectl get nodes -o jsonpath='{.items[0].metadata.labels.foo}' | grep bar 
+        run: |
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt: checking node label"
+            output=$(docker exec server-node k3s kubectl get nodes -o jsonpath='{.items[0].metadata.labels.foo}' 2>&1)
+            echo "$output"
+            if echo "$output" | grep -q bar; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              sleep 10
+            fi
+          done
+          exit 1
+
+      - name: Debug nodes/pods on failure
+        if: failure()
+        run: |
+          echo "NODE INFO"
+          docker exec server-node k3s kubectl get nodes -o wide
+          echo "POD INFO"
+          docker exec server-node k3s kubectl get pods -A -o wide
+          echo "CONFIG FILES"
+          docker exec server-node cat /etc/rancher/k3s/config.yaml
+          docker exec agent-node cat /etc/rancher/k3s/config.yaml
+          echo "SERVER LOGS"
+          docker exec server-node journalctl -u k3s -n 10
 
       - name: Remove K3s from Server and Agent
         run: ansible-playbook playbooks/reset.yml -i tests/basic.yml
@@ -173,6 +198,23 @@ jobs:
             docker exec $SERVER k3s --version | grep v1.34.
           done
         
+      - name: Debug nodes/pods on failure
+        if: failure()
+        run: |
+          echo "NODE INFO"
+          docker exec server-node1 k3s kubectl get nodes -o wide
+          echo "POD INFO"
+          docker exec server-node1 k3s kubectl get pods -A -o wide
+          echo "CONFIG FILES"
+          for SERVER in $SERVERS; do
+            docker exec $SERVER cat /etc/rancher/k3s/config.yaml
+          done
+          echo "SERVER LOGS"
+          for SERVER in $SERVERS; do
+            echo "$SERVER LOG"
+            docker exec $SERVER journalctl -u k3s -n 10
+          done
+            
       - name: Remove K3s from server nodes
         run: ansible-playbook playbooks/reset.yml -i tests/ha.yml
 
