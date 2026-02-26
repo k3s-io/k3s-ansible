@@ -95,12 +95,42 @@ jobs:
       - name: Verify K3s upgraded on Agent
         run: docker exec agent-node k3s --version | grep v1.34.
         
+      - name: Wait for all deployments to be ready
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            echo "Attempt $attempt: checking deployments"
+            output=$(docker exec server-node k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
+            echo "$output"
+            if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 6 ]; then
+              sleep 10
+            fi
+          done
+          exit 1
+
       - name: Add node-label to server config
         run: |
           printf "    server_config_yaml: |\n      node-label: foo=bar\n" >> tests/basic.yml
 
       - name: Run site Playbook again to apply new server args
         run: ansible-playbook playbooks/site.yml -i tests/basic.yml
+
+      - name: Wait for all deployments to be ready
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            echo "Attempt $attempt: checking deployments"
+            output=$(docker exec server-node k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
+            echo "$output"
+            if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 6 ]; then
+              sleep 10
+            fi
+          done
+          exit 1
 
       - name: Verify new server args applied
         run: |
