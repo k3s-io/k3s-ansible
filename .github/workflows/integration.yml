@@ -69,6 +69,9 @@ jobs:
         if: matrix.os == 'alpine'
         run: docker exec agent-node apk add curl python3
       
+      - name: Check disk space
+        run: df -khl
+        
       - name: Run Playbook
         env:
           ANSIBLE_FORCE_COLOR: '1'
