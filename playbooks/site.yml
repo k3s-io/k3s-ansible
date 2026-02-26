@@ -10,12 +10,14 @@
 
 - name: Setup K3S server
   hosts: server
+  gather_facts: false
   become: true
   roles:
     - role: k3s_server
 
 - name: Setup K3S agent
   hosts: agent
+  gather_facts: false
   become: true
   roles:
     - role: k3s_agent
