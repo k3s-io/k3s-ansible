@@ -320,6 +320,14 @@
       delay: 10
       changed_when: false
 
+- name: Wait for control plane to be ready
+  ansible.builtin.wait_for:
+    host: "{{ api_endpoint }}"
+    port: "{{ api_port }}"
+    timeout: 60
+  run_once: true
+  changed_when: false
+
 - name: Setup kubectl for user
   when: user_kubectl
   block:
