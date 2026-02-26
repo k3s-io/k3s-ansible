@@ -19,8 +19,10 @@ jobs:
         run: |
           if [ "${{ matrix.service_mgr }}" == "systemd" ]; then
             echo "container_os=geerlingguy/docker-debian12-ansible" >> $GITHUB_ENV
+            echo "service_mgr=systemd" >> $GITHUB_ENV
           else
             echo "container_os=jrei/openrc-alpine" >> $GITHUB_ENV
+            echo "service_mgr=openrc" >> $GITHUB_ENV
           fi
 
       - name: Checkout codebase
@@ -105,7 +107,7 @@ jobs:
               exit 0
             fi
             if [ "$attempt" -lt 6 ]; then
-              sleep 10
+              sleep 15
             fi
           done
           exit 1
@@ -127,7 +129,7 @@ jobs:
               exit 0
             fi
             if [ "$attempt" -lt 6 ]; then
-              sleep 10
+              sleep 15
             fi
           done
           exit 1
@@ -154,9 +156,16 @@ jobs:
           docker exec server-node k3s kubectl get nodes -o wide
           echo "POD INFO"
           docker exec server-node k3s kubectl get pods -A -o wide
-          echo "CONFIG FILES"
+          echo "CONFIG FILE"
           docker exec server-node cat /etc/rancher/k3s/config.yaml
-          docker exec agent-node cat /etc/rancher/k3s/config.yaml
+          echo "Server ENV"
+          docker exec server-node cat /etc/systemd/system/k3s*.env
+          echo "Agent ENV"
+          if [ $service_mgr == "systemd" ]; then
+            docker exec agent-node cat /etc/systemd/system/k3s-agent.service.env
+          elif [ $service_mgr == "openrc" ]; then
+            docker exec agent-node cat /etc/rancher/k3s/k3s-agent.env
+          fi
           echo "SERVER LOGS"
           docker exec server-node journalctl -u k3s -n 10
 
