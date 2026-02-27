@@ -26,20 +26,27 @@
         group: root
         mode: "0755"
 
-    - name: Download K3s and install binary
+    - name: Set skip_download var for install script
       # noqa var-naming[no-role-prefix]
-      ansible.builtin.command:
-        cmd: /usr/local/bin/k3s-install.sh
-      environment: "{{ _install_envs }}"
-      vars:
-        _base_envs:
-          INSTALL_K3S_SKIP_START: "true"
-          INSTALL_K3S_SYSTEMD_DIR: "{{ systemd_dir }}"
-          INSTALL_K3S_VERSION: "{{ k3s_version }}"
-          INSTALL_K3S_EXEC: "agent --server https://{{ api_endpoint }}:{{ api_port }} {{ extra_agent_args }}"
-        # We overrides the extra_install_envs with required keys from _base_envs on purpose
-        _install_envs: "{{ extra_install_envs | default({}) | combine(_base_envs) }}"
-      changed_when: true
+      ansible.builtin.set_fact:
+        skip_download: "false"
+
+# We always run the install script, we just skip the download step as needed
+- name: Run K3s install script
+  # noqa var-naming[no-role-prefix]
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s-install.sh
+  environment: "{{ _install_envs }}"
+  vars:
+    _base_envs:
+      INSTALL_K3S_SKIP_DOWNLOAD: "{{ skip_download | default('true') }}"
+      INSTALL_K3S_SKIP_START: "true"
+      INSTALL_K3S_SYSTEMD_DIR: "{{ systemd_dir }}"
+      INSTALL_K3S_VERSION: "{{ k3s_version }}"
+      INSTALL_K3S_EXEC: "agent --server https://{{ api_endpoint }}:{{ api_port }} {{ extra_agent_args }}"
+    # We overrides the extra_install_envs with required keys from _base_envs on purpose
+    _install_envs: "{{ extra_install_envs | default({}) | combine(_base_envs) }}"
+  changed_when: true
 
 - name: Setup optional config file
   when: agent_config_yaml is defined
