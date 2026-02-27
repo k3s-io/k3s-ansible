@@ -133,6 +133,17 @@
     regexp: '\.\s+<\(k3s completion bash\)'
     line: ". <(k3s completion bash)  # Added by k3s-ansible"
 
+- name: Set k3s server environment file based on init system
+  ansible.builtin.set_fact:
+    k3s_server_env_file: "{{ (ansible_facts['service_mgr'] == 'systemd') | ternary(systemd_dir ~ '/k3s.service.env', '/etc/rancher/k3s/k3s.env') }}"
+
+- name: Add service environment variables
+  when: extra_service_envs is defined
+  ansible.builtin.lineinfile:
+    path: "{{ k3s_server_env_file }}"
+    line: "{{ item }}"
+  loop: "{{ extra_service_envs }}"
+
 - name: Init first server node
   when: inventory_hostname == groups[server_group][0] or ansible_host == groups[server_group][0]
   block:
@@ -145,34 +156,32 @@
         mode: "0644"
       register: k3s_server_config_result
 
-    - name: Add service environment variables
-      when: extra_service_envs is defined
-      ansible.builtin.lineinfile:
-        path: "{{ systemd_dir }}/k3s.service.env"
-        line: "{{ item }}"
-      loop: "{{ extra_service_envs }}"
-
     - name: Delete any existing token from the environment if different from the new one
       ansible.builtin.lineinfile:
         state: absent
-        path: "{{ systemd_dir }}/k3s.service.env"
+        path: "{{ k3s_server_env_file }}"
         regexp: "^K3S_TOKEN=\\s*(?!{{ token | default('') | regex_escape }}\\s*$)"
+
+    - name: Reload systemd daemon
+      when:
+        - not ansible_check_mode
+        - ansible_facts['service_mgr'] == 'systemd'
+      ansible.builtin.systemd:
+        daemon_reload: true
 
     - name: Restart K3s service
       when:
         - ansible_facts.services['k3s.service'] is defined
         - ansible_facts.services['k3s.service'].state == 'running'
         - k3s_server_config_result.changed
-      ansible.builtin.systemd:
+      ansible.builtin.service:
         name: k3s
-        daemon_reload: true
         state: restarted
 
-    - name: Enable and check K3s service
+    - name: Enable and start K3s service
       when: ansible_facts.services['k3s.service'] is not defined or ansible_facts.services['k3s.service'].state != 'running'
-      ansible.builtin.systemd:
+      ansible.builtin.service:
         name: k3s
-        daemon_reload: true
         state: started
         enabled: true
 
@@ -193,12 +202,14 @@
 
     # Copy the k3s config to a second file to detect changes.
     # If no changes are found, we can skip copying the kubeconfig to the control node.
+    # This is dependent on the speed of the target node for k3s startup time, so retries are used.
     - name: Copy k3s.yaml to second file
       ansible.builtin.copy:
         src: /etc/rancher/k3s/k3s.yaml
         dest: /etc/rancher/k3s/k3s-copy.yaml
         mode: "0600"
         remote_src: true
+      retries: 3
       register: k3s_server_copy_yaml
       tags: kubeconfig
 
@@ -280,34 +291,32 @@
         mode: "0644"
       register: k3s_server_config_result
 
-    - name: Add service environment variables
-      when: extra_service_envs is defined
-      ansible.builtin.lineinfile:
-        path: "{{ systemd_dir }}/k3s.service.env"
-        line: "{{ item }}"
-      loop: "{{ extra_service_envs }}"
-
     - name: Delete any existing token from the environment if different from the new one
       ansible.builtin.lineinfile:
         state: absent
-        path: "{{ systemd_dir }}/k3s.service.env"
+        path: "{{ k3s_server_env_file }}"
         regexp: "^K3S_TOKEN=\\s*(?!{{ token | regex_escape }}\\s*$)"
+
+    - name: Reload systemd daemon
+      when:
+        - not ansible_check_mode
+        - ansible_facts['service_mgr'] == 'systemd'
+      ansible.builtin.systemd:
+        daemon_reload: true
 
     - name: Restart K3s service
       when:
         - ansible_facts.services['k3s.service'] is defined
         - ansible_facts.services['k3s.service'].state == 'running'
         - k3s_server_config_result.changed
-      ansible.builtin.systemd:
+      ansible.builtin.service:
         name: k3s
-        daemon_reload: true
         state: restarted
 
-    - name: Enable and check K3s service
+    - name: Enable and start K3s service
       when: ansible_facts.services['k3s.service'] is not defined or ansible_facts.services['k3s.service'].state != 'running'
-      ansible.builtin.systemd:
+      ansible.builtin.service:
         name: k3s
-        daemon_reload: true
         state: started
         enabled: true
 
