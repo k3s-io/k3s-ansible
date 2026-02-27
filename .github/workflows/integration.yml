@@ -9,8 +9,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         service_mgr: [systemd, openrc]
+        inventory: [basic, notoken]
+        exclude:
+          - service_mgr: openrc
+            inventory: notoken
 
     # K3s requires privileged containers to run inside Docker and access to cgrougs.
     steps:
@@ -40,7 +45,7 @@ jobs:
           ansible-galaxy collection install -r collections/requirements.yml
 
       - name: Verify Inventory
-        run: ansible-inventory -i tests/basic.yml --list
+        run: ansible-inventory -i tests/${{ matrix.inventory }}.yml --list
 
       - name: Create Docker Network
         run: docker network create k3s-ansible
@@ -85,7 +90,7 @@ jobs:
       - name: Run Playbook
         env:
           ANSIBLE_FORCE_COLOR: '1'
-        run: ansible-playbook playbooks/site.yml -i tests/basic.yml
+        run: ansible-playbook playbooks/site.yml -i tests/${{ matrix.inventory }}.yml
 
       - name: Verify K3s is running on Server
         run: docker exec server-node k3s kubectl get nodes | grep Ready
@@ -115,10 +120,10 @@ jobs:
 
       - name: Modify the k3s_version in inventory for upgrade
         run: |
-          sed -i 's/k3s_version: v1.33.4+k3s1/k3s_version: v1.34.1+k3s1/' tests/basic.yml
+          sed -i 's/k3s_version: v1.33.4+k3s1/k3s_version: v1.34.1+k3s1/' tests/${{ matrix.inventory }}.yml
 
       - name: Run Upgrade Playbook
-        run: ansible-playbook playbooks/upgrade.yml -i tests/basic.yml
+        run: ansible-playbook playbooks/upgrade.yml -i tests/${{ matrix.inventory }}.yml
 
       - name: Verify K3s upgraded on Server
         run: docker exec server-node k3s --version | grep v1.34.
@@ -143,10 +148,10 @@ jobs:
 
       - name: Add node-label to server config
         run: |
-          printf "    server_config_yaml: |\n      node-label: foo=bar\n" >> tests/basic.yml
+          printf "    server_config_yaml: |\n      node-label: foo=bar\n" >> tests/${{ matrix.inventory }}.yml
 
       - name: Run site Playbook again to apply new server args
-        run: ansible-playbook playbooks/site.yml -i tests/basic.yml
+        run: ansible-playbook playbooks/site.yml -i tests/${{ matrix.inventory }}.yml
 
       - name: Wait for all deployments to be ready
         run: |
@@ -199,7 +204,7 @@ jobs:
           docker exec server-node journalctl -u k3s -n 10
 
       - name: Remove K3s from Server and Agent
-        run: ansible-playbook playbooks/reset.yml -i tests/basic.yml
+        run: ansible-playbook playbooks/reset.yml -i tests/${{ matrix.inventory }}.yml
 
       - name: Stop and remove Docker containers
         run: |
