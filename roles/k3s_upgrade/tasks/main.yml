@@ -133,6 +133,7 @@
              | combine({
                "INSTALL_K3S_SKIP_START": "true",
                "INSTALL_K3S_VERSION": k3s_version,
+               "INSTALL_K3S_EXEC": extra_server_args,
              })
              | combine(airgap_dir is defined and {"INSTALL_K3S_SKIP_DOWNLOAD": "true"} or {}) }}
       changed_when: true
