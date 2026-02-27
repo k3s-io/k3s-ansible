@@ -62,7 +62,7 @@ jobs:
             --volume=/lib/modules:/lib/modules:ro \
             --cgroupns=host \
             --network=k3s-ansible \
-            rancher/systemd-node:v0.0.8 /usr/lib/systemd/systemd --unit=noop.target --show-status=true
+            ${{ env.container_os }} ${{ env.container_cmd }} 
 
           # Start the Agent node
           docker run -d --name agent-node \
@@ -76,16 +76,17 @@ jobs:
             --network=k3s-ansible \
             ${{ env.container_os }} ${{ env.container_cmd }} 
 
-      - name: Install server dependencies
-        run: docker exec server-node zypper install -y python3-rpm
-          
-      - name: Install agent dependencies (systemd)
+      - name: Install node dependencies (systemd)
         if: matrix.service_mgr == 'systemd'
-        run: docker exec agent-node zypper install -y python3-rpm
+        run: |
+          docker exec server-node zypper install -y python3-rpm
+          docker exec agent-node zypper install -y python3-rpm
 
-      - name: Install agent dependencies (openrc)
+      - name: Install node dependencies (openrc)
         if: matrix.service_mgr == 'openrc'
-        run: docker exec agent-node apk add curl python3
+        run: |
+          docker exec server-node apk add curl python3
+          docker exec agent-node apk add curl python3
       
       - name: Run Playbook
         env:
@@ -193,7 +194,11 @@ jobs:
           echo "CONFIG FILE"
           docker exec server-node cat /etc/rancher/k3s/config.yaml
           echo "Server ENV"
-          docker exec server-node cat /etc/systemd/system/k3s.service.env
+          if [ $service_mgr == "systemd" ]; then
+            docker exec server-node cat /etc/systemd/system/k3s.service.env
+          elif [ $service_mgr == "openrc" ]; then
+            docker exec server-node cat /etc/rancher/k3s/k3s.env
+          fi
           echo "Agent ENV"
           if [ $service_mgr == "systemd" ]; then
             docker exec agent-node cat /etc/systemd/system/k3s-agent.service.env
@@ -201,7 +206,12 @@ jobs:
             docker exec agent-node cat /etc/rancher/k3s/k3s-agent.env
           fi
           echo "SERVER LOGS"
-          docker exec server-node journalctl -u k3s -n 10
+          if [ $service_mgr == "systemd" ]; then
+            docker exec server-node journalctl -u k3s -n 10
+          elif [ $service_mgr == "openrc" ]; then
+            tail -n 10 /var/log/k3s.log
+          fi
+          
 
       - name: Remove K3s from Server and Agent
         run: ansible-playbook playbooks/reset.yml -i tests/${{ matrix.inventory }}.yml
