@@ -218,6 +218,7 @@
 - name: Install Apparmor Parser [Suse]
   when:
     - ansible_facts['os_family'] == 'Suse'
+    - ansible_facts['distribution_major_version'] is version("16", '<')
     - prereq_apparmor_status is defined
     - prereq_apparmor_status.stdout == "Y"
   ansible.builtin.package:
