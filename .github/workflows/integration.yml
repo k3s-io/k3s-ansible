@@ -400,3 +400,105 @@ jobs:
           docker stop server-node && docker rm -f server-node
           docker stop mysqlDB && docker rm -f mysqlDB
           docker network rm k3s-ext-ansible
+
+  test-airgap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v6
+
+      - name: Set up Python 3.13.
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13.x'
+
+      - name: Install Ansible and dependencies
+        run: |
+          pip install ansible
+          ansible-galaxy collection install -r collections/requirements.yml
+
+      - name: Verify Inventory
+        run: ansible-inventory -i tests/airgap.yml --list
+
+      - name: Create Docker Network
+        run: docker network create k3s-airgp-ansible
+      
+      - name: Start containers
+        run: |
+          docker run -d --name server-node \
+            --privileged \
+            --volume=/sys/fs/cgroup:/sys/fs/cgroup:rw \
+            --volume=/lib/modules:/lib/modules:ro \
+            --cgroupns=host \
+            --network=k3s-airgp-ansible \
+            rancher/systemd-node:v0.0.8 /usr/lib/systemd/systemd --unit=noop.target --show-status=true
+
+          docker run -d --name agent-node \
+            --privileged \
+            --volume=/sys/fs/cgroup:/sys/fs/cgroup:rw \
+            --volume=/lib/modules:/lib/modules:ro \
+            --cgroupns=host \
+            --network=k3s-airgp-ansible \
+            rancher/systemd-node:v0.0.8 /usr/lib/systemd/systemd --unit=noop.target --show-status=true
+
+      - name: Install node dependencies
+        run: |
+          docker exec server-node zypper install -y python3-rpm
+          docker exec agent-node zypper install -y python3-rpm
+
+      - name: Download K3s airgap artifacts
+        run: |
+          mkdir -p ./playbooks/test-airgap
+          wget -P ./playbooks/test-airgap https://github.com/k3s-io/k3s/releases/download/v1.33.8%2Bk3s1/k3s-airgap-images-amd64.tar.gz 
+          wget -P ./playbooks/test-airgap https://github.com/k3s-io/k3s/releases/download/v1.33.8%2Bk3s1/k3s 
+
+      - name: Run Playbook
+        env:
+          ANSIBLE_FORCE_COLOR: '1'
+        run: ansible-playbook playbooks/site.yml -i tests/airgap.yml
+
+      - name: Verify K3s is running on servers
+        run: docker exec server-node k3s kubectl get nodes | grep Ready | wc -l | grep 2
+
+      - name: Validate its the correct K3s version
+        run: |
+          docker exec server-node k3s --version | grep v1.33.8
+          docker exec agent-node k3s --version | grep v1.33.8
+
+      - name: Wait for all deployments to be ready
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            echo "Attempt $attempt: checking deployments"
+            output=$(docker exec server-node k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
+            echo "$output"
+            if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 6 ]; then
+              sleep 15
+            fi
+          done
+          exit 1
+
+      - name: Debug nodes/pods on failure
+        if: failure()
+        run: |
+          echo "NODE INFO"
+          docker exec server-node k3s kubectl get nodes -o wide
+          echo "POD INFO"
+          docker exec server-node k3s kubectl get pods -A -o wide
+          echo "CONFIG FILE"
+          docker exec server-node cat /etc/rancher/k3s/config.yaml
+          echo "Server ENV"
+          docker exec server-node cat /etc/systemd/system/k3s.service.env
+          echo "Agent ENV"
+          docker exec agent-node cat /etc/systemd/system/k3s-agent.service.env
+          echo "SERVER LOGS"
+          docker exec server-node journalctl -u k3s -n 10
+
+      - name: Stop and remove Docker containers
+        run: |
+          docker stop server-node && docker rm -f server-node
+          docker stop agent-node && docker rm -f agent-node
+          docker network rm k3s-airgp-ansible
+
