@@ -18,9 +18,12 @@ jobs:
         id: set-container
         run: |
           if [ "${{ matrix.service_mgr }}" == "systemd" ]; then
-            echo "container_os=geerlingguy/docker-debian12-ansible" >> $GITHUB_ENV
+            echo "container_os=rancher/systemd-node:v0.0.8" >> $GITHUB_ENV
+            echo "container_cmd=/usr/lib/systemd/systemd --unit=noop.target --show-status=true" >> $GITHUB_ENV
+            echo "service_mgr=systemd" >> $GITHUB_ENV
           else
             echo "container_os=jrei/openrc-alpine" >> $GITHUB_ENV
+            echo "service_mgr=openrc" >> $GITHUB_ENV
           fi
 
       - name: Checkout codebase
@@ -46,23 +49,36 @@ jobs:
         run: |
           # Start the Server node
           docker run -d --name server-node \
+            --hostname server-node \
             --privileged \
+            -v /sys/fs/bpf:/sys/fs/bpf \
+            --memory 2048m \
             --volume=/sys/fs/cgroup:/sys/fs/cgroup:rw \
             --volume=/lib/modules:/lib/modules:ro \
             --cgroupns=host \
             --network=k3s-ansible \
-            geerlingguy/docker-debian12-ansible:latest
+            rancher/systemd-node:v0.0.8 /usr/lib/systemd/systemd --unit=noop.target --show-status=true
 
           # Start the Agent node
           docker run -d --name agent-node \
+            --hostname agent-node \
             --privileged \
+            -v /sys/fs/bpf:/sys/fs/bpf \
+            --memory 2048m \
             --volume=/sys/fs/cgroup:/sys/fs/cgroup:rw \
             --volume=/lib/modules:/lib/modules:ro \
             --cgroupns=host \
             --network=k3s-ansible \
-            ${{ env.container_os }}:latest
+            ${{ env.container_os }} ${{ env.container_cmd }} 
 
-      - name: Setup openrc Image
+      - name: Install server dependencies
+        run: docker exec server-node zypper install -y python3-rpm
+          
+      - name: Install agent dependencies (systemd)
+        if: matrix.service_mgr == 'systemd'
+        run: docker exec agent-node zypper install -y python3-rpm
+
+      - name: Install agent dependencies (openrc)
         if: matrix.service_mgr == 'openrc'
         run: docker exec agent-node apk add curl python3
       
@@ -82,6 +98,21 @@ jobs:
         if: matrix.service_mgr == 'openrc'
         run: docker exec agent-node rc-service k3s-agent status | grep started
 
+      - name: Wait for all deployments to be ready
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            echo "Attempt $attempt: checking deployments"
+            output=$(docker exec server-node k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
+            echo "$output"
+            if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 6 ]; then
+              sleep 15
+            fi
+          done
+          exit 1
+
       - name: Modify the k3s_version in inventory for upgrade
         run: |
           sed -i 's/k3s_version: v1.33.4+k3s1/k3s_version: v1.34.1+k3s1/' tests/basic.yml
@@ -94,6 +125,78 @@ jobs:
 
       - name: Verify K3s upgraded on Agent
         run: docker exec agent-node k3s --version | grep v1.34.
+
+      - name: Wait for all deployments to be ready
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            echo "Attempt $attempt: checking deployments"
+            output=$(docker exec server-node k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
+            echo "$output"
+            if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 6 ]; then
+              sleep 15
+            fi
+          done
+          exit 1
+
+      - name: Add node-label to server config
+        run: |
+          printf "    server_config_yaml: |\n      node-label: foo=bar\n" >> tests/basic.yml
+
+      - name: Run site Playbook again to apply new server args
+        run: ansible-playbook playbooks/site.yml -i tests/basic.yml
+
+      - name: Wait for all deployments to be ready
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            echo "Attempt $attempt: checking deployments"
+            output=$(docker exec server-node k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
+            echo "$output"
+            if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 6 ]; then
+              sleep 15
+            fi
+          done
+          exit 1
+
+      - name: Verify new server args applied
+        run: |
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt: checking node label"
+            output=$(docker exec server-node k3s kubectl get nodes -o jsonpath='{.items[*].metadata.labels.foo}' 2>&1)
+            echo "$output"
+            if echo "$output" | grep -q bar; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              sleep 10
+            fi
+          done
+          exit 1
+
+      - name: Debug nodes/pods on failure
+        if: failure()
+        run: |
+          echo "NODE INFO"
+          docker exec server-node k3s kubectl get nodes -o wide
+          echo "POD INFO"
+          docker exec server-node k3s kubectl get pods -A -o wide
+          echo "CONFIG FILE"
+          docker exec server-node cat /etc/rancher/k3s/config.yaml
+          echo "Server ENV"
+          docker exec server-node cat /etc/systemd/system/k3s.service.env
+          echo "Agent ENV"
+          if [ $service_mgr == "systemd" ]; then
+            docker exec agent-node cat /etc/systemd/system/k3s-agent.service.env
+          elif [ $service_mgr == "openrc" ]; then
+            docker exec agent-node cat /etc/rancher/k3s/k3s-agent.env
+          fi
+          echo "SERVER LOGS"
+          docker exec server-node journalctl -u k3s -n 10
         
       - name: Remove K3s from Server and Agent
         run: ansible-playbook playbooks/reset.yml -i tests/basic.yml
@@ -133,12 +236,19 @@ jobs:
         run: |
           for SERVER in $SERVERS; do
             docker run -d --name $SERVER \
+              --hostname $SERVER \
               --privileged \
               --volume=/sys/fs/cgroup:/sys/fs/cgroup:rw \
               --volume=/lib/modules:/lib/modules:ro \
               --cgroupns=host \
               --network=k3s-ha-ansible \
-              geerlingguy/docker-debian12-ansible:latest
+              rancher/systemd-node:v0.0.8 /usr/lib/systemd/systemd --unit=noop.target --show-status=true
+          done
+
+      - name: Install server dependencies
+        run: |
+          for SERVER in $SERVERS; do
+            docker exec $SERVER zypper install -y python3-rpm
           done
 
       - name: Run Playbook
@@ -148,6 +258,21 @@ jobs:
 
       - name: Verify K3s is running on servers
         run: docker exec server-node1 k3s kubectl get nodes | grep Ready | wc -l | grep 3
+
+      - name: Wait for all deployments to be ready
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            echo "Attempt $attempt: checking deployments"
+            output=$(docker exec server-node1 k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
+            echo "$output"
+            if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 6 ]; then
+              sleep 15
+            fi
+          done
+          exit 1
 
       - name: Modify the k3s_version in inventory for upgrade
         run: |
@@ -163,6 +288,39 @@ jobs:
             docker exec $SERVER k3s --version | grep v1.34.
           done
         
+      - name: Wait for all deployments to be ready
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            echo "Attempt $attempt: checking deployments"
+            output=$(docker exec server-node1 k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
+            echo "$output"
+            if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 6 ]; then
+              sleep 15
+            fi
+          done
+          exit 1
+
+      - name: Debug nodes/pods on failure
+        if: failure()
+        run: |
+          echo "NODE INFO"
+          docker exec server-node1 k3s kubectl get nodes -o wide
+          echo "POD INFO"
+          docker exec server-node1 k3s kubectl get pods -A -o wide
+          echo "CONFIG FILES"
+          for SERVER in $SERVERS; do
+            docker exec $SERVER cat /etc/rancher/k3s/config.yaml
+          done
+          echo "Server ENVS"
+          for SERVER in $SERVERS; do
+            docker exec $SERVER cat /etc/systemd/system/k3s.service.env
+          done
+          echo "SERVER LOGSS"
+          docker exec server-node1 journalctl -u k3s -n 10
+
       - name: Remove K3s from server nodes
         run: ansible-playbook playbooks/reset.yml -i tests/ha.yml
 

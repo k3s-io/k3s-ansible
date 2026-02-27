@@ -39,8 +39,16 @@
         }) }}
       changed_when: true
 
-- name: Add K3s autocomplete to user bashrc
+- name: Check if user bashrc exists
   when: ansible_user is defined
+  ansible.builtin.stat:
+    path: "~{{ ansible_user }}/.bashrc"
+  register: k3s_server_bashrc
+
+- name: Add K3s autocomplete to user bashrc
+  when:
+    - ansible_user is defined
+    - k3s_server_bashrc.stat.exists
   ansible.builtin.lineinfile:
     path: "~{{ ansible_user }}/.bashrc"
     regexp: '\.\s+<\(k3s completion bash\)'
@@ -348,6 +356,7 @@
         mode: "u=rw,g=,o="
 
     - name: Configure default KUBECONFIG for user
+      when: k3s_server_bashrc.stat.exists
       ansible.builtin.lineinfile:
         path: ~{{ ansible_user }}/.bashrc
         regexp: 'export KUBECONFIG=~/.kube/config'
@@ -355,6 +364,7 @@
         state: present
 
     - name: Configure kubectl autocomplete
+      when: k3s_server_bashrc.stat.exists
       ansible.builtin.lineinfile:
         path: ~{{ ansible_user }}/.bashrc
         regexp: '\.\s+<\(kubectl completion bash\)'
