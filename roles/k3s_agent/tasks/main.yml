@@ -65,9 +65,10 @@
       register: _agent_config_result
 
 - name: Get the token from the first server
+  when: token is not defined and hostvars[groups[server_group][0]].random_token is defined
   # noqa var-naming[no-role-prefix]
   ansible.builtin.set_fact:
-    token: "{{ hostvars[groups[server_group][0]].token }}"
+    token: "{{ hostvars[groups[server_group][0]].random_token }}"
 
 - name: Set k3s agent environment file based on init system
   ansible.builtin.set_fact:
