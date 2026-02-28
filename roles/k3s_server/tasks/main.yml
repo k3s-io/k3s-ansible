@@ -169,20 +169,10 @@
       ansible.builtin.systemd:
         daemon_reload: true
 
-    - name: Restart K3s service
-      when:
-        - ansible_facts.services['k3s.service'] is defined
-        - ansible_facts.services['k3s.service'].state == 'running'
-        - k3s_server_config_result.changed
+    - name: Enable and start K3s service
       ansible.builtin.service:
         name: k3s
         state: restarted
-
-    - name: Enable and start K3s service
-      when: ansible_facts.services['k3s.service'] is not defined or ansible_facts.services['k3s.service'].state != 'running'
-      ansible.builtin.service:
-        name: k3s
-        state: started
         enabled: true
 
     - name: Pause to allow first server startup
