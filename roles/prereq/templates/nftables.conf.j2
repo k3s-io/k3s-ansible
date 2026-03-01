@@ -1,0 +1,60 @@
+#!/usr/bin/nft -f
+flush ruleset
+
+table inet filter {
+  chain input {
+    type filter hook input priority filter; policy drop;
+
+    # 1. Standard "Safe" Rules
+    iif lo accept
+    ct state established,related accept
+    ip protocol icmp accept
+    ip6 nexthdr ipv6-icmp accept
+    tcp dport ssh accept
+
+    # 2. Allow Inter-Node Communication (Like Firewalld "Internal" zone)
+    # Whitelists every node in the Ansible inventory
+    {% for host in (groups[server_group] | default([]) + groups[agent_group] | default([])) | unique %}
+    {% if hostvars[host].ansible_default_ipv4 is defined %}
+    ip saddr {{ hostvars[host].ansible_default_ipv4.address }} accept
+    {% endif %}
+    {% endfor %}
+
+    # 3. K3s Core Ports (Like UFW/Firewalld port loops)
+    tcp dport {{ api_port | default(6443) }} accept
+    {% if groups[server_group] | length > 1 %}
+    tcp dport 2379-2381 accept  # etcd
+    {% endif %}
+    
+    # Inter-node overlay ports
+    tcp dport { 5001, 10250 } accept        # Spegel & Kubelet
+    udp dport { 8472, 51820, 51821 } accept # Flannel (VXLAN/Wireguard)
+
+    # 4. Allow Cluster & Service CIDRs (The "Trusted" zone logic)
+    {% for cidr in (cluster_cidr + ',' + service_cidr) | split(',') %}
+    ip saddr {{ cidr }} accept
+    {% endfor %}
+
+    # 5. NodePort Range
+    tcp dport 30000-32767 accept
+    udp dport 30000-32767 accept
+  }
+
+  chain forward {
+    type filter hook forward priority filter; policy accept;
+    # We allow forwarding so K3s/CNI can manage pod-to-pod routing
+    ct state established,related accept
+  }
+
+  chain output {
+    type filter hook output priority filter; policy accept;
+  }
+}
+
+table inet nat {
+  chain postrouting {
+    type nat hook postrouting priority srcnat; policy accept;
+    # Masquerade traffic leaving the pod network
+    ip saddr {{ cluster_cidr | default('10.42.0.0/16') }} masquerade
+  }
+}

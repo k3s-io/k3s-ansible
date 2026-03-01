@@ -63,6 +63,13 @@
         state: started
         enabled: true
 
+    - name: Configure nftables rules for K3s
+      ansible.builtin.template:
+        src: nftables.conf.j2
+        dest: /etc/nftables.conf
+        mode: "0644"
+      notify: Reload nftables
+
 - name: Populate service facts
   ansible.builtin.service_facts:
 
