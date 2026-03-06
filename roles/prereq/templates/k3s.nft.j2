@@ -1,0 +1,31 @@
+# K3s rules managed by ansible-k3s; loaded via /etc/nftables.conf include
+
+# Allow inter-node communication (server + agent nodes)
+{% for host in (groups[server_group] | default([]) + groups[agent_group] | default([])) | unique %}
+{% if hostvars[host].ansible_default_ipv4 is defined %}
+insert rule inet filter input ip saddr {{ hostvars[host].ansible_default_ipv4.address }} accept
+{% endif %}
+{% endfor %}
+
+# K3s core ports
+insert rule inet filter input tcp dport {{ api_port | default(6443) }} accept
+{% if groups[server_group] | length > 1 %}
+insert rule inet filter input tcp dport 2379-2381 accept
+{% endif %}
+
+# Inter-node overlay ports
+insert rule inet filter input tcp dport { 5001, 10250 } accept
+insert rule inet filter input udp dport { 8472, 51820, 51821 } accept
+
+# Cluster and service CIDRs
+{% for cidr in (cluster_cidr + ',' + service_cidr) | split(',') %}
+insert rule inet filter input ip saddr {{ cidr }} accept
+{% endfor %}
+
+# NodePort range
+insert rule inet filter input tcp dport 30000-32767 accept
+insert rule inet filter input udp dport 30000-32767 accept
+
+# Keep forward traffic open for CNI/pod networking
+insert rule inet filter forward ct state established,related accept
+insert rule inet filter forward accept
