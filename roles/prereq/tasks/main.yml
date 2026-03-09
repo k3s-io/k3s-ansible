@@ -56,6 +56,12 @@
           - nftables
         state: present
 
+    - name: TEMPORARY FOR TESTING - Ensure nftables is enabled and started
+      ansible.builtin.service:
+        name: nftables
+        state: started
+        enabled: true
+  
     - name: Check nftables service
       ansible.builtin.service_facts:
 
@@ -82,11 +88,11 @@
             src: k3s.nft.j2
             dest: /etc/nftables.d/k3s.nft
             mode: "0644"
-          
-          - name: Reload nftables
-            ansible.builtin.service:
-              name: nftables
-              state: reloaded
+
+        - name: Reload nftables
+          ansible.builtin.service:
+            name: nftables
+            state: reloaded
 
 - name: Populate service facts
   ansible.builtin.service_facts:
