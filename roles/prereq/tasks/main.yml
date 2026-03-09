@@ -82,7 +82,11 @@
             src: k3s.nft.j2
             dest: /etc/nftables.d/k3s.nft
             mode: "0644"
-          notify: Reload nftables
+          
+          - name: Reload nftables
+            ansible.builtin.service:
+              name: nftables
+              state: reloaded
 
 - name: Populate service facts
   ansible.builtin.service_facts:
