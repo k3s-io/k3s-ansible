@@ -55,12 +55,6 @@
           - iptables-nft
           - nftables
         state: present
-
-    - name: TEMPORARY FOR TESTING - Ensure nftables is enabled and started
-      ansible.builtin.service:
-        name: nftables
-        state: started
-        enabled: true
   
     - name: Check nftables service
       ansible.builtin.service_facts:
