@@ -55,7 +55,7 @@
           - iptables-nft
           - nftables
         state: present
-  
+
     - name: Check nftables service
       ansible.builtin.service_facts:
 
