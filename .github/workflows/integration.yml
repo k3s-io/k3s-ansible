@@ -16,7 +16,9 @@ jobs:
         exclude:
           - service_mgr: openrc
             inventory: notoken
-
+    env:
+      STARTING_K3S_VERSION: v1.34.3+k3s1
+      UPGRADE_K3S_VERSION: v1.35.1+k3s1
     # K3s requires privileged containers to run inside Docker and access to cgrougs.
     steps:
       - name: Set container OS based on service manager
@@ -88,6 +90,10 @@ jobs:
           docker exec server-node apk add curl python3
           docker exec agent-node apk add curl python3
       
+      - name: Replace k3s_version in inventory
+        run: |
+          sed -i "s/k3s_version: .*/k3s_version: ${STARTING_K3S_VERSION}/" tests/${{ matrix.inventory }}.yml
+
       - name: Run Playbook
         env:
           ANSIBLE_FORCE_COLOR: '1'
@@ -121,16 +127,16 @@ jobs:
 
       - name: Modify the k3s_version in inventory for upgrade
         run: |
-          sed -i 's/k3s_version: v1.33.4+k3s1/k3s_version: v1.34.1+k3s1/' tests/${{ matrix.inventory }}.yml
+          sed -i "s/k3s_version: .*/k3s_version: ${UPGRADE_K3S_VERSION}/" tests/${{ matrix.inventory }}.yml
 
       - name: Run Upgrade Playbook
         run: ansible-playbook playbooks/upgrade.yml -i tests/${{ matrix.inventory }}.yml
 
       - name: Verify K3s upgraded on Server
-        run: docker exec server-node k3s --version | grep v1.34.
+        run: docker exec server-node k3s --version | grep ${UPGRADE_K3S_VERSION}
 
       - name: Verify K3s upgraded on Agent
-        run: docker exec agent-node k3s --version | grep v1.34.
+        run: docker exec agent-node k3s --version | grep ${UPGRADE_K3S_VERSION}
 
       - name: Wait for all deployments to be ready
         run: |
