@@ -32,7 +32,7 @@
     reload: true
   when: ansible_facts['all_ipv6_addresses'] | length > 0
 
-- name: Handle modern nftables/iptables-nft stack (Arch Linux ARM 6.18+)
+- name: Handle modern nftables/iptables-nft stack (Arch Linux 6.18+)
   when:
     - ansible_facts['distribution'] == 'Archlinux'
     - ansible_facts['kernel'] is version('6.18', '>=')
@@ -48,7 +48,6 @@
         force: true
       when:
         - "'iptables' in ansible_facts.packages"
-        - "'iptables-nft' not in ansible_facts.packages"
 
     - name: Install iptables-nft and nftables
       community.general.pacman:
@@ -57,11 +56,37 @@
           - nftables
         state: present
 
-    - name: Ensure nftables is enabled and started
-      ansible.builtin.systemd:
-        name: nftables
-        state: started
-        enabled: true
+    - name: Check nftables service
+      ansible.builtin.service_facts:
+
+    - name: Configure nftables include and K3s rules fragment
+      when:
+        - ansible_facts.services['nftables.service'] is defined
+        - ansible_facts.services['nftables.service'].status == 'enabled'
+      block:
+        - name: Ensure nftables include directory exists
+          ansible.builtin.file:
+            path: /etc/nftables.d
+            state: directory
+            mode: "0755"
+
+        - name: Ensure nftables loads /etc/nftables.d rules
+          ansible.builtin.lineinfile:
+            path: /etc/nftables.conf
+            regexp: '^include "/etc/nftables\\.d/\\*\\.nft"$'
+            line: 'include "/etc/nftables.d/*.nft"'
+            insertafter: EOF
+
+        - name: Install K3s nftables rules fragment
+          ansible.builtin.template:
+            src: k3s.nft.j2
+            dest: /etc/nftables.d/k3s.nft
+            mode: "0644"
+
+        - name: Reload nftables
+          ansible.builtin.service:
+            name: nftables
+            state: reloaded
 
 - name: Populate service facts
   ansible.builtin.service_facts:
