@@ -109,14 +109,14 @@ Alternatively, to run the playbook from your existing project setup, run the pla
 
 ```yaml
 - name: Import kube cluster playbook
-  ansible.builtin.import_playbook: k3s-ansible/playbooks/site.yml
+  ansible.builtin.import_playbook: k3s.orchestration.site
 ```
 
 *Running the playbook from inside the repository*
 
 ```yaml
 - name: Import kube cluster playbook
-  ansible.builtin.import_playbook: k3s.orchestration.site
+  ansible.builtin.import_playbook: k3s-ansible/playbooks/site.yml
 ```
 
 
