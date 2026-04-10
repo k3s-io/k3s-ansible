@@ -75,7 +75,7 @@
         # If token is not defined, use the old token
         - name: Add old token to server config
           when: 
-            - token is not defined
+            - token is not defined and hostvars[groups[server_group][0]].random_token is defined
             # since we are pulling the token from the first server we don't want to reset it JIC
             - inventory_hostname != groups[server_group][0] and ansible_host == groups[server_group][0]
           ansible.builtin.set_fact:
