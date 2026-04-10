@@ -12,6 +12,29 @@
     k3s_upgrade_current_version: "{{ k3s_upgrade_version_output.stdout_lines[0].split(' ')[2] }}"
   check_mode: false
 
+# Get the generated token if one is not defined in the configuration, we need to do this
+# outside of the next check in the case that the first server doesn't need the upgrade
+# this is same technique used in `k3s_server`
+# NOTE: this requires that the first serfver is included in any limited playbook run
+- name: Get the token if randomly generated
+  when:
+    - token is not defined
+    - inventory_hostname == groups[server_group][0] or ansible_host == groups[server_group][0]
+  block:
+    - name: Wait for token
+      ansible.builtin.wait_for:
+        path: /var/lib/rancher/k3s/server/token
+
+    - name: Read node-token from first server
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/k3s/server/token
+      register: k3s_server_node_token
+
+    - name: Store random token for later servers
+      # noqa var-naming[no-role-prefix]
+      ansible.builtin.set_fact:
+        random_token: "{{ k3s_server_node_token.content | b64decode | regex_replace('\n', '') }}"
+
 # We update the node configuration in the following cases:
 #   - the installed version of K3s on the nodes is older than the requested version in ansible vars
 #   - the installed version equals the requested version (to apply config changes like extra_server_args/extra_agent_args)
@@ -35,16 +58,6 @@
         state: stopped
         name: "{{ (server_group in group_names) | ternary('k3s', 'k3s-agent') }}"
 
-    # We only save the token if the user did not provide one, leading to an auto-generated token on first install.
-    # If you want the actual token value, you need to use the k3s_upgrade_old_token.stdout
-    - name: Save the existing K3s token if needed
-      when:
-        - token is not defined
-        - inventory_hostname == groups[server_group][0] or ansible_host == groups[server_group][0]
-      ansible.builtin.command: cut -d':' -f4 /var/lib/rancher/k3s/server/node-token
-      register: k3s_upgrade_old_token
-      changed_when: false
-
     - name: Construct Server config
       when: server_group in group_names
       block:
@@ -61,9 +74,12 @@
 
         # If token is not defined, use the old token
         - name: Add old token to server config
-          when: token is not defined
+          when: 
+            - token is not defined
+            # since we are pulling the token from the first server we don't want to reset it JIC
+            - inventory_hostname != groups[server_group][0] and ansible_host == groups[server_group][0]
           ansible.builtin.set_fact:
-            k3s_server_config: "{{ k3s_server_config | combine({'token': k3s_upgrade_old_token.stdout}) }}"
+            k3s_server_config: "{{ k3s_server_config | combine({'token': hostvars[groups[server_group][0]].random_token}) }}"
 
         - name: Determine if tls-san is already in config or args
           # noqa var-naming[no-role-prefix]
@@ -138,14 +154,6 @@
              | combine(airgap_dir is defined and {"INSTALL_K3S_SKIP_DOWNLOAD": "true"} or {}) }}
       changed_when: true
 
-    - name: Get the token from the first server
-      # noqa var-naming[no-role-prefix]
-      when:
-        - agent_group in group_names
-        - token is not defined
-      ansible.builtin.set_fact:
-        k3s_upgrade_old_server_token: "{{ hostvars[groups[server_group][0]].k3s_upgrade_old_token }}"
-
     - name: Install new K3s Version [agent]
       # For some reason, ansible-lint thinks using enviroment with command is an error
       # even though its valid https://ansible.readthedocs.io/projects/lint/rules/inline-env-var/#correct-code
@@ -164,7 +172,7 @@
           INSTALL_K3S_SYSTEMD_DIR: "{{ systemd_dir }}"
           INSTALL_K3S_VERSION: "{{ k3s_version }}"
           INSTALL_K3S_EXEC: "agent --server https://{{ api_endpoint }}:{{ api_port }} {{ extra_agent_args }}"
-          K3S_TOKEN: "{{ token if token is defined else k3s_upgrade_old_server_token.stdout }}"
+          K3S_TOKEN: "{{ token if token is defined else hostvars[groups[server_group][0]].random_token }}"
         # We overrides the extra_install_envs with required keys from _base_envs on purpose
         _install_envs: "{{ extra_install_envs | default({}) | combine(_base_envs) }}"
       changed_when: true
