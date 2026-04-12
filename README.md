@@ -8,7 +8,7 @@ Easily bring up a cluster on machines running:
 - [X] Debian
 - [X] Ubuntu
 - [X] Raspberry Pi OS
-- [X] RHEL Family (CentOS, Redhat, Rocky Linux...)
+- [X] RHEL Family (CentOS, Redhat, Rocky Linux, Oracle Linux...)
 - [X] SUSE Family (SLES, OpenSUSE Leap, Tumbleweed...)
 - [X] ArchLinux
 
