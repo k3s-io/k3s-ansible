@@ -227,6 +227,7 @@ This project is intended to provide a "vanilla" K3s install. If you need more fe
 - Alternative CNIs
 
 See these other projects:
+- https://github.com/Jonty16117/ansible-collection-k3s-proxmox
 - https://github.com/PyratLabs/ansible-role-k3s
 - https://github.com/techno-tim/k3s-ansible
 - https://github.com/jon-stumpf/k3s-ansible
