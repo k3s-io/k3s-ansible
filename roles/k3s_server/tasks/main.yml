@@ -271,7 +271,7 @@
       when: token is not defined and hostvars[groups[server_group][0]].random_token is defined
       # noqa var-naming[no-role-prefix]
       ansible.builtin.set_fact:
-        k3s_server_config: "{{ k3s_server_config | combine({'token': token}) }}"
+        k3s_server_config: "{{ k3s_server_config | combine({'token': hostvars[groups[server_group][0]].random_token}) }}"
 
     - name: Convert server config to YAML and write to file
       when: not ansible_check_mode
@@ -285,7 +285,7 @@
       ansible.builtin.lineinfile:
         state: absent
         path: "{{ k3s_server_env_file }}"
-        regexp: "^K3S_TOKEN=\\s*(?!{{ token | regex_escape }}\\s*$)"
+        regexp: "^K3S_TOKEN=\\s*(?!{{ token | default('') | regex_escape }}\\s*$)"
 
     - name: Reload systemd daemon
       when:
