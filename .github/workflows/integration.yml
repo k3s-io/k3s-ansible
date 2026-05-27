@@ -319,7 +319,7 @@ jobs:
               exit 0
             fi
             if [ "$attempt" -lt 6 ]; then
-              sleep 15
+              sleep 20
             fi
           done
           exit 1
