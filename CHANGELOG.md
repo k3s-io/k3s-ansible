@@ -1,5 +1,18 @@
 # `k3s-ansible` changelog (`k3s.orchestration`)
 
+## 1.2.1
+
+### PRs Merged
+
+- Invert directives when importing ref. playbook (#524)
+- Fix existing token retrieval for k3s server (#534)
+- Add Oracle Linux 11 support (#532)
+- Pin GH Actions to commit sha (#525)
+
+For a full list of commits see [diff between 1.2.0 and 1.2.1](https://github.com/k3s-io/k3s-ansible/compare/1.2.0...1.2.1).
+
+Thanks to all community contributors including: Chris Wayne, Jonathan Cremin, Rémi Paulmier, shadow1runner!
+
 ## 1.2.0
 
 ### PRs Merged
