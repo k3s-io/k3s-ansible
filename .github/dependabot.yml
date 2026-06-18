@@ -3,8 +3,6 @@ updates:
 
   - package-ecosystem: "github-actions"
     directory: "/"
-    labels:
-      - "kind/dependabot"
     reviewers:
       - "dereknola"
     schedule:
