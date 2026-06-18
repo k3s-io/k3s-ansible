@@ -1,0 +1,20 @@
+version: 2
+updates:
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    labels:
+      - "kind/dependabot"
+    reviewers:
+      - "dereknola"
+    schedule:
+      interval: "cron"
+      cronjob: "0 0 12 * *" # Every 12th of the month
+    groups:
+      action-deps:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-patch"
