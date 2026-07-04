@@ -95,8 +95,12 @@
   loop:
     - "K3S_TOKEN={{ token }}"
 
+# Always restart so a re-run of site.yml — whether it changed the agent config
+# or bumped k3s_version — reliably brings the agent onto the new state. The
+# install script leaves the service stopped (INSTALL_K3S_SKIP_START), so a plain
+# restart also covers the first install.
 - name: Enable and start K3s agent
   ansible.builtin.service:
     name: k3s-agent
-    state: "{{ 'restarted' if _agent_config_result.changed else 'started' }}"
+    state: restarted
     enabled: true

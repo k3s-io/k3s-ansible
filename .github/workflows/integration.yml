@@ -19,6 +19,7 @@ jobs:
     env:
       STARTING_K3S_VERSION: v1.34.3+k3s1
       UPGRADE_K3S_VERSION: v1.35.1+k3s1
+      SITE_UPGRADE_K3S_VERSION: v1.35.6+k3s1
     # K3s requires privileged containers to run inside Docker and access to cgrougs.
     steps:
       - name: Set container OS based on service manager
@@ -137,6 +138,37 @@ jobs:
 
       - name: Verify K3s upgraded on Agent
         run: docker exec agent-node k3s --version | grep ${UPGRADE_K3S_VERSION}
+
+      # Second upgrade, this time re-running site.yml with a bumped version: it
+      # must upgrade the running runtime on both the server and the agent, not
+      # just replace the on-disk binary.
+      - name: Modify the k3s_version in inventory for a site.yml upgrade
+        run: |
+          sed -i "s/k3s_version: .*/k3s_version: ${SITE_UPGRADE_K3S_VERSION}/" tests/${{ matrix.inventory }}.yml
+
+      - name: Run site Playbook to upgrade via a version bump
+        run: ansible-playbook playbooks/site.yml -i tests/${{ matrix.inventory }}.yml
+
+      # The install script replaces the on-disk binary regardless of a restart,
+      # so assert the running version the kubelet reports to the API: it only
+      # advances once the service was actually restarted onto the new build.
+      # This is what fails if the version-bump restart regresses.
+      - name: Verify the running K3s version upgraded on Server and Agent
+        run: |
+          for node in server-node agent-node; do
+            for attempt in 1 2 3 4 5 6; do
+              running=$(docker exec server-node k3s kubectl get node "$node" -o jsonpath='{.status.nodeInfo.kubeletVersion}' 2>&1)
+              echo "$node running version: $running"
+              if echo "$running" | grep -q "${SITE_UPGRADE_K3S_VERSION}"; then
+                break
+              fi
+              if [ "$attempt" -eq 6 ]; then
+                echo "$node did not reach ${SITE_UPGRADE_K3S_VERSION}"
+                exit 1
+              fi
+              sleep 10
+            done
+          done
 
       - name: Wait for all deployments to be ready
         run: |
@@ -310,6 +342,51 @@ jobs:
           done
         
       - name: Wait for all deployments to be ready
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            echo "Attempt $attempt: checking deployments"
+            output=$(docker exec server-node1 k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
+            echo "$output"
+            if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 6 ]; then
+              sleep 15
+            fi
+          done
+          exit 1
+
+      # Re-running site.yml with a bumped version must upgrade every etcd
+      # server. --forks=1 makes Ansible restart them one at a time so the etcd
+      # quorum is never lost.
+      - name: Modify the k3s_version in inventory for a site.yml upgrade
+        run: |
+          sed -i 's/k3s_version: v1.34.1+k3s1/k3s_version: v1.34.3+k3s1/' tests/ha.yml
+
+      - name: Run site Playbook to upgrade the servers via a version bump
+        run: ansible-playbook playbooks/site.yml -i tests/ha.yml --forks=1
+
+      # Assert the running (kubelet-reported) version, not the on-disk binary:
+      # without a rolling restart the joined servers stay on the old runtime.
+      - name: Verify the running K3s version upgraded on all servers via site.yml
+        run: |
+          docker exec server-node1 k3s kubectl get nodes -o wide
+          for SERVER in $SERVERS; do
+            for attempt in 1 2 3 4 5 6; do
+              running=$(docker exec server-node1 k3s kubectl get node "$SERVER" -o jsonpath='{.status.nodeInfo.kubeletVersion}' 2>&1)
+              echo "$SERVER running version: $running"
+              if echo "$running" | grep -q v1.34.3; then
+                break
+              fi
+              if [ "$attempt" -eq 6 ]; then
+                echo "$SERVER did not reach v1.34.3"
+                exit 1
+              fi
+              sleep 10
+            done
+          done
+
+      - name: Wait for all deployments to be ready after the site.yml upgrade
         run: |
           for attempt in 1 2 3 4 5 6; do
             echo "Attempt $attempt: checking deployments"
