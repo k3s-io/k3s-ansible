@@ -4,12 +4,14 @@
   register: raspberrypi_grep_cpuinfo
   failed_when: false
   changed_when: false
+  check_mode: false
 
 - name: Test for raspberry pi /proc/device-tree/model
   ansible.builtin.command: grep -E "Raspberry Pi" /proc/device-tree/model
   register: raspberrypi_grep_device_tree_model
   failed_when: false
   changed_when: false
+  check_mode: false
 
 - name: Run Raspberry Pi-specific tasks
   when:
