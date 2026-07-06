@@ -3,7 +3,7 @@
   ansible.builtin.command: k3s --version
   register: k3s_agent_version_output
   changed_when: false
-  ignore_errors: true
+  failed_when: false
 
 - name: Set k3s installed version
   when: not ansible_check_mode and k3s_agent_version_output.rc == 0
