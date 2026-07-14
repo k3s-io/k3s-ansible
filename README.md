@@ -161,6 +161,14 @@ ansible-playbook k3s.orchestration.upgrade -i inventory.yml
 ansible-playbook playbooks/upgrade.yml -i inventory.yml
 ```
 
+Re-running the `site.yml` playbook after bumping `k3s_version` performs the same upgrade declaratively: it restarts the k3s services so the cluster picks up the new runtime. On a multi-server (HA) cluster, add `--forks=1` so Ansible restarts the servers one at a time and the etcd quorum is never lost:
+
+```bash
+ansible-playbook playbooks/site.yml -i inventory.yml --forks=1
+```
+
+The dedicated `upgrade.yml` playbook remains available and unchanged.
+
 ## Airgap Install
 
 Airgap installation is supported via the `airgap_dir` variable. This variable should be set to the path of a directory containing the K3s binary and images. The release artifacts can be downloaded from the [K3s Releases](https://github.com/k3s-io/k3s/releases). You must download the appropriate images for you architecture (any of the compression formats will work). Additionally, you must run the `airgap` role to set up the airgapped environment.
