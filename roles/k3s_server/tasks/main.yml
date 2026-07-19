@@ -147,7 +147,6 @@
 - name: Init first server node
   when: inventory_hostname == groups[server_group][0] or ansible_host == groups[server_group][0]
   block:
-
     - name: Convert server config to YAML and write to file
       when: not ansible_check_mode
       ansible.builtin.copy:
@@ -170,6 +169,7 @@
         daemon_reload: true
 
     - name: Enable and start K3s service
+      when: not ansible_check_mode
       ansible.builtin.service:
         name: k3s
         state: restarted
@@ -194,6 +194,7 @@
     # If no changes are found, we can skip copying the kubeconfig to the control node.
     # This is dependent on the speed of the target node for k3s startup time, so retries are used.
     - name: Copy k3s.yaml to second file
+      when: not ansible_check_mode
       ansible.builtin.copy:
         src: /etc/rancher/k3s/k3s.yaml
         dest: /etc/rancher/k3s/k3s-copy.yaml
@@ -245,7 +246,9 @@
             - k3s_server_mv_result.rc == 0
 
     - name: Get the token if randomly generated
-      when: token is not defined
+      when:
+        - not ansible_check_mode
+        - token is not defined
       block:
         - name: Wait for token
           ansible.builtin.wait_for:
@@ -266,7 +269,6 @@
     - (groups[server_group] | length) > 1
     - inventory_hostname != groups[server_group][0] and ansible_host != groups[server_group][0]
   block:
-
     - name: Get token from first server if needed
       when: token is not defined and hostvars[groups[server_group][0]].random_token is defined
       # noqa var-naming[no-role-prefix]
@@ -336,7 +338,6 @@
 - name: Setup kubectl for user
   when: user_kubectl
   block:
-
     - name: Create directory .kube
       ansible.builtin.file:
         path: ~{{ ansible_user }}/.kube
@@ -345,6 +346,7 @@
         mode: "u=rwx,g=rx,o="
 
     - name: Copy config file to user home directory
+      when: not ansible_check_mode
       ansible.builtin.copy:
         src: /etc/rancher/k3s/k3s.yaml
         dest: ~{{ ansible_user }}/.kube/config
