@@ -100,6 +100,7 @@
 # install script leaves the service stopped (INSTALL_K3S_SKIP_START), so a plain
 # restart also covers the first install.
 - name: Enable and start K3s agent
+  when: not ansible_check_mode
   ansible.builtin.service:
     name: k3s-agent
     state: restarted
