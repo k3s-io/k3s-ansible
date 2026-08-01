@@ -103,7 +103,7 @@
         - name: Add server URL to server config for joining servers in HA-IC setup
           when: (groups[server_group] | length) > 1 and inventory_hostname != groups[server_group][0] and not use_external_database
           ansible.builtin.set_fact:
-            k3s_server_config: "{{ k3s_server_config | combine({'server': 'https://' + api_endpoint + ':' + api_port | string}) }}"
+            k3s_server_config: "{{ k3s_server_config | combine({'server': 'https://' + (api_endpoint | ansible.utils.ipwrap) + ':' + api_port | string}) }}"
 
         # If the user has provided additional server config, merge it with the generated config
         - name: Merge user server config with generated server config
@@ -163,7 +163,7 @@
           INSTALL_K3S_SKIP_START: "true"
           INSTALL_K3S_SYSTEMD_DIR: "{{ systemd_dir }}"
           INSTALL_K3S_VERSION: "{{ k3s_version }}"
-          INSTALL_K3S_EXEC: "agent --server https://{{ api_endpoint }}:{{ api_port }} {{ extra_agent_args }}"
+          INSTALL_K3S_EXEC: "agent --server https://{{ api_endpoint | ansible.utils.ipwrap }}:{{ api_port }} {{ extra_agent_args }}"
           K3S_TOKEN: "{{ token if token is defined else k3s_upgrade_old_server_token.stdout }}"
         # We overrides the extra_install_envs with required keys from _base_envs on purpose
         _install_envs: "{{ extra_install_envs | default({}) | combine(_base_envs) }}"
