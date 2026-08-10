@@ -84,7 +84,7 @@
         - name: Add TLS SAN to config if needed
           when:
             - api_endpoint is defined
-            - api_endpoint != ansible_hostname
+            - api_endpoint != ansible_facts['hostname']
             - not (_api_endpoint_in_config | trim | bool)
             - not (_api_endpoint_in_args | trim | bool)
           ansible.builtin.set_fact:
