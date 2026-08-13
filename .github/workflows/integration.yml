@@ -22,6 +22,25 @@ jobs:
       SITE_UPGRADE_K3S_VERSION: v1.35.6+k3s1
     # K3s requires privileged containers to run inside Docker and access to cgrougs.
     steps:
+      - name: Remove Unnecessary Tools
+        working-directory: /
+        run: |
+          sudo rm -rf \
+            /home/linuxbrew \
+            /home/packer \
+            /opt/az \
+            /opt/microsoft \
+            /usr/lib/firefox \
+            /usr/lib/google-cloud-sdk \
+            /usr/local/julia* \
+            /usr/local/share/boost \
+            /usr/local/share/chromium \
+            /usr/local/share/powershell \
+            /usr/share/az* \
+            /usr/share/dotnet \
+            /usr/share/miniconda \
+            /usr/share/swift
+          df -khl
       - name: Set container OS based on service manager
         id: set-container
         run: |
