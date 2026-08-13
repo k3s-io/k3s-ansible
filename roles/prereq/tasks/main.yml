@@ -45,6 +45,7 @@
 
 - name: Handle modern nftables/iptables-nft stack (Arch Linux 6.18+)
   when:
+    - manage_firewall
     - ansible_facts['distribution'] == 'Archlinux'
     - ansible_facts['kernel'] is version('6.18', '>=')
   block:
@@ -72,6 +73,7 @@
 
     - name: Configure nftables include and K3s rules fragment
       when:
+        - manage_firewall
         - ansible_facts.services['nftables.service'] is defined
         - ansible_facts.services['nftables.service'].status == 'enabled'
       block:
@@ -104,6 +106,7 @@
 
 - name: Allow UFW Exceptions
   when:
+    - manage_firewall
     - ansible_facts.services['ufw'] is defined
     - ansible_facts.services['ufw'].state == 'running'
   block:
@@ -154,6 +157,7 @@
 
 - name: Allow Firewalld Exceptions
   when:
+    - manage_firewall
     - ansible_facts.services['firewalld.service'] is defined
     - ansible_facts.services['firewalld.service'].state == 'running'
   block:

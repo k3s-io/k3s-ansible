@@ -33,6 +33,7 @@ k3s_cluster:
     # systemd_dir: /etc/systemd/system
     # extra_service_envs: [ 'ENV_VAR1=VALUE1', 'ENV_VAR2=VALUE2' ]
     # user_kubectl: true, by default kubectl is symlinked and configured for use by ansible_user. Set to false to only kubectl via root user.
+    # manage_firewall: false
 
     # Manifests or Airgap should be either full paths or relative to the playbook directory.
     # List of locally available manifests to apply to the cluster, useful for PVCs or Traefik modifications.
