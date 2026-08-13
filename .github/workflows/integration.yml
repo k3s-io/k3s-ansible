@@ -22,6 +22,25 @@ jobs:
       SITE_UPGRADE_K3S_VERSION: v1.35.6+k3s1
     # K3s requires privileged containers to run inside Docker and access to cgrougs.
     steps:
+      - name: Remove Unnecessary Tools
+        working-directory: /
+        run: |
+          sudo rm -rf \
+            /home/linuxbrew \
+            /home/packer \
+            /opt/az \
+            /opt/microsoft \
+            /usr/lib/firefox \
+            /usr/lib/google-cloud-sdk \
+            /usr/local/julia* \
+            /usr/local/share/boost \
+            /usr/local/share/chromium \
+            /usr/local/share/powershell \
+            /usr/share/az* \
+            /usr/share/dotnet \
+            /usr/share/miniconda \
+            /usr/share/swift
+          df -khl
       - name: Set container OS based on service manager
         id: set-container
         run: |
@@ -172,14 +191,14 @@ jobs:
 
       - name: Wait for all deployments to be ready
         run: |
-          for attempt in 1 2 3 4 5 6; do
+          for attempt in {1..10}; do
             echo "Attempt $attempt: checking deployments"
             output=$(docker exec server-node k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
             echo "$output"
             if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
               exit 0
             fi
-            if [ "$attempt" -lt 6 ]; then
+            if [ "$attempt" -lt 10 ]; then
               sleep 15
             fi
           done
@@ -194,14 +213,14 @@ jobs:
 
       - name: Wait for all deployments to be ready
         run: |
-          for attempt in 1 2 3 4 5 6; do
+          for attempt in {1..10}; do
             echo "Attempt $attempt: checking deployments"
             output=$(docker exec server-node k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
             echo "$output"
             if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
               exit 0
             fi
-            if [ "$attempt" -lt 6 ]; then
+            if [ "$attempt" -lt 10 ]; then
               sleep 15
             fi
           done
@@ -245,9 +264,9 @@ jobs:
           fi
           echo "SERVER LOGS"
           if [ $service_mgr == "systemd" ]; then
-            docker exec server-node journalctl -u k3s -n 10
+            docker exec server-node journalctl -u k3s -n 50
           elif [ $service_mgr == "openrc" ]; then
-            tail -n 10 /var/log/k3s.log
+            docker exec server-node tail -n 50 /var/log/k3s.log
           fi
           
 
@@ -388,14 +407,14 @@ jobs:
 
       - name: Wait for all deployments to be ready after the site.yml upgrade
         run: |
-          for attempt in 1 2 3 4 5 6; do
+          for attempt in {1..10}; do
             echo "Attempt $attempt: checking deployments"
             output=$(docker exec server-node1 k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
             echo "$output"
             if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
               exit 0
             fi
-            if [ "$attempt" -lt 6 ]; then
+            if [ "$attempt" -lt 10 ]; then
               sleep 15
             fi
           done
