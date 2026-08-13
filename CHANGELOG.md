@@ -1,5 +1,24 @@
 # `k3s-ansible` changelog (`k3s.orchestration`)
 
+## 1.2.2
+
+### PRs Merged
+
+- Bump the action-deps group across 1 directory with 3 updates (#539)
+- fix(raspberrypi): run detection commands in check mode (#542)
+- fix: use failed_when instead of ignore_errors for version detection (#543)
+- fix: apply k3s version bumps declaratively through site.yml (#544)
+- Bump actions/setup-python from 6.2.0 to 6.3.0 in the action-deps group (#545)
+- fix(roles): fix check mode on clean install (#547)
+- fix: read hostname from ansible_facts in the TLS SAN condition (#548)
+- Wrap api_endpoint with ansible.utils.ipwrap for IPv6 compatibility (#550)
+- feat: add firewall variable (#552)
+- Increase wait time for upgrades in testing (#554)
+
+For a full list of commits see [diff between 1.2.1 and 1.2.2](https://github.com/k3s-io/k3s-ansible/compare/1.2.1...1.2.2).
+
+Thanks to all community contributors including: Archy, Ian Lewis, Aleksei Sviridkin, Stéphane Este-Gracias, Matthew Bathe!
+
 ## 1.2.1
 
 ### PRs Merged
