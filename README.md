@@ -20,7 +20,7 @@ on processor architectures:
 
 ## System requirements
 
-The control node **must** have Ansible 8.0+ (ansible-core 2.15+)
+The control node **must** have Ansible 8.0+ (ansible-core 2.15+) and the Python `netaddr` library (`pip install netaddr`), required by the `ansible.utils.ipwrap` filter for IPv6 `api_endpoint` support.
 
 All managed nodes in inventory must have:
 - Passwordless SSH access

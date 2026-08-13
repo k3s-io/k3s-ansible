@@ -63,7 +63,7 @@ jobs:
 
       - name: Install Ansible and dependencies
         run: |
-          pip install ansible
+          pip install ansible netaddr
           ansible-galaxy collection install -r collections/requirements.yml
 
       - name: Verify Inventory
@@ -295,7 +295,7 @@ jobs:
 
       - name: Install Ansible and dependencies
         run: |
-          pip install ansible
+          pip install ansible netaddr
           ansible-galaxy collection install -r collections/requirements.yml
 
       - name: Verify Inventory
@@ -461,7 +461,7 @@ jobs:
 
       - name: Install Ansible and dependencies
         run: |
-          pip install ansible
+          pip install ansible netaddr
           ansible-galaxy collection install -r collections/requirements.yml
 
       - name: Verify Inventory
@@ -531,7 +531,7 @@ jobs:
 
       - name: Install Ansible and dependencies
         run: |
-          pip install ansible
+          pip install ansible netaddr
           ansible-galaxy collection install -r collections/requirements.yml
 
       - name: Verify Inventory

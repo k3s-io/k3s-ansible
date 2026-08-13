@@ -67,7 +67,7 @@
     - name: Add server URL to server config for joining servers in HA-IC setup
       when: (groups[server_group] | length) > 1 and inventory_hostname != groups[server_group][0] and not use_external_database
       ansible.builtin.set_fact:
-        k3s_server_config: "{{ k3s_server_config | combine({'server': 'https://' + api_endpoint + ':' + api_port | string}) }}"
+        k3s_server_config: "{{ k3s_server_config | combine({'server': 'https://' + (api_endpoint | ansible.utils.ipwrap) + ':' + api_port | string}) }}"
 
     # If the user has provided additional server config, merge it with the generated config
     - name: Merge user server config with generated server config
@@ -216,7 +216,7 @@
 
         - name: Change server address in kubeconfig on control node
           ansible.builtin.shell: |
-            KUBECONFIG={{ kubeconfig }} kubectl config set-cluster default --server=https://{{ api_endpoint }}:{{ api_port }}
+            KUBECONFIG={{ kubeconfig }} kubectl config set-cluster default --server=https://{{ api_endpoint | ansible.utils.ipwrap }}:{{ api_port }}
           delegate_to: 127.0.0.1
           become: false
           register: k3s_server_csa_result
