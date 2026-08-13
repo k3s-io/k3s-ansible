@@ -268,6 +268,12 @@ jobs:
           elif [ $service_mgr == "openrc" ]; then
             docker exec server-node tail -n 50 /var/log/k3s.log
           fi
+          echo "AGENT LOGS"
+          if [ $service_mgr == "systemd" ]; then
+            docker exec agent-node journalctl -u k3s -n 50
+          elif [ $service_mgr == "openrc" ]; then
+            docker exec agent-node tail -n 50 /var/log/k3s.log
+          fi
           
 
       - name: Remove K3s from Server and Agent
