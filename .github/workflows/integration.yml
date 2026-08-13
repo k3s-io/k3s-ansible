@@ -264,9 +264,9 @@ jobs:
           fi
           echo "SERVER LOGS"
           if [ $service_mgr == "systemd" ]; then
-            docker exec server-node journalctl -u k3s -n 10
+            docker exec server-node journalctl -u k3s -n 50
           elif [ $service_mgr == "openrc" ]; then
-            tail -n 10 /var/log/k3s.log
+            docker exec server-node tail -n 50 /var/log/k3s.log
           fi
           
 
