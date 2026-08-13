@@ -45,7 +45,7 @@
 
 - name: Handle modern nftables/iptables-nft stack (Arch Linux 6.18+)
   when:
-    - manage_firewall    
+    - manage_firewall
     - ansible_facts['distribution'] == 'Archlinux'
     - ansible_facts['kernel'] is version('6.18', '>=')
   block:
@@ -157,7 +157,7 @@
 
 - name: Allow Firewalld Exceptions
   when:
-    - manage_firewall    
+    - manage_firewall
     - ansible_facts.services['firewalld.service'] is defined
     - ansible_facts.services['firewalld.service'].state == 'running'
   block:
