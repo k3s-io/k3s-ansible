@@ -172,14 +172,14 @@ jobs:
 
       - name: Wait for all deployments to be ready
         run: |
-          for attempt in 1 2 3 4 5 6; do
+          for attempt in {1..10}; do
             echo "Attempt $attempt: checking deployments"
             output=$(docker exec server-node k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
             echo "$output"
             if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
               exit 0
             fi
-            if [ "$attempt" -lt 6 ]; then
+            if [ "$attempt" -lt 10 ]; then
               sleep 15
             fi
           done
@@ -194,14 +194,14 @@ jobs:
 
       - name: Wait for all deployments to be ready
         run: |
-          for attempt in 1 2 3 4 5 6; do
+          for attempt in {1..10}; do
             echo "Attempt $attempt: checking deployments"
             output=$(docker exec server-node k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
             echo "$output"
             if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
               exit 0
             fi
-            if [ "$attempt" -lt 6 ]; then
+            if [ "$attempt" -lt 10 ]; then
               sleep 15
             fi
           done
@@ -388,14 +388,14 @@ jobs:
 
       - name: Wait for all deployments to be ready after the site.yml upgrade
         run: |
-          for attempt in 1 2 3 4 5 6; do
+          for attempt in {1..10}; do
             echo "Attempt $attempt: checking deployments"
             output=$(docker exec server-node1 k3s kubectl get deployments -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}={.status.readyReplicas}/{.spec.replicas}{"\n"}{end}' 2>&1)
             echo "$output"
             if ! echo "$output" | grep -q "<no value>" && echo "$output" | awk -F '[=/]' '{if ($2 != $3) exit 1}' ; then
               exit 0
             fi
-            if [ "$attempt" -lt 6 ]; then
+            if [ "$attempt" -lt 10 ]; then
               sleep 15
             fi
           done
