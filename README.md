@@ -144,6 +144,16 @@ The `use_external_database` flag is required when more than one server is define
 
 The format of the datastore-endpoint parameter is dependent upon the datastore backend, please visit the [K3s datastore endpoint format](https://docs.k3s.io/datastore#datastore-endpoint-format-and-functionality) for details on the format and supported datastores.
 
+### Server config file permissions
+
+The server role writes `/etc/rancher/k3s/config.yaml` at mode `0644`. That file holds the cluster token, so any local account on a server node can read the credential that joins a node to the cluster. Set `k3s_server_config_mode` to narrow it:
+
+```yaml
+k3s_server_config_mode: "0640"
+```
+
+K3s reads the file as root, so any mode that root can read works. The upgrade role rewrites the same file and honours the same variable. The default stays `0644`.
+
 ## Upgrading
 
 A playbook is provided to upgrade K3s on all nodes in the cluster. To use it, update `k3s_version` with the desired version in `inventory.yml` and run one of the following commands. Again, the syntax is slightly different depending on whether you installed `k3s-ansible` with `ansible-galaxy` or if you run the playbook from within the cloned git repository:
