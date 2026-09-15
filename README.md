@@ -144,6 +144,19 @@ The `use_external_database` flag is required when more than one server is define
 
 The format of the datastore-endpoint parameter is dependent upon the datastore backend, please visit the [K3s datastore endpoint format](https://docs.k3s.io/datastore#datastore-endpoint-format-and-functionality) for details on the format and supported datastores.
 
+### Waiting for a node to come back
+
+`k3s_wait_ready` holds each node at the end of its role until the API server reports it `Ready` again. It is off by default. A server checks itself; an agent holds no kubeconfig, so its check runs on the first server.
+
+On an HA cluster, set `k3s_server_wait_etcd_voters` as well. A member that has just restarted rejoins etcd as a learner and only becomes a voter once it has caught up, and `Ready` does not report that. A learner does not count towards the quorum, so without this gate a serialised run can restart the next member while the previous one is still catching up:
+
+```yaml
+k3s_wait_ready: true
+k3s_server_wait_etcd_voters: true
+```
+
+Both gates poll for up to five minutes and are skipped in check mode. `k3s_server_wait_etcd_voters` applies only to an embedded etcd cluster with more than one server.
+
 ## Upgrading
 
 A playbook is provided to upgrade K3s on all nodes in the cluster. To use it, update `k3s_version` with the desired version in `inventory.yml` and run one of the following commands. Again, the syntax is slightly different depending on whether you installed `k3s-ansible` with `ansible-galaxy` or if you run the playbook from within the cloned git repository:

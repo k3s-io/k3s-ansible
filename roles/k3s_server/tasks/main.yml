@@ -335,6 +335,44 @@
   run_once: true
   changed_when: false
 
+# The role restarts k3s whether or not anything changed, and a node that has
+# just restarted does not carry workload yet. Under a serialised server play
+# these gates hold the batch until this node is back, so the next server does
+# not restart on top of a cluster that has not recovered.
+- name: Wait for this server to be ready
+  when:
+    - k3s_wait_ready | bool
+    - not ansible_check_mode
+  block:
+    - name: Wait for this node to report Ready
+      ansible.builtin.command:
+        cmd: >-
+          k3s kubectl get node {{ ansible_facts['hostname'] }} -o=jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+      register: k3s_server_node_ready
+      until: k3s_server_node_ready.rc == 0 and k3s_server_node_ready.stdout == 'True'
+      retries: 30
+      delay: 10
+      changed_when: false
+
+    # A restarted member rejoins etcd as a learner and becomes a voter again
+    # once it has caught up. Ready does not report that, and a learner does not
+    # count towards the quorum that the next restart needs.
+    - name: Wait for every server to be an etcd voter
+      when:
+        - k3s_server_wait_etcd_voters | bool
+        - (groups[server_group] | length) > 1
+        - not use_external_database
+      ansible.builtin.command:
+        cmd: >-
+          k3s kubectl get nodes -l "node-role.kubernetes.io/control-plane=true" -o=jsonpath='{.items[*].status.conditions[?(@.type=="EtcdIsVoter")].status}'
+      register: k3s_server_etcd_voters
+      until:
+        - k3s_server_etcd_voters.rc == 0
+        - (k3s_server_etcd_voters.stdout.split() | select('equalto', 'True') | list | length) == (groups[server_group] | length)
+      retries: 30
+      delay: 10
+      changed_when: false
+
 - name: Setup kubectl for user
   when: user_kubectl
   block:

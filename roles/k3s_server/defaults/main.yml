@@ -10,3 +10,5 @@ agent_group: agent  # noqa var-naming[no-role-prefix]
 use_external_database: false # noqa var-naming[no-role-prefix]
 extra_server_args: "" # noqa var-naming[no-role-prefix]
 extra_install_envs: {} # noqa var-naming[no-role-prefix]
+k3s_wait_ready: false # noqa var-naming[no-role-prefix]
+k3s_server_wait_etcd_voters: false

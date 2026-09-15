@@ -105,3 +105,21 @@
     name: k3s-agent
     state: restarted
     enabled: true
+
+# The role restarts k3s-agent whether or not anything changed, and a node whose
+# kubelet is down reports NotReady. Under a serialised agent play this gate
+# holds the batch until this node carries workload again.
+- name: Wait for this agent to report Ready
+  when:
+    - k3s_wait_ready | bool
+    - not ansible_check_mode
+  # An agent holds no kubeconfig, so the read runs on the first server.
+  delegate_to: "{{ groups[server_group][0] }}"
+  ansible.builtin.command:
+    cmd: >-
+      k3s kubectl get node {{ ansible_facts['hostname'] }} -o=jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  register: k3s_agent_node_ready
+  until: k3s_agent_node_ready.rc == 0 and k3s_agent_node_ready.stdout == 'True'
+  retries: 30
+  delay: 10
+  changed_when: false
