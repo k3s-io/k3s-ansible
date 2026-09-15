@@ -144,6 +144,28 @@ The `use_external_database` flag is required when more than one server is define
 
 The format of the datastore-endpoint parameter is dependent upon the datastore backend, please visit the [K3s datastore endpoint format](https://docs.k3s.io/datastore#datastore-endpoint-format-and-functionality) for details on the format and supported datastores.
 
+### Rolling the nodes one at a time
+
+The server and agent roles restart their k3s service on every run, not only when something changed. On a cluster with three or more servers that means three restarts, and by default Ansible runs the play against every server at once. Three etcd members restarting together lose the quorum and the API server with it.
+
+`k3s_server_serial` sets the `serial` of the server play and `k3s_agent_serial` sets it for the agent play. A multi-server cluster sets the server one to 1, which runs the whole server role against one node before starting the next, so the surviving members keep the quorum while a member restarts:
+
+```bash
+ansible-playbook playbooks/site.yml -i inventory.yml -e k3s_server_serial=1
+```
+
+Setting `k3s_agent_serial` to 1 does the same for the agents, which keeps the workload on the other nodes while one kubelet is down.
+
+Both default to `100%`, which is the whole group in one batch, so a run that does not set them behaves as before. `serial` is a play keyword that Ansible templates before it binds any host, so inventory group vars do not reach it: pass the value with `--extra-vars`, or in the `vars` of an `ansible.builtin.import_playbook` that imports this playbook.
+
+```yaml
+- name: Import kube cluster playbook
+  ansible.builtin.import_playbook: k3s.orchestration.site
+  vars:
+    k3s_server_serial: 1
+    k3s_agent_serial: 1
+```
+
 ## Upgrading
 
 A playbook is provided to upgrade K3s on all nodes in the cluster. To use it, update `k3s_version` with the desired version in `inventory.yml` and run one of the following commands. Again, the syntax is slightly different depending on whether you installed `k3s-ansible` with `ansible-galaxy` or if you run the playbook from within the cloned git repository:
@@ -161,10 +183,10 @@ ansible-playbook k3s.orchestration.upgrade -i inventory.yml
 ansible-playbook playbooks/upgrade.yml -i inventory.yml
 ```
 
-Re-running the `site.yml` playbook after bumping `k3s_version` performs the same upgrade declaratively: it restarts the k3s services so the cluster picks up the new runtime. On a multi-server (HA) cluster, add `--forks=1` so Ansible restarts the servers one at a time and the etcd quorum is never lost:
+Re-running the `site.yml` playbook after bumping `k3s_version` performs the same upgrade declaratively: it restarts the k3s services so the cluster picks up the new runtime. On a multi-server (HA) cluster, roll the servers one at a time as described in [Rolling the nodes one at a time](#rolling-the-nodes-one-at-a-time):
 
 ```bash
-ansible-playbook playbooks/site.yml -i inventory.yml --forks=1
+ansible-playbook playbooks/site.yml -i inventory.yml -e k3s_server_serial=1
 ```
 
 The dedicated `upgrade.yml` playbook remains available and unchanged.

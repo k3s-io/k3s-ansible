@@ -299,8 +299,8 @@
     # Always restart a joined server so a re-run of site.yml — whether it only
     # bumped k3s_version or changed config — brings it onto the new runtime, the
     # same way the first server above always restarts. On a multi-server cluster
-    # run the playbook with --forks=1 so the servers restart one at a time and
-    # the etcd quorum is preserved (see README).
+    # set k3s_server_serial to 1 so the servers restart one at a time and the
+    # etcd quorum is preserved (see README).
     - name: Restart K3s service
       when:
         - ansible_facts.services['k3s.service'] is defined

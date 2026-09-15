@@ -382,14 +382,14 @@ jobs:
           exit 1
 
       # Re-running site.yml with a bumped version must upgrade every etcd
-      # server. --forks=1 makes Ansible restart them one at a time so the etcd
-      # quorum is never lost.
+      # server. k3s_server_serial=1 makes Ansible run the server role against
+      # one node at a time so the etcd quorum is never lost.
       - name: Modify the k3s_version in inventory for a site.yml upgrade
         run: |
           sed -i 's/k3s_version: v1.34.1+k3s1/k3s_version: v1.34.3+k3s1/' tests/ha.yml
 
       - name: Run site Playbook to upgrade the servers via a version bump
-        run: ansible-playbook playbooks/site.yml -i tests/ha.yml --forks=1
+        run: ansible-playbook playbooks/site.yml -i tests/ha.yml -e k3s_server_serial=1
 
       # Assert the running (kubelet-reported) version, not the on-disk binary:
       # without a rolling restart the joined servers stay on the old runtime.

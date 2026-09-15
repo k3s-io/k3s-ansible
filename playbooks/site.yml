@@ -12,6 +12,11 @@
   hosts: server
   gather_facts: false
   become: true
+  # A multi-server cluster sets k3s_server_serial to 1 so the servers restart
+  # one at a time. serial is templated before any host is bound, so the value
+  # has to come from --extra-vars or from the vars of an import_playbook;
+  # inventory group vars do not reach it.
+  serial: "{{ k3s_server_serial | default('100%') }}"
   roles:
     - role: k3s_server
 
@@ -19,5 +24,6 @@
   hosts: agent
   gather_facts: false
   become: true
+  serial: "{{ k3s_agent_serial | default('100%') }}"
   roles:
     - role: k3s_agent
