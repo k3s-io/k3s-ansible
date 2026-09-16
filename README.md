@@ -206,7 +206,7 @@ Re-running the `site.yml` playbook after bumping `k3s_version` performs the same
 ansible-playbook playbooks/site.yml -i inventory.yml -e k3s_server_serial=1 -e k3s_wait_ready=true -e k3s_server_wait_etcd_voters=true
 ```
 
-The dedicated `upgrade.yml` playbook remains available and unchanged.
+The dedicated `upgrade.yml` playbook performs the same upgrade on its own, and rolls the servers one at a time by default.
 
 ## Airgap Install
 
