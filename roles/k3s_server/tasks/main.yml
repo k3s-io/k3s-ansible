@@ -337,8 +337,10 @@
         state: started
         enabled: true
 
-    # Matched by name rather than by count: a re-run meets a cluster that already
-    # has more nodes than this run has started, and a count would never match.
+    # Counted rather than matched by name: at the default serial this is the
+    # whole server group, and under a serialised run it is the servers started
+    # so far. A re-run meets a cluster that already holds more nodes, which the
+    # comparison allows. The opt-in gates below are the ones that match by name.
     - name: Verify that the servers started so far joined
       when: not ansible_check_mode and (groups[server_group] | length) > 1
       ansible.builtin.command:
@@ -347,7 +349,7 @@
       register: k3s_server_nodes
       until:
         - k3s_server_nodes.rc == 0
-        - k3s_server_started_nodes | difference(k3s_server_nodes.stdout.lower().split()) | length == 0
+        - (k3s_server_nodes.stdout.split() | length) >= (k3s_server_started_nodes | length)
       retries: 20
       delay: 10
       changed_when: false
