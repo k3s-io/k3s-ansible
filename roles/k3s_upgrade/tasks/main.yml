@@ -12,6 +12,8 @@
     k3s_upgrade_current_version: "{{ k3s_upgrade_version_output.stdout_lines[0].split(' ')[2] }}"
   check_mode: false
 
+# Recorded as a fact so the servers in later batches can read it back out of
+# hostvars, which a role default does not reach.
 - name: Resolve the Kubernetes node name of this node
   ansible.builtin.set_fact:
     k3s_upgrade_node_name: "{{ k3s_node_name | lower }}"
