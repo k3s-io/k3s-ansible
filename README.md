@@ -179,7 +179,7 @@ k3s_server_wait_etcd_voters: true
 
 Each gate polls for up to five minutes. `k3s_server_wait_etcd_voters` is skipped on a single-server cluster, which is its own quorum, and on a cluster that sets `use_external_database`, which keeps no embedded etcd members to promote.
 
-Both gates read the node back from the API server by name. `k3s_node_name` holds that name and defaults to the lower-cased hostname, which is what K3s registers. A node installed with `--node-name`, or with the `node-name` config key, needs `k3s_node_name` set to the same value.
+Both gates read the node back from the API server by name, and `k3s_node_name` holds the name to match. It defaults to the lower-cased OS nodename, which is what the kubelet registers the node under, so on a host with a search domain that is the fully qualified name. A node installed with `--node-name`, or with the `node-name` config key, needs `k3s_node_name` set to the same value.
 
 The `upgrade.yml` playbook rolls its servers one at a time already, and its role honors the same two variables.
 

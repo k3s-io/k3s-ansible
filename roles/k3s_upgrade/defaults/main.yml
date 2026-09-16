@@ -9,7 +9,7 @@ extra_server_args: ""  # noqa var-naming[no-role-prefix]
 extra_agent_args: ""  # noqa var-naming[no-role-prefix]
 use_external_database: false  # noqa var-naming[no-role-prefix]
 # The name K3s registers this node under. See the k3s_server role default.
-k3s_node_name: "{{ ansible_facts['hostname'] | lower }}"  # noqa var-naming[no-role-prefix]
+k3s_node_name: "{{ ansible_facts['nodename'] | default(inventory_hostname, true) | lower }}"  # noqa var-naming[no-role-prefix]
 k3s_wait_ready: false  # noqa var-naming[no-role-prefix]
 k3s_server_wait_etcd_voters: false  # noqa var-naming[no-role-prefix]
 # api_endpoint must be provided by inventory for agent nodes
