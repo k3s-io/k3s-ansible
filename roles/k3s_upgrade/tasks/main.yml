@@ -21,13 +21,16 @@
 # The server play of upgrade.yml is serialised, so the etcd gate below has to
 # wait for the servers this run has already upgraded rather than for the whole
 # group. ansible_play_hosts_all is the play's host list in play order, and every
-# host up to the end of the current batch has already run the task above.
+# host up to the end of the current batch has already run the task above. A host
+# that went unreachable never set the fact, so the name is selected rather than
+# extracted by key: extracting a missing key raises and fails the whole batch.
 - name: List the servers this play has already upgraded
   when: server_group in group_names
   ansible.builtin.set_fact:
     k3s_upgrade_started_nodes: >-
       {{ ansible_play_hosts_all[:ansible_play_hosts_all.index(ansible_play_batch[-1]) + 1]
-         | map('extract', hostvars, 'k3s_upgrade_node_name') | list }}
+         | map('extract', hostvars) | selectattr('k3s_upgrade_node_name', 'defined')
+         | map(attribute='k3s_upgrade_node_name') | list }}
 
 # We update the node configuration in the following cases:
 #   - the installed version of K3s on the nodes is older than the requested version in ansible vars

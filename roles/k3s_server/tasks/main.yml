@@ -17,15 +17,18 @@
     k3s_server_node_name: "{{ k3s_node_name | lower }}"
 
 # serial splits the play into batches. A barrier that waits for the whole server
-# group never completes on a fresh install rolled one node at a time, so both
+# group never completes on a fresh install rolled one node at a time, so the
 # barriers below wait only for the servers this run has already started.
 # ansible_play_hosts_all is the play's host list in play order, and every host
-# up to the end of the current batch has already run the task above.
+# up to the end of the current batch has already run the task above. A host that
+# went unreachable never set the fact, so the name is selected rather than
+# extracted by key: extracting a missing key raises and fails the whole batch.
 - name: List the servers this play has already started
   ansible.builtin.set_fact:
     k3s_server_started_nodes: >-
       {{ ansible_play_hosts_all[:ansible_play_hosts_all.index(ansible_play_batch[-1]) + 1]
-         | map('extract', hostvars, 'k3s_server_node_name') | list }}
+         | map('extract', hostvars) | selectattr('k3s_server_node_name', 'defined')
+         | map(attribute='k3s_server_node_name') | list }}
 
 - name: Construct K3s server config
   block:
