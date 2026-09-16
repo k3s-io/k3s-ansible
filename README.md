@@ -146,13 +146,13 @@ The format of the datastore-endpoint parameter is dependent upon the datastore b
 
 ### Server config file permissions
 
-The server role writes `/etc/rancher/k3s/config.yaml` at mode `0644`. That file holds the cluster token, so any local account on a server node can read the credential that joins a node to the cluster. Set `k3s_server_config_mode` to narrow it:
+The server role writes `/etc/rancher/k3s/config.yaml` at mode `0644`. That file can contain the cluster token, so any local account on a server node can read the credential that joins a node to the cluster. Set `k3s_server_config_mode` to narrow it:
 
 ```yaml
 k3s_server_config_mode: "0640"
 ```
 
-K3s reads the file as root, so any mode that root can read works. The upgrade role rewrites the same file and honours the same variable. The default stays `0644`.
+K3s reads the file as root, so any mode that root can read works. The upgrade role rewrites the same file and honors the same variable. The default stays `0644`.
 
 ## Upgrading
 
