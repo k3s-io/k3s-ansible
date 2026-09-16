@@ -170,7 +170,7 @@ Rolling the play one node at a time is not enough on its own. The role returns a
 
 `k3s_wait_ready` holds the node until the API server reports it `Ready`. That proves the kubelet has registered and is accepting workload, and it says nothing about etcd. A server checks itself; an agent holds no kubeconfig, so its check runs on the first server.
 
-`k3s_server_wait_etcd_voters` holds each server until every server the run has already started carries `EtcdIsVoter=True`. A member that has just restarted rejoins etcd as a learner and becomes a voter only once it has caught up, `Ready` does not report that, and a learner does not count towards the quorum that the next restart needs. This is the gate that keeps a rolling run from taking the quorum down.
+`k3s_server_wait_etcd_voters` checks one thing: that every server this run has started so far reports the `EtcdIsVoter=True` node condition. A member that has just restarted rejoins etcd as a learner and becomes a voter only once it has caught up, and `Ready` does not report that. Holding the play until the restarted member is a voter again is what stops the next restart from meeting a cluster that is one member short of the quorum it counted on. It says nothing about a quorum lost some other way, and a cluster that was already short of voters before the run stays short.
 
 ```yaml
 k3s_wait_ready: true
@@ -179,7 +179,11 @@ k3s_server_wait_etcd_voters: true
 
 Each gate polls for up to five minutes. `k3s_server_wait_etcd_voters` is skipped on a single-server cluster, which is its own quorum, and on a cluster that sets `use_external_database`, which keeps no embedded etcd members to promote.
 
-Both gates read the node back from the API server by name, and `k3s_node_name` holds the name to match. It defaults to the lower-cased OS nodename, which is what the kubelet registers the node under, so on a host with a search domain that is the fully qualified name. A node installed with `--node-name`, or with the `node-name` config key, needs `k3s_node_name` set to the same value.
+The join check that runs on every multi-server install counts nodes, so it needs no node name. Both opt-in gates match nodes by name instead, and `k3s_node_name` holds the name to match. It defaults to the lower-cased OS nodename, which is what the kubelet registers the node under, so on a host with a search domain that is the fully qualified name. A node installed with `--node-name`, or with the `node-name` config key, needs `k3s_node_name` set to the same value.
+
+A gate that times out prints the names it read from the API server in the failed task's `stdout`. Compare them with the names the gate expected: names that do not appear mean `k3s_node_name` is not set to the name K3s registered, and the gate is waiting for a node that does not exist.
+
+The agent `Ready` gate runs its read on the first server in the `server` group, because an agent holds no kubeconfig. If that one server is unreachable the gate fails at once rather than retrying, so a run that rolls agents needs the first server up.
 
 The `upgrade.yml` playbook rolls its servers one at a time already, and its role honors the same two variables.
 
