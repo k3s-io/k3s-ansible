@@ -1,0 +1,10 @@
+---
+# Exercises the import_playbook path for the serial variables, which is the only
+# way to set them other than --extra-vars: serial is a play keyword, and a play
+# keyword is templated before Ansible binds a host, so an inventory variable
+# never reaches it.
+- name: Roll the cluster one node at a time
+  ansible.builtin.import_playbook: ../playbooks/site.yml
+  vars:
+    k3s_server_serial: 1
+    k3s_agent_serial: 1

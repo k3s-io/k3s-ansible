@@ -13,9 +13,10 @@
   gather_facts: false
   become: true
   # A multi-server cluster sets k3s_server_serial to 1 so the servers restart
-  # one at a time. serial is templated before any host is bound, so the value
-  # has to come from --extra-vars or from the vars of an import_playbook;
-  # inventory group vars do not reach it.
+  # one at a time, and k3s_server_wait_etcd_voters so a member is a voter again
+  # before the next one restarts. serial is templated before any host is bound,
+  # so the value has to come from --extra-vars or from the vars of an
+  # import_playbook; an inventory variable does not reach it and is ignored.
   serial: "{{ k3s_server_serial | default('100%') }}"
   roles:
     - role: k3s_server

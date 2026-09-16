@@ -146,17 +146,15 @@ The format of the datastore-endpoint parameter is dependent upon the datastore b
 
 ### Rolling the nodes one at a time
 
-The server and agent roles restart their k3s service on every run, not only when something changed. On a cluster with three or more servers that means three restarts, and by default Ansible runs the play against every server at once. Three etcd members restarting together lose the quorum and the API server with it.
+The server and agent roles restart their k3s service on every run, not only when something changed, and by default Ansible runs each play against every host in the group at once. On a cluster with three or more servers that restarts every etcd member together, which loses the quorum and the API server with it.
 
-`k3s_server_serial` sets the `serial` of the server play and `k3s_agent_serial` sets it for the agent play. A multi-server cluster sets the server one to 1, which runs the whole server role against one node before starting the next, so the surviving members keep the quorum while a member restarts:
+`k3s_server_serial` sets the `serial` of the server play and `k3s_agent_serial` sets it for the agent play. Setting the server one to `1` runs the whole server role against one node before the next node starts, and setting the agent one to `1` does the same for the agents, which keeps the workload on the other nodes while one kubelet is down.
 
 ```bash
 ansible-playbook playbooks/site.yml -i inventory.yml -e k3s_server_serial=1
 ```
 
-Setting `k3s_agent_serial` to 1 does the same for the agents, which keeps the workload on the other nodes while one kubelet is down.
-
-Both default to `100%`, which is the whole group in one batch, so a run that does not set them behaves as before. `serial` is a play keyword that Ansible templates before it binds any host, so inventory group vars do not reach it: pass the value with `--extra-vars`, or in the `vars` of an `ansible.builtin.import_playbook` that imports this playbook.
+Both default to `100%`, which is the whole group in one batch, so a run that sets neither behaves as it did before. `serial` is a play keyword, and Ansible templates a play keyword before it binds any host, so an inventory variable does not reach it: an inventory `k3s_server_serial` is ignored and the play falls back to `100%`. Pass the value with `--extra-vars`, or in the `vars` of the `import_playbook` that imports this playbook.
 
 ```yaml
 - name: Import kube cluster playbook
@@ -165,6 +163,25 @@ Both default to `100%`, which is the whole group in one batch, so a run that doe
     k3s_server_serial: 1
     k3s_agent_serial: 1
 ```
+
+### Waiting for a node to come back
+
+Rolling the play one node at a time is not enough on its own. The role returns as soon as the service manager reports the k3s service started, which is well before the node serves again. Two gates hold the play at the end of the role until it does. Both are off by default, both are independent of each other, and both are skipped in check mode.
+
+`k3s_wait_ready` holds the node until the API server reports it `Ready`. That proves the kubelet has registered and is accepting workload, and it says nothing about etcd. A server checks itself; an agent holds no kubeconfig, so its check runs on the first server.
+
+`k3s_server_wait_etcd_voters` holds each server until every server the run has already started carries `EtcdIsVoter=True`. A member that has just restarted rejoins etcd as a learner and becomes a voter only once it has caught up, `Ready` does not report that, and a learner does not count towards the quorum that the next restart needs. This is the gate that keeps a rolling run from taking the quorum down.
+
+```yaml
+k3s_wait_ready: true
+k3s_server_wait_etcd_voters: true
+```
+
+Each gate polls for up to five minutes. `k3s_server_wait_etcd_voters` is skipped on a single-server cluster, which is its own quorum, and on a cluster that sets `use_external_database`, which keeps no embedded etcd members to promote.
+
+Both gates read the node back from the API server by name. `k3s_node_name` holds that name and defaults to the lower-cased hostname, which is what K3s registers. A node installed with `--node-name`, or with the `node-name` config key, needs `k3s_node_name` set to the same value.
+
+The `upgrade.yml` playbook rolls its servers one at a time already, and its role honors the same two variables.
 
 ## Upgrading
 
@@ -183,10 +200,10 @@ ansible-playbook k3s.orchestration.upgrade -i inventory.yml
 ansible-playbook playbooks/upgrade.yml -i inventory.yml
 ```
 
-Re-running the `site.yml` playbook after bumping `k3s_version` performs the same upgrade declaratively: it restarts the k3s services so the cluster picks up the new runtime. On a multi-server (HA) cluster, roll the servers one at a time as described in [Rolling the nodes one at a time](#rolling-the-nodes-one-at-a-time):
+Re-running the `site.yml` playbook after bumping `k3s_version` performs the same upgrade declaratively: it restarts the k3s services so the cluster picks up the new runtime. On a multi-server (HA) cluster, roll the servers one at a time and turn on the etcd voter gate, so that a member is a voter again before the next one restarts. See [Rolling the nodes one at a time](#rolling-the-nodes-one-at-a-time) and [Waiting for a node to come back](#waiting-for-a-node-to-come-back):
 
 ```bash
-ansible-playbook playbooks/site.yml -i inventory.yml -e k3s_server_serial=1
+ansible-playbook playbooks/site.yml -i inventory.yml -e k3s_server_serial=1 -e k3s_wait_ready=true -e k3s_server_wait_etcd_voters=true
 ```
 
 The dedicated `upgrade.yml` playbook remains available and unchanged.
