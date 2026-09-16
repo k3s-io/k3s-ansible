@@ -152,7 +152,7 @@ The server role writes `/etc/rancher/k3s/config.yaml` at mode `0644`. That file 
 k3s_server_config_mode: "0640"
 ```
 
-K3s reads the file as root, so any mode that root can read works. The upgrade role rewrites the same file and honors the same variable. The default stays `0644`.
+K3s reads the file as root, so `0600` is the safe floor: no other account needs the file. The default stays `0644`, which is the mode the file already has on a running cluster, so a re-run changes nothing until the variable is set. The upgrade role rewrites the same file and honors the same variable.
 
 ## Upgrading
 
