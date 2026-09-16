@@ -1,5 +1,8 @@
 ---
 k3s_server_location: "/var/lib/rancher/k3s"
+# /etc/rancher/k3s/config.yaml can contain the cluster token, so a cluster
+# that does not want it world readable can narrow this to "0640".
+k3s_server_config_mode: "0644"
 systemd_dir: "/etc/systemd/system"  # noqa var-naming[no-role-prefix]
 api_port: 6443  # noqa var-naming[no-role-prefix]
 kubeconfig: ~/.kube/config.new  # noqa var-naming[no-role-prefix]

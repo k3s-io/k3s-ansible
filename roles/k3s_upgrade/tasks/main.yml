@@ -116,7 +116,7 @@
           ansible.builtin.copy:
             content: "{{ k3s_server_config | to_nice_yaml }}"
             dest: "/etc/rancher/k3s/config.yaml"
-            mode: "0644"
+            mode: "{{ k3s_server_config_mode }}"
           register: k3s_server_config_result
 
     - name: Install new K3s Version [server]
