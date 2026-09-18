@@ -122,6 +122,10 @@ jobs:
       - name: Verify K3s is running on Server
         run: docker exec server-node k3s kubectl get nodes | grep Ready
 
+      - name: Verify the server config file mode
+        if: matrix.inventory == 'basic'
+        run: docker exec server-node ls -l /etc/rancher/k3s/config.yaml | grep -q '^-rw-r-----'
+
       - name: Verify K3s is running on Agent (systemd)
         if: matrix.service_mgr == 'systemd'
         run: docker exec agent-node systemctl status k3s-agent | grep running
