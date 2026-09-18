@@ -6,6 +6,9 @@ k3s_cluster:
         server-node1:
         server-node2:
         server-node3:
+    agent:
+      hosts:
+        agent-node1:
   vars:
     ansible_connection: docker
     ansible_user: root
@@ -14,3 +17,4 @@ k3s_cluster:
     token: "secretha"
     api_endpoint: "server-node1"
     extra_server_args: "--snapshotter=native"
+    extra_agent_args: "--snapshotter=native"

@@ -5,3 +5,6 @@ systemd_dir: "/etc/systemd/system"  # noqa var-naming[no-role-prefix]
 api_port: 6443  # noqa var-naming[no-role-prefix]
 extra_agent_args: "" # noqa var-naming[no-role-prefix]
 extra_install_envs: {} # noqa var-naming[no-role-prefix]
+# The name K3s registers this node under. See the k3s_server role default.
+k3s_node_name: "{{ ansible_facts['nodename'] | default(inventory_hostname, true) | lower }}"  # noqa var-naming[no-role-prefix]
+k3s_wait_ready: false  # noqa var-naming[no-role-prefix]

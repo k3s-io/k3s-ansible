@@ -13,3 +13,12 @@ agent_group: agent  # noqa var-naming[no-role-prefix]
 use_external_database: false # noqa var-naming[no-role-prefix]
 extra_server_args: "" # noqa var-naming[no-role-prefix]
 extra_install_envs: {} # noqa var-naming[no-role-prefix]
+# The name K3s registers this node under. The kubelet derives it from the OS
+# nodename, which on a host with a search domain is the fully qualified name, so
+# the default reads that rather than the short host name. The fallback keeps the
+# role usable in a play that gathers no facts. A node installed with --node-name
+# or the node-name config key needs this set to the same value, so the readiness
+# gates find the node.
+k3s_node_name: "{{ ansible_facts['nodename'] | default(inventory_hostname, true) | lower }}"  # noqa var-naming[no-role-prefix]
+k3s_wait_ready: false  # noqa var-naming[no-role-prefix]
+k3s_server_wait_etcd_voters: false

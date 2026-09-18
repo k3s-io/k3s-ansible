@@ -10,6 +10,26 @@
   ansible.builtin.set_fact:
     k3s_server_installed_version: "{{ k3s_server_version_output.stdout_lines[0].split(' ')[2] }}"
 
+# Recorded as a fact so the servers in later batches can read it back out of
+# hostvars, which a role default does not reach.
+- name: Resolve the Kubernetes node name of this server
+  ansible.builtin.set_fact:
+    k3s_server_node_name: "{{ k3s_node_name | lower }}"
+
+# serial splits the play into batches. A barrier that waits for the whole server
+# group never completes on a fresh install rolled one node at a time, so the
+# barriers below wait only for the servers this run has already started.
+# ansible_play_hosts_all is the play's host list in play order, and every host
+# up to the end of the current batch has already run the task above. A host that
+# went unreachable never set the fact, so the name is selected rather than
+# extracted by key: extracting a missing key raises and fails the whole batch.
+- name: List the servers this play has already started
+  ansible.builtin.set_fact:
+    k3s_server_started_nodes: >-
+      {{ ansible_play_hosts_all[:ansible_play_hosts_all.index(ansible_play_batch[-1]) + 1]
+         | map('extract', hostvars) | selectattr('k3s_server_node_name', 'defined')
+         | map(attribute='k3s_server_node_name') | list }}
+
 - name: Construct K3s server config
   block:
     # Start with an empty config
@@ -299,8 +319,9 @@
     # Always restart a joined server so a re-run of site.yml — whether it only
     # bumped k3s_version or changed config — brings it onto the new runtime, the
     # same way the first server above always restarts. On a multi-server cluster
-    # run the playbook with --forks=1 so the servers restart one at a time and
-    # the etcd quorum is preserved (see README).
+    # set k3s_server_serial to 1 so the servers restart one at a time, and
+    # k3s_server_wait_etcd_voters so each member is a voter again before the
+    # next one restarts (see README).
     - name: Restart K3s service
       when:
         - ansible_facts.services['k3s.service'] is defined
@@ -316,23 +337,78 @@
         state: started
         enabled: true
 
-    - name: Verify that all server nodes joined
+    # Counted rather than matched by name: at the default serial this is the
+    # whole server group, and under a serialised run it is the servers started
+    # so far. A re-run meets a cluster that already holds more nodes, which the
+    # comparison allows. The opt-in gates below are the ones that match by name.
+    - name: Verify that the servers started so far joined
       when: not ansible_check_mode and (groups[server_group] | length) > 1
       ansible.builtin.command:
         cmd: >
           k3s kubectl get nodes -l "node-role.kubernetes.io/control-plane=true" -o=jsonpath="{.items[*].metadata.name}"
       register: k3s_server_nodes
-      until: k3s_server_nodes.rc == 0 and (k3s_server_nodes.stdout.split() | length) == (groups[server_group] | length)
+      until:
+        - k3s_server_nodes.rc == 0
+        - (k3s_server_nodes.stdout.split() | length) >= (k3s_server_started_nodes | length)
       retries: 20
       delay: 10
       changed_when: false
 
+# run_once fires once per batch rather than once per play, so a serialised run
+# repeats this check for every batch. Waiting for a port is idempotent, and
+# repeating it per batch is what the batch needs.
 - name: Wait for control plane to be ready
   ansible.builtin.wait_for:
     host: "{{ api_endpoint }}"
     port: "{{ api_port }}"
     timeout: 60
   run_once: true
+  changed_when: false
+
+# The role restarts k3s whether or not anything changed, so every run takes the
+# node out of service for a moment. These two gates hold the play at the end of
+# the role until the node is back. They are independent: Ready says the kubelet
+# has registered and accepts workload, and says nothing about etcd.
+- name: Wait for this server to report Ready
+  when:
+    - k3s_wait_ready | bool
+    - not ansible_check_mode
+  ansible.builtin.command:
+    cmd: >-
+      k3s kubectl get node {{ k3s_server_node_name }}
+      -o=jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  register: k3s_server_node_ready
+  until: k3s_server_node_ready.rc == 0 and k3s_server_node_ready.stdout == 'True'
+  retries: 30
+  delay: 10
+  changed_when: false
+
+# A member that has just restarted rejoins etcd as a learner and becomes a voter
+# again only once it has caught up. Ready does not report that, and a learner
+# does not count towards the quorum the next restart needs, so this is the gate
+# that keeps a rolling run from taking the quorum down. Members are selected by
+# the etcd role label: on a split-role cluster a control-plane node need not
+# hold etcd.
+- name: Wait for the servers started so far to be etcd voters
+  when:
+    - k3s_server_wait_etcd_voters | bool
+    - not ansible_check_mode
+    # A single server is its own quorum, and a cluster on an external datastore
+    # has no embedded etcd members to promote.
+    - (groups[server_group] | length) > 1
+    - not use_external_database
+  ansible.builtin.command:
+    cmd: >-
+      k3s kubectl get nodes -l "node-role.kubernetes.io/etcd=true"
+      -o=jsonpath='{range .items[*]}{.metadata.name}={.status.conditions[?(@.type=="EtcdIsVoter")].status}{"\n"}{end}'
+  register: k3s_server_etcd_voters
+  until:
+    - k3s_server_etcd_voters.rc == 0
+    - >-
+      k3s_server_started_nodes | difference(k3s_server_etcd_voters.stdout.lower().split()
+      | select('search', '=true$') | map('regex_replace', '=true$', '') | list) | length == 0
+  retries: 30
+  delay: 10
   changed_when: false
 
 - name: Setup kubectl for user

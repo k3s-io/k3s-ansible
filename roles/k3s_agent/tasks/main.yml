@@ -10,6 +10,10 @@
   ansible.builtin.set_fact:
     k3s_agent_installed_version: "{{ k3s_agent_version_output.stdout_lines[0].split(' ')[2] }}"
 
+- name: Resolve the Kubernetes node name of this agent
+  ansible.builtin.set_fact:
+    k3s_agent_node_name: "{{ k3s_node_name | lower }}"
+
 # If airgapped, all K3s artifacts are already on the node.
 # We should be downloading and installing the newer version only if we are in one of the following cases :
 #   - we couldn't get k3s installed version in the first task of this role
@@ -105,3 +109,23 @@
     name: k3s-agent
     state: restarted
     enabled: true
+
+# The role restarts k3s-agent whether or not anything changed, and a node whose
+# kubelet is down reports NotReady. Under a serialised agent play this gate
+# holds the batch until the node carries workload again.
+- name: Wait for this agent to report Ready
+  when:
+    - k3s_wait_ready | bool
+    - not ansible_check_mode
+  # An agent holds no kubeconfig, so the read runs on the first server. The node
+  # name comes from a fact of this agent, which delegation does not replace.
+  delegate_to: "{{ groups[server_group][0] }}"
+  ansible.builtin.command:
+    cmd: >-
+      k3s kubectl get node {{ k3s_agent_node_name }}
+      -o=jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  register: k3s_agent_node_ready
+  until: k3s_agent_node_ready.rc == 0 and k3s_agent_node_ready.stdout == 'True'
+  retries: 30
+  delay: 10
+  changed_when: false

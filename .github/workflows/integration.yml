@@ -117,7 +117,7 @@ jobs:
       - name: Run Playbook
         env:
           ANSIBLE_FORCE_COLOR: '1'
-        run: ansible-playbook playbooks/site.yml -i tests/${{ matrix.inventory }}.yml
+        run: ansible-playbook playbooks/site.yml -i tests/${{ matrix.inventory }}.yml -e k3s_wait_ready=true
 
       - name: Verify K3s is running on Server
         run: docker exec server-node k3s kubectl get nodes | grep Ready
@@ -154,7 +154,7 @@ jobs:
           sed -i "s/k3s_version: .*/k3s_version: ${UPGRADE_K3S_VERSION}/" tests/${{ matrix.inventory }}.yml
 
       - name: Run Upgrade Playbook
-        run: ansible-playbook playbooks/upgrade.yml -i tests/${{ matrix.inventory }}.yml
+        run: ansible-playbook playbooks/upgrade.yml -i tests/${{ matrix.inventory }}.yml -e k3s_wait_ready=true
 
       - name: Verify K3s upgraded on Server
         run: docker exec server-node k3s --version | grep ${UPGRADE_K3S_VERSION}
@@ -170,7 +170,7 @@ jobs:
           sed -i "s/k3s_version: .*/k3s_version: ${SITE_UPGRADE_K3S_VERSION}/" tests/${{ matrix.inventory }}.yml
 
       - name: Run site Playbook to upgrade via a version bump
-        run: ansible-playbook playbooks/site.yml -i tests/${{ matrix.inventory }}.yml
+        run: ansible-playbook playbooks/site.yml -i tests/${{ matrix.inventory }}.yml -e k3s_wait_ready=true
 
       # The install script replaces the on-disk binary regardless of a restart,
       # so assert the running version the kubelet reports to the API: it only
@@ -213,7 +213,7 @@ jobs:
           printf "    server_config_yaml: |\n      node-label: foo=bar\n" >> tests/${{ matrix.inventory }}.yml
 
       - name: Run site Playbook again to apply new server args
-        run: ansible-playbook playbooks/site.yml -i tests/${{ matrix.inventory }}.yml
+        run: ansible-playbook playbooks/site.yml -i tests/${{ matrix.inventory }}.yml -e k3s_wait_ready=true
 
       - name: Wait for all deployments to be ready
         run: |
@@ -294,6 +294,7 @@ jobs:
     # K3s requires privileged containers to run inside Docker and access to cgrougs.
     env:
       SERVERS: server-node1 server-node2 server-node3
+      AGENTS: agent-node1
     steps:
       - name: Checkout codebase
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v6
@@ -316,9 +317,9 @@ jobs:
 
       - name: Start Docker containers
         run: |
-          for SERVER in $SERVERS; do
-            docker run -d --name $SERVER \
-              --hostname $SERVER \
+          for NODE in $SERVERS $AGENTS; do
+            docker run -d --name $NODE \
+              --hostname $NODE \
               --privileged \
               --volume=/sys/fs/cgroup:/sys/fs/cgroup:rw \
               --volume=/lib/modules:/lib/modules:ro \
@@ -327,19 +328,24 @@ jobs:
               rancher/systemd-node:v0.0.8 /usr/lib/systemd/systemd --unit=noop.target --show-status=true
           done
 
-      - name: Install server dependencies
+      - name: Install node dependencies
         run: |
-          for SERVER in $SERVERS; do
-            docker exec $SERVER zypper install -y python3-rpm
+          for NODE in $SERVERS $AGENTS; do
+            docker exec $NODE zypper install -y python3-rpm
           done
 
+      # The fresh install runs at the default serial, so the whole server group
+      # installs in one batch and the join barrier and both gates are exercised
+      # the way a cluster that sets no serial variable meets them.
       - name: Run Playbook
         env:
           ANSIBLE_FORCE_COLOR: '1'
-        run: ansible-playbook playbooks/site.yml -i tests/ha.yml
+        run: >-
+          ansible-playbook playbooks/site.yml -i tests/ha.yml
+          -e k3s_wait_ready=true -e k3s_server_wait_etcd_voters=true
 
-      - name: Verify K3s is running on servers
-        run: docker exec server-node1 k3s kubectl get nodes | grep Ready | wc -l | grep 3
+      - name: Verify K3s is running on all nodes
+        run: docker exec server-node1 k3s kubectl get nodes | grep Ready | wc -l | grep 4
 
       - name: Wait for all deployments to be ready
         run: |
@@ -361,13 +367,13 @@ jobs:
           sed -i 's/k3s_version: v1.33.4+k3s1/k3s_version: v1.34.1+k3s1/' tests/ha.yml
 
       - name: Run Upgrade Playbook
-        run: ansible-playbook playbooks/upgrade.yml -i tests/ha.yml
+        run: ansible-playbook playbooks/upgrade.yml -i tests/ha.yml -e k3s_wait_ready=true -e k3s_server_wait_etcd_voters=true
 
-      - name: Verify K3s upgraded on all servers
+      - name: Verify K3s upgraded on all nodes
         run: |
           sleep 5 && docker exec server-node1 k3s kubectl get nodes
-          for SERVER in $SERVERS; do
-            docker exec $SERVER k3s --version | grep v1.34.
+          for NODE in $SERVERS $AGENTS; do
+            docker exec $NODE k3s --version | grep v1.34.
           done
         
       - name: Wait for all deployments to be ready
@@ -386,29 +392,34 @@ jobs:
           exit 1
 
       # Re-running site.yml with a bumped version must upgrade every etcd
-      # server. --forks=1 makes Ansible restart them one at a time so the etcd
-      # quorum is never lost.
+      # server. tests/serial.yml imports site.yml with both serial variables set
+      # to 1, which is the import_playbook path the README documents, so the
+      # servers and then the agents restart one node at a time. The etcd voter
+      # gate holds each server until it is a voter again, so the quorum survives
+      # the rolling restart.
       - name: Modify the k3s_version in inventory for a site.yml upgrade
         run: |
           sed -i 's/k3s_version: v1.34.1+k3s1/k3s_version: v1.34.3+k3s1/' tests/ha.yml
 
-      - name: Run site Playbook to upgrade the servers via a version bump
-        run: ansible-playbook playbooks/site.yml -i tests/ha.yml --forks=1
+      - name: Run site Playbook to upgrade the cluster one node at a time
+        run: >-
+          ansible-playbook tests/serial.yml -i tests/ha.yml
+          -e k3s_wait_ready=true -e k3s_server_wait_etcd_voters=true
 
       # Assert the running (kubelet-reported) version, not the on-disk binary:
       # without a rolling restart the joined servers stay on the old runtime.
-      - name: Verify the running K3s version upgraded on all servers via site.yml
+      - name: Verify the running K3s version upgraded on all nodes via site.yml
         run: |
           docker exec server-node1 k3s kubectl get nodes -o wide
-          for SERVER in $SERVERS; do
+          for NODE in $SERVERS $AGENTS; do
             for attempt in 1 2 3 4 5 6; do
-              running=$(docker exec server-node1 k3s kubectl get node "$SERVER" -o jsonpath='{.status.nodeInfo.kubeletVersion}' 2>&1)
-              echo "$SERVER running version: $running"
+              running=$(docker exec server-node1 k3s kubectl get node "$NODE" -o jsonpath='{.status.nodeInfo.kubeletVersion}' 2>&1)
+              echo "$NODE running version: $running"
               if echo "$running" | grep -q v1.34.3; then
                 break
               fi
               if [ "$attempt" -eq 6 ]; then
-                echo "$SERVER did not reach v1.34.3"
+                echo "$NODE did not reach v1.34.3"
                 exit 1
               fi
               sleep 10
@@ -447,14 +458,18 @@ jobs:
           done
           echo "SERVER LOGSS"
           docker exec server-node1 journalctl -u k3s -n 10
+          echo "AGENT LOGS"
+          for AGENT in $AGENTS; do
+            docker exec $AGENT journalctl -u k3s-agent -n 50
+          done
 
-      - name: Remove K3s from server nodes
+      - name: Remove K3s from all nodes
         run: ansible-playbook playbooks/reset.yml -i tests/ha.yml
 
       - name: Stop and remove Docker containers
         run: |
-          for SERVER in $SERVERS; do
-            docker stop $SERVER && docker rm -f $SERVER
+          for NODE in $SERVERS $AGENTS; do
+            docker stop $NODE && docker rm -f $NODE
           done
           docker network rm k3s-ha-ansible
 
@@ -502,7 +517,7 @@ jobs:
       - name: Run Playbook
         env:
           ANSIBLE_FORCE_COLOR: '1'
-        run: ansible-playbook playbooks/site.yml -i tests/external.yml
+        run: ansible-playbook playbooks/site.yml -i tests/external.yml -e k3s_wait_ready=true
 
       - name: Verify K3s is running on servers
         run: docker exec server-node k3s kubectl get nodes | grep Ready | wc -l | grep 1

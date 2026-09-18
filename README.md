@@ -144,6 +144,49 @@ The `use_external_database` flag is required when more than one server is define
 
 The format of the datastore-endpoint parameter is dependent upon the datastore backend, please visit the [K3s datastore endpoint format](https://docs.k3s.io/datastore#datastore-endpoint-format-and-functionality) for details on the format and supported datastores.
 
+### Rolling the nodes one at a time
+
+The server and agent roles restart their k3s service on every run, not only when something changed, and by default Ansible runs each play against every host in the group at once. On a cluster with three or more servers that restarts every etcd member together, which loses the quorum and the API server with it.
+
+`k3s_server_serial` sets the `serial` of the server play and `k3s_agent_serial` sets it for the agent play. Setting the server one to `1` runs the whole server role against one node before the next node starts, and setting the agent one to `1` does the same for the agents, which keeps the workload on the other nodes while one kubelet is down.
+
+```bash
+ansible-playbook playbooks/site.yml -i inventory.yml -e k3s_server_serial=1
+```
+
+Both default to `100%`, which is the whole group in one batch, so a run that sets neither behaves as it did before. `serial` is a play keyword, and Ansible templates a play keyword before it binds any host, so an inventory variable does not reach it: an inventory `k3s_server_serial` is ignored and the play falls back to `100%`. Pass the value with `--extra-vars`, or in the `vars` of the `import_playbook` that imports this playbook.
+
+```yaml
+- name: Import kube cluster playbook
+  ansible.builtin.import_playbook: k3s.orchestration.site
+  vars:
+    k3s_server_serial: 1
+    k3s_agent_serial: 1
+```
+
+### Waiting for a node to come back
+
+Rolling the play one node at a time is not enough on its own. The role returns as soon as the service manager reports the k3s service started, which is well before the node serves again. Two gates hold the play at the end of the role until it does. Both are off by default, both are independent of each other, and both are skipped in check mode.
+
+`k3s_wait_ready` holds the node until the API server reports it `Ready`. That proves the kubelet has registered and is accepting workload, and it says nothing about etcd. A server checks itself; an agent holds no kubeconfig, so its check runs on the first server.
+
+`k3s_server_wait_etcd_voters` checks one thing: that every server this run has started so far reports the `EtcdIsVoter=True` node condition. A member that has just restarted rejoins etcd as a learner and becomes a voter only once it has caught up, and `Ready` does not report that. Holding the play until the restarted member is a voter again is what stops the next restart from meeting a cluster that is one member short of the quorum it counted on. It says nothing about a quorum lost some other way, and a cluster that was already short of voters before the run stays short.
+
+```yaml
+k3s_wait_ready: true
+k3s_server_wait_etcd_voters: true
+```
+
+Each gate polls for up to five minutes. `k3s_server_wait_etcd_voters` is skipped on a single-server cluster, which is its own quorum, and on a cluster that sets `use_external_database`, which keeps no embedded etcd members to promote.
+
+The join check that runs on every multi-server install counts nodes, so it needs no node name. Both opt-in gates match nodes by name instead, and `k3s_node_name` holds the name to match. It defaults to the lower-cased OS nodename, which is what the kubelet registers the node under, so on a host with a search domain that is the fully qualified name. A node installed with `--node-name`, or with the `node-name` config key, needs `k3s_node_name` set to the same value.
+
+A gate that times out prints the names it read from the API server in the failed task's `stdout`. Compare them with the names the gate expected: names that do not appear mean `k3s_node_name` is not set to the name K3s registered, and the gate is waiting for a node that does not exist.
+
+The agent `Ready` gate runs its read on the first server in the `server` group, because an agent holds no kubeconfig. If that one server is unreachable the gate fails at once rather than retrying, so a run that rolls agents needs the first server up.
+
+The `upgrade.yml` playbook rolls its servers one at a time already, and its role honors the same two variables.
+
 ### Server config file permissions
 
 The server role writes `/etc/rancher/k3s/config.yaml` at mode `0644`. That file can contain the cluster token, so any local account on a server node can read the credential that joins a node to the cluster. Set `k3s_server_config_mode` to narrow it:
@@ -171,13 +214,13 @@ ansible-playbook k3s.orchestration.upgrade -i inventory.yml
 ansible-playbook playbooks/upgrade.yml -i inventory.yml
 ```
 
-Re-running the `site.yml` playbook after bumping `k3s_version` performs the same upgrade declaratively: it restarts the k3s services so the cluster picks up the new runtime. On a multi-server (HA) cluster, add `--forks=1` so Ansible restarts the servers one at a time and the etcd quorum is never lost:
+Re-running the `site.yml` playbook after bumping `k3s_version` performs the same upgrade declaratively: it restarts the k3s services so the cluster picks up the new runtime. On a multi-server (HA) cluster, roll the servers one at a time and turn on the etcd voter gate, so that a member is a voter again before the next one restarts. See [Rolling the nodes one at a time](#rolling-the-nodes-one-at-a-time) and [Waiting for a node to come back](#waiting-for-a-node-to-come-back):
 
 ```bash
-ansible-playbook playbooks/site.yml -i inventory.yml --forks=1
+ansible-playbook playbooks/site.yml -i inventory.yml -e k3s_server_serial=1 -e k3s_wait_ready=true -e k3s_server_wait_etcd_voters=true
 ```
 
-The dedicated `upgrade.yml` playbook remains available and unchanged.
+The dedicated `upgrade.yml` playbook performs the same upgrade on its own, and rolls the servers one at a time by default.
 
 ## Airgap Install
 

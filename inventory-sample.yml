@@ -4,6 +4,10 @@ k3s_cluster:
     server:
       hosts:
         192.16.35.11:
+          # k3s_node_name is per host: it is the name K3s registers that one
+          # node under, the lower-cased OS nodename by default. Set it on a node
+          # installed with --node-name or the node-name config key.
+          # k3s_node_name: server-1
     agent:
       hosts:
         192.16.35.12:
@@ -35,6 +39,13 @@ k3s_cluster:
     # user_kubectl: true, by default kubectl is symlinked and configured for use by ansible_user. Set to false to only kubectl via root user.
     # manage_firewall: false
     # k3s_server_config_mode: "0644", mode of /etc/rancher/k3s/config.yaml on server nodes. The file can contain the cluster token; set "0640" to keep it off other local accounts.
+    # k3s_wait_ready: false, set to true to hold each node at the end of its role until the API server reports it Ready.
+    # k3s_server_wait_etcd_voters: false, set to true to hold each server until every server started so far is an etcd voter.
+
+    # To roll the nodes one at a time, see "Rolling the nodes one at a time" in
+    # the README. k3s_server_serial and k3s_agent_serial set a play keyword, so
+    # they are passed with --extra-vars or in the vars of the import_playbook,
+    # never from inventory.
 
     # Manifests or Airgap should be either full paths or relative to the playbook directory.
     # List of locally available manifests to apply to the cluster, useful for PVCs or Traefik modifications.

@@ -12,6 +12,26 @@
     k3s_upgrade_current_version: "{{ k3s_upgrade_version_output.stdout_lines[0].split(' ')[2] }}"
   check_mode: false
 
+# Recorded as a fact so the servers in later batches can read it back out of
+# hostvars, which a role default does not reach.
+- name: Resolve the Kubernetes node name of this node
+  ansible.builtin.set_fact:
+    k3s_upgrade_node_name: "{{ k3s_node_name | lower }}"
+
+# The server play of upgrade.yml is serialised, so the etcd gate below has to
+# wait for the servers this run has already upgraded rather than for the whole
+# group. ansible_play_hosts_all is the play's host list in play order, and every
+# host up to the end of the current batch has already run the task above. A host
+# that went unreachable never set the fact, so the name is selected rather than
+# extracted by key: extracting a missing key raises and fails the whole batch.
+- name: List the servers this play has already upgraded
+  when: server_group in group_names
+  ansible.builtin.set_fact:
+    k3s_upgrade_started_nodes: >-
+      {{ ansible_play_hosts_all[:ansible_play_hosts_all.index(ansible_play_batch[-1]) + 1]
+         | map('extract', hostvars) | selectattr('k3s_upgrade_node_name', 'defined')
+         | map(attribute='k3s_upgrade_node_name') | list }}
+
 # We update the node configuration in the following cases:
 #   - the installed version of K3s on the nodes is older than the requested version in ansible vars
 #   - the installed version equals the requested version (to apply config changes like extra_server_args/extra_agent_args)
@@ -187,3 +207,64 @@
       ansible.builtin.service:
         state: restarted
         name: k3s-agent
+
+    # upgrade.yml already restarts the servers one at a time, but the role
+    # returns as soon as the service is up, which is before the node serves
+    # again. The same two gates as in the server and agent roles hold each node
+    # until it is back, behind the same variables and off by default.
+    - name: Wait for this server to report Ready
+      when:
+        - k3s_wait_ready | bool
+        - server_group in group_names
+        - not ansible_check_mode
+      ansible.builtin.command:
+        cmd: >-
+          k3s kubectl get node {{ k3s_upgrade_node_name }}
+          -o=jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+      register: k3s_upgrade_node_ready
+      until: k3s_upgrade_node_ready.rc == 0 and k3s_upgrade_node_ready.stdout == 'True'
+      retries: 30
+      delay: 10
+      changed_when: false
+
+    # A member that has just restarted rejoins etcd as a learner and counts
+    # towards no quorum until it has caught up, which Ready does not report.
+    - name: Wait for the servers upgraded so far to be etcd voters
+      when:
+        - k3s_server_wait_etcd_voters | bool
+        - server_group in group_names
+        - not ansible_check_mode
+        # A single server is its own quorum, and a cluster on an external
+        # datastore has no embedded etcd members to promote.
+        - (groups[server_group] | length) > 1
+        - not use_external_database
+      ansible.builtin.command:
+        cmd: >-
+          k3s kubectl get nodes -l "node-role.kubernetes.io/etcd=true"
+          -o=jsonpath='{range .items[*]}{.metadata.name}={.status.conditions[?(@.type=="EtcdIsVoter")].status}{"\n"}{end}'
+      register: k3s_upgrade_etcd_voters
+      until:
+        - k3s_upgrade_etcd_voters.rc == 0
+        - >-
+          k3s_upgrade_started_nodes | difference(k3s_upgrade_etcd_voters.stdout.lower().split()
+          | select('search', '=true$') | map('regex_replace', '=true$', '') | list) | length == 0
+      retries: 30
+      delay: 10
+      changed_when: false
+
+    - name: Wait for this agent to report Ready
+      when:
+        - k3s_wait_ready | bool
+        - agent_group in group_names
+        - not ansible_check_mode
+      # An agent holds no kubeconfig, so the read runs on the first server.
+      delegate_to: "{{ groups[server_group][0] }}"
+      ansible.builtin.command:
+        cmd: >-
+          k3s kubectl get node {{ k3s_upgrade_node_name }}
+          -o=jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+      register: k3s_upgrade_agent_ready
+      until: k3s_upgrade_agent_ready.rc == 0 and k3s_upgrade_agent_ready.stdout == 'True'
+      retries: 30
+      delay: 10
+      changed_when: false
