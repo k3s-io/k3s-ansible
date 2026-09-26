@@ -9,7 +9,7 @@ insert rule inet filter input ip saddr {{ hostvars[host].ansible_default_ipv4.ad
 
 # K3s core ports
 insert rule inet filter input tcp dport {{ api_port | default(6443) }} accept
-{% if groups[server_group] | length > 1 %}
+{% if groups[server_group] | length > 1 and not (use_external_database | default(false) | bool) %}
 insert rule inet filter input tcp dport 2379-2381 accept
 {% endif %}
 
