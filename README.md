@@ -171,7 +171,7 @@ ansible-playbook k3s.orchestration.upgrade -i inventory.yml
 ansible-playbook playbooks/upgrade.yml -i inventory.yml
 ```
 
-Re-running the `site.yml` playbook after bumping `k3s_version` performs the same upgrade declaratively: it restarts the k3s services so the cluster picks up the new runtime. On a multi-server (HA) cluster, add `-e k3s_server_serial=1` so the servers restart one at a time and etcd keeps quorum. With embedded etcd, each server rejoins etcd as a voting member before the next one restarts. By default all servers restart together. Set it through extra vars or `import_playbook` vars, not inventory: `serial` is a play keyword, so inventory variables don't apply to it.
+Re-running the `site.yml` playbook after bumping `k3s_version` performs the same upgrade declaratively: it restarts the k3s services so the cluster picks up the new runtime. On a multi-server (HA) cluster, add `-e k3s_server_serial=1` so the servers restart one at a time and etcd keeps quorum. With embedded etcd, the next server restarts only after the restarted ones report as etcd voters. By default all servers restart together. Set it through extra vars or `import_playbook` vars, not inventory: `serial` is a play keyword, so inventory variables don't apply to it.
 
 ```bash
 ansible-playbook playbooks/site.yml -i inventory.yml -e k3s_server_serial=1
