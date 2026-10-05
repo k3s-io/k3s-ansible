@@ -12,6 +12,7 @@
   hosts: server
   gather_facts: false
   become: true
+  serial: "{{ k3s_server_serial | default('100%') }}"
   roles:
     - role: k3s_server
 

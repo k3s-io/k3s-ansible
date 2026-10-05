@@ -10,6 +10,11 @@
   ansible.builtin.set_fact:
     k3s_server_installed_version: "{{ k3s_server_version_output.stdout_lines[0].split(' ')[2] }}"
 
+# Limit join checks to completed and current batches during serial installation.
+- name: Count the servers this play has already started
+  ansible.builtin.set_fact:
+    k3s_server_started_count: "{{ ansible_play_hosts_all.index(ansible_play_batch[-1]) + 1 }}"
+
 - name: Construct K3s server config
   block:
     # Start with an empty config
@@ -299,8 +304,7 @@
     # Always restart a joined server so a re-run of site.yml — whether it only
     # bumped k3s_version or changed config — brings it onto the new runtime, the
     # same way the first server above always restarts. On a multi-server cluster
-    # run the playbook with --forks=1 so the servers restart one at a time and
-    # the etcd quorum is preserved (see README).
+    # set k3s_server_serial to 1 so the servers restart one at a time (see README).
     - name: Restart K3s service
       when:
         - ansible_facts.services['k3s.service'] is defined
@@ -316,13 +320,15 @@
         state: started
         enabled: true
 
-    - name: Verify that all server nodes joined
-      when: not ansible_check_mode and (groups[server_group] | length) > 1
+    - name: Verify that the servers started so far joined
+      when: not ansible_check_mode
       ansible.builtin.command:
         cmd: >
           k3s kubectl get nodes -l "node-role.kubernetes.io/control-plane=true" -o=jsonpath="{.items[*].metadata.name}"
       register: k3s_server_nodes
-      until: k3s_server_nodes.rc == 0 and (k3s_server_nodes.stdout.split() | length) == (groups[server_group] | length)
+      until:
+        - k3s_server_nodes.rc == 0
+        - (k3s_server_nodes.stdout.split() | length) >= (k3s_server_started_count | int)
       retries: 20
       delay: 10
       changed_when: false
@@ -333,6 +339,24 @@
     port: "{{ api_port }}"
     timeout: 60
   run_once: true
+  changed_when: false
+
+- name: Wait for the servers started so far to be etcd voters
+  when:
+    - not ansible_check_mode
+    - (groups[server_group] | length) > 1
+    - not use_external_database
+  ansible.builtin.command:
+    cmd: >-
+      k3s kubectl --request-timeout=10s get nodes -l "node-role.kubernetes.io/etcd=true"
+      -o=jsonpath='{range .items[*]}{.metadata.name}={.status.conditions[?(@.type=="EtcdIsVoter")].status}{"\n"}{end}'
+  register: k3s_server_etcd_voters
+  until:
+    - k3s_server_etcd_voters.rc == 0
+    - (k3s_server_etcd_voters.stdout.split() | length) >= (k3s_server_started_count | int)
+    - (k3s_server_etcd_voters.stdout.split() | reject('search', '=True$') | list | length) == 0
+  retries: 30
+  delay: 10
   changed_when: false
 
 - name: Setup kubectl for user
