@@ -128,6 +128,7 @@
       when:
         - "'Status: active' in prereq_ufw_status['stdout']"
         - groups[server_group] | length > 1
+        - not (use_external_database | default(false) | bool)
       community.general.ufw:
         rule: allow
         port: "2379:2381"
@@ -170,7 +171,9 @@
         immediate: true
 
     - name: If firewalld enabled, open etcd ports
-      when: groups[server_group] | length > 1
+      when:
+        - groups[server_group] | length > 1
+        - not (use_external_database | default(false) | bool)
       ansible.posix.firewalld:
         port: "2379-2381/tcp"
         zone: internal
