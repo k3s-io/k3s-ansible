@@ -238,9 +238,8 @@ By default, each node is given 2 cores and 2GB of RAM and runs Ubuntu 24.04. You
 ## Need More Features?
 
 This project is intended to provide a "vanilla" K3s install. If you need more features, such as:
-- Private Registry
 - Advanced Storage (Longhorn, Ceph, etc)
-- External Database
+- External Database Management
 - External Load Balancer or VIP
 - Alternative CNIs
 
