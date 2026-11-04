@@ -95,13 +95,81 @@
   loop:
     - "K3S_TOKEN={{ token }}"
 
+# With k3s_restart_on_change, we restart the agent only if the files it reads at start
+# changed since its last restart, or it was restarted outside site.yml (same check as
+# roles/k3s_server/tasks/restart_needed.yml).
+- name: Check whether the K3s agent needs a restart
+  when: k3s_restart_on_change | bool
+  block:
+    - name: Fingerprint the k3s binary, service, environment, config and registries files
+      ansible.builtin.stat:
+        path: "{{ item }}"
+        checksum_algorithm: sha256
+        follow: true
+      loop:
+        - "{{ extra_install_envs.INSTALL_K3S_BIN_DIR | default('/usr/local/bin') }}/k3s"
+        - "{{ (ansible_facts['service_mgr'] == 'systemd') | ternary(systemd_dir ~ '/k3s-agent.service', '/etc/init.d/k3s-agent') }}"
+        - "{{ k3s_agent_env_file }}"
+        - /etc/rancher/k3s/config.yaml
+        - /etc/rancher/k3s/registries.yaml
+      register: k3s_agent_restart_files
+
+    - name: Get the running K3s agent instance
+      ansible.builtin.command:
+        cmd: >-
+          {{ (ansible_facts['service_mgr'] == 'systemd')
+          | ternary('systemctl show -p InvocationID --value k3s-agent', 'cat /proc/sys/kernel/random/boot_id /run/openrc/options/k3s-agent/child_pid') }}
+      register: k3s_agent_restart_instance
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Read the fingerprint recorded after the last restart
+      ansible.builtin.slurp:
+        src: /etc/rancher/k3s/k3s-ansible-restart.state
+      register: k3s_agent_restart_recorded
+      failed_when: false
+
+    - name: Decide whether the K3s agent needs a restart
+      ansible.builtin.set_fact:
+        k3s_agent_restart_fingerprint: "{{ _fingerprint }}"
+        k3s_agent_restart_needed: "{{ (_fingerprint ~ ' ' ~ k3s_agent_restart_instance.stdout) != (k3s_agent_restart_recorded.content | default('') | b64decode | trim) }}"
+      vars:
+        _fingerprint: "{{ k3s_agent_restart_files.results | map(attribute='stat.checksum', default='absent') | join(' ') }}"
+
 # Always restart so a re-run of site.yml — whether it changed the agent config
 # or bumped k3s_version — reliably brings the agent onto the new state. The
 # install script leaves the service stopped (INSTALL_K3S_SKIP_START), so a plain
 # restart also covers the first install.
+# With k3s_restart_on_change, only when its files changed.
 - name: Enable and start K3s agent
   when: not ansible_check_mode
   ansible.builtin.service:
     name: k3s-agent
-    state: restarted
+    state: "{{ 'restarted' if (not (k3s_restart_on_change | bool) or k3s_agent_restart_needed) else 'started' }}"
     enabled: true
+
+- name: Record the fingerprint the K3s agent now runs with
+  when:
+    - not ansible_check_mode
+    - k3s_restart_on_change | bool
+  block:
+    - name: Make config directory for the fingerprint
+      ansible.builtin.file:
+        path: /etc/rancher/k3s
+        mode: "0755"
+        state: directory
+
+    - name: Get the K3s agent instance now running
+      ansible.builtin.command:
+        cmd: >-
+          {{ (ansible_facts['service_mgr'] == 'systemd')
+          | ternary('systemctl show -p InvocationID --value k3s-agent', 'cat /proc/sys/kernel/random/boot_id /run/openrc/options/k3s-agent/child_pid') }}
+      register: k3s_agent_restart_instance
+      changed_when: false
+
+    - name: Write the fingerprint
+      ansible.builtin.copy:
+        content: "{{ k3s_agent_restart_fingerprint }} {{ k3s_agent_restart_instance.stdout }}\n"
+        dest: /etc/rancher/k3s/k3s-ansible-restart.state
+        mode: "0600"
