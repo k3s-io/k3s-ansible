@@ -48,6 +48,8 @@ tags: ['infrastructure', 'linux', 'tools']
 dependencies:
   community.general: ">=7.0.0"
   ansible.posix: ">=1.5.0"
+  ansible.utils: ">=5.0.0"
+
 
 # The URL of the originating SCM repository
 repository: https://github.com/k3s-io/k3s-ansible
