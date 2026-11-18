@@ -1,10 +1,10 @@
 ---
 - name: Undo cluster setup
-  hosts: k3s_cluster
+  hosts: "{{ k3s_ansible_cluster_group  | default('server') }}"
   become: true
   vars:
-  - k3s_ansible_server : "{{ server_group  | default('server') }}"
-  - k3s_ansible_agent : "{{ agent_group  | default('agent') }}"
+  - k3s_ansible_server : "{{ k3s_ansible_server_group  | default('server') }}"
+  - k3s_ansible_agent : "{{ k3s_ansible_agent_group  | default('agent') }}"
   tasks:
     - name: Run K3s Uninstall script [server]
       when: "k3s_ansible_server in group_names"
@@ -36,7 +36,7 @@
         state: absent
 
 - name: Undo user setup
-  hosts: "{{ server_group  | default('server') }}"
+  hosts: "{{ k3s_ansible_server_group  | default('server') }}"
   tasks:
     - name: Remove K3s commands from ~/.bashrc
       ansible.builtin.lineinfile:
