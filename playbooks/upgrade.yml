@@ -3,14 +3,20 @@
 # Servers should be restarted sequientally to avoid etcd learner issues
 # Agents have no such limitation
 - name: Upgrade K3s Servers
-  hosts: server
+  hosts: "{{  k3s_ansible_server_group | default('server') }}"
+  vars:
+  - server_group: "{{  k3s_ansible_server_group | default('server') }}"
+  - agent_group: "{{  k3s_ansible_agent_group | default('agent') }}"
   become: true
   serial: 1
   roles:
     - role: k3s_upgrade
 
 - name: Upgrade K3s Agents
-  hosts: agent
+  hosts: "{{  k3s_ansible_agent_group | default('agent') }}"
+  vars:
+  - server_group: "{{  k3s_ansible_server_group | default('server') }}"
+  - agent_group: "{{  k3s_ansible_agent_group | default('agent') }}"
   become: true
   roles:
     - role: k3s_upgrade
