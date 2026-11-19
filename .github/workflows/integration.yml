@@ -245,6 +245,42 @@ jobs:
           done
           exit 1
 
+      # With k3s_restart_on_change, a re-run that changes nothing must not
+      # restart k3s, and a restart outside site.yml or a config change must
+      # still make site.yml restart it.
+      - name: Run site Playbook with k3s_restart_on_change to record the fingerprint
+        if: matrix.service_mgr == 'systemd'
+        run: ansible-playbook playbooks/site.yml -i tests/${{ matrix.inventory }}.yml -e k3s_restart_on_change=true
+
+      - name: Run site Playbook again and verify k3s was not restarted
+        if: matrix.service_mgr == 'systemd'
+        run: |
+          before_server=$(docker exec server-node systemctl show -p InvocationID --value k3s)
+          before_agent=$(docker exec agent-node systemctl show -p InvocationID --value k3s-agent)
+          test -n "$before_server" && test -n "$before_agent"
+          ansible-playbook playbooks/site.yml -i tests/${{ matrix.inventory }}.yml -e k3s_restart_on_change=true
+          test "$before_server" = "$(docker exec server-node systemctl show -p InvocationID --value k3s)"
+          test "$before_agent" = "$(docker exec agent-node systemctl show -p InvocationID --value k3s-agent)"
+
+      - name: Restart k3s outside site.yml and verify site.yml restarts it once more
+        if: matrix.service_mgr == 'systemd'
+        run: |
+          docker exec server-node systemctl restart k3s
+          before_server=$(docker exec server-node systemctl show -p InvocationID --value k3s)
+          test -n "$before_server"
+          ansible-playbook playbooks/site.yml -i tests/${{ matrix.inventory }}.yml -e k3s_restart_on_change=true
+          test "$before_server" != "$(docker exec server-node systemctl show -p InvocationID --value k3s)"
+
+      - name: Change the server config and verify k3s was restarted
+        if: matrix.service_mgr == 'systemd'
+        run: |
+          before_server=$(docker exec server-node systemctl show -p InvocationID --value k3s)
+          test -n "$before_server"
+          sed -i "s/node-label: foo=bar/node-label: foo=baz/" tests/${{ matrix.inventory }}.yml
+          grep -q "node-label: foo=baz" tests/${{ matrix.inventory }}.yml
+          ansible-playbook playbooks/site.yml -i tests/${{ matrix.inventory }}.yml -e k3s_restart_on_change=true
+          test "$before_server" != "$(docker exec server-node systemctl show -p InvocationID --value k3s)"
+
       - name: Debug nodes/pods on failure
         if: failure()
         run: |
@@ -429,6 +465,20 @@ jobs:
             fi
           done
           exit 1
+
+      # With k3s_restart_on_change, a site.yml re-run that changes nothing must
+      # not restart k3s on any of the joined servers.
+      - name: Run site Playbook with k3s_restart_on_change on the HA servers
+        run: |
+          ansible-playbook playbooks/site.yml -i tests/ha.yml -e k3s_server_serial=1 -e k3s_restart_on_change=true
+          for SERVER in $SERVERS; do
+            docker exec $SERVER systemctl show -p InvocationID --value k3s > /tmp/$SERVER.id
+            test -s /tmp/$SERVER.id
+          done
+          ansible-playbook playbooks/site.yml -i tests/ha.yml -e k3s_server_serial=1 -e k3s_restart_on_change=true
+          for SERVER in $SERVERS; do
+            test "$(cat /tmp/$SERVER.id)" = "$(docker exec $SERVER systemctl show -p InvocationID --value k3s)"
+          done
 
       - name: Debug nodes/pods on failure
         if: failure()

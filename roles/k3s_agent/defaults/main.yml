@@ -5,3 +5,5 @@ systemd_dir: "/etc/systemd/system"  # noqa var-naming[no-role-prefix]
 api_port: 6443  # noqa var-naming[no-role-prefix]
 extra_agent_args: "" # noqa var-naming[no-role-prefix]
 extra_install_envs: {} # noqa var-naming[no-role-prefix]
+# Restart k3s only if its binary, service, environment, config or registries file changed.
+k3s_restart_on_change: false  # noqa var-naming[no-role-prefix]

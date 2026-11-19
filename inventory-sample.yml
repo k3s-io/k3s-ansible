@@ -35,6 +35,7 @@ k3s_cluster:
     # user_kubectl: true, by default kubectl is symlinked and configured for use by ansible_user. Set to false to only kubectl via root user.
     # manage_firewall: false
     # k3s_server_config_mode: "0644", mode of /etc/rancher/k3s/config.yaml on server nodes. The file can contain the cluster token; set "0640" to keep it off other local accounts.
+    # k3s_restart_on_change: false, set true to restart k3s on a node only when its binary, service, environment, config or registries file changed since its last restart.
 
     # Manifests or Airgap should be either full paths or relative to the playbook directory.
     # List of locally available manifests to apply to the cluster, useful for PVCs or Traefik modifications.

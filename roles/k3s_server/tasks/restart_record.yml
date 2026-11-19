@@ -1,0 +1,15 @@
+---
+# Record what K3s now runs with, for restart_needed.yml on the next run.
+- name: Get the K3s service instance now running
+  ansible.builtin.command:
+    cmd: >-
+      {{ (ansible_facts['service_mgr'] == 'systemd')
+      | ternary('systemctl show -p InvocationID --value k3s', 'cat /proc/sys/kernel/random/boot_id /run/openrc/options/k3s/child_pid') }}
+  register: k3s_server_restart_instance
+  changed_when: false
+
+- name: Write the fingerprint
+  ansible.builtin.copy:
+    content: "{{ k3s_server_restart_fingerprint }} {{ k3s_server_restart_instance.stdout }}\n"
+    dest: /etc/rancher/k3s/k3s-ansible-restart.state
+    mode: "0600"

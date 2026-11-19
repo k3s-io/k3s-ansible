@@ -177,6 +177,13 @@ Re-running the `site.yml` playbook after bumping `k3s_version` performs the same
 ansible-playbook playbooks/site.yml -i inventory.yml -e k3s_server_serial=1
 ```
 
+By default `site.yml` restarts k3s on every server and agent on every run. Set `k3s_restart_on_change: true` to restart k3s on a node only when one of these happened since `site.yml` last restarted it:
+
+- its k3s binary, service file, environment file, `config.yaml` or `registries.yaml` changed;
+- k3s was restarted by something else, for example `upgrade.yml`, a rollback or a reboot.
+
+`site.yml` records what k3s was started with in `/etc/rancher/k3s/k3s-ansible-restart.state`. A node without that file, for example on the first run with the variable set, is restarted.
+
 The dedicated `upgrade.yml` playbook remains available and unchanged.
 
 ## Airgap Install
