@@ -1,6 +1,6 @@
 ---
 - name: Reboot cluster servers staggered
-  hosts: server
+  hosts: "{{  k3s_ansible_server_group | default('server) }}"
   become: true
   gather_facts: true
   serial: 1
@@ -10,7 +10,7 @@
         test_command: kubectl get nodes
 
 - name: Reboot cluster agents staggered
-  hosts: agent
+  hosts: "{{  k3s_ansible_agent_group | default('agent) }}"
   become: true
   gather_facts: true
   serial: 1

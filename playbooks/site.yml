@@ -1,6 +1,9 @@
 ---
 - name: Cluster prep
-  hosts: k3s_cluster
+  hosts: "{{  k3s_ansible_cluster_group | default('k3s_cluster') }}"
+  vars:
+    server_group: "{{  k3s_ansible_server_group | default('server') }}"
+    agent_group: "{{  k3s_ansible_agent_group | default('agent') }}"
   gather_facts: true
   become: true
   roles:
@@ -9,7 +12,10 @@
     - role: raspberrypi
 
 - name: Setup K3S server
-  hosts: server
+  hosts: "{{  k3s_ansible_server_group | default('server') }}"
+  vars:
+    server_group: "{{  k3s_ansible_server_group | default('server') }}"
+    agent_group: "{{  k3s_ansible_agent_group | default('agent') }}"
   gather_facts: false
   become: true
   serial: "{{ k3s_server_serial | default('100%') }}"
@@ -17,7 +23,10 @@
     - role: k3s_server
 
 - name: Setup K3S agent
-  hosts: agent
+  hosts: "{{  k3s_ansible_agent_group | default('agent') }}"
+  vars:
+    server_group: "{{  k3s_ansible_server_group | default('server') }}"
+    agent_group: "{{  k3s_ansible_agent_group | default('agent') }}"
   gather_facts: false
   become: true
   roles:
